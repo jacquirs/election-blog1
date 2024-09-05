@@ -65,8 +65,6 @@ d_popvote_wide |>
 
 # Visualize the two-party presidential popular over time
 
-
-
 # LINE PLOT
 my_pretty_theme <- theme_bw() + 
     theme(panel.border = element_blank(),
