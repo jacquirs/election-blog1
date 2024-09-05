@@ -1,0 +1,70 @@
+---
+title: "Week1_Post_Code"
+output: html_document
+date: "2024-09-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load libraries.
+library(ggplot2)
+library(maps)
+library(tidyverse)
+```
+
+
+### About This Document
+In this document, I include the code for plots, regressions, and other analyses carried out in furtherance of the week 1 questions and blog post assignment.
+
+### Goals of Week 1
+This week, there are two questions that we will seek to answer through our analysis:
+- How competitive are presidential elections in the United States?
+- Which states vote blue/red and how consistently?
+
+### The Data
+There are a few datasets we have access to this week to use in our analyses. They are found in the files popvote 1948-2020.csv, clean wide state 2pv 1948 2020.csv, and shapefile data from tha maps library. I explore the two datasets below.
+
+#### popvote 1948-2020.csv
+```{r}
+# Read in presidential popular vote data
+d_popvote <- read.csv("popvote_1948-2020.csv")
+
+# Look at Columns
+d_popvote |> colnames()
+
+# Look at First Few Rows
+d_popvote |> head()
+
+# Look at Summary Stats
+d_popvote |> summary()
+
+
+```
+From this analysis, I see that this data contains data such that a pair of two rows contains the results of an election from a specific year, specified by the year variable. Party gives the party for each of the two rows, winner is a bool of whether that party won that year, and candidate gives the candidate name. pv is the popular vote percentage, and pv2p gives the two-way popular vote between only the R and D candidates. There is also a bool column for incumbency. 
+
+#### clean wide state 2pv 1948 2020.csv
+```{r}
+# Read wide version of dataset that can be used to compare candidate votes with one another. 
+d_pvstate_wide <- read_csv("clean_wide_state_2pv_1948_2020.csv")
+
+# Look at Columns
+d_pvstate_wide |> colnames()
+
+# Look at First Few Rows
+d_pvstate_wide |> head()
+
+# Look at Summary Stats
+d_pvstate_wide |> summary()
+
+
+```
+This data exploration shows that this data has by state results and is unique on the combo of year and state. In each row, it gives the popular vote for dems and reps, D_pv and R_pv, and the two-way popular vote, D_pv2p and R_pv2p. There are also lag1 and lag2 for pv and pv2p, which represent 2020 and 2016 data used for the Helmut Norpath electoral cycle model.
+
+### To Explore
+- margins across years by state in electoral college votes (add in percents)
+- consistency measure (color based) on number of elections voted one way or the other? Or weighted by percent of popular vote goes each way?
+- map of voting red or blue of states overtime 
+- box size proportional to electoral vote amount map
