@@ -2,72 +2,75 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:4321/categories/</loc>
+    <loc>https://example.org/</loc>
+    <lastmod>2024-09-05T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/post/</loc>
+    <lastmod>2024-09-05T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/post/2024/09/05/week-1-introductory-post/</loc>
+    <lastmod>2024-09-05T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/categories/</loc>
     <lastmod>2020-12-01T21:13:14-05:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/post/2020/12/01/hello-r-markdown/</loc>
+    <loc>https://example.org/post/2020/12/01/hello-r-markdown/</loc>
     <lastmod>2020-12-01T21:13:14-05:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/</loc>
+    <loc>https://example.org/tags/plot/</loc>
     <lastmod>2020-12-01T21:13:14-05:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/tags/plot/</loc>
+    <loc>https://example.org/categories/r/</loc>
     <lastmod>2020-12-01T21:13:14-05:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/post/</loc>
+    <loc>https://example.org/tags/r-markdown/</loc>
     <lastmod>2020-12-01T21:13:14-05:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/categories/r/</loc>
+    <loc>https://example.org/tags/regression/</loc>
     <lastmod>2020-12-01T21:13:14-05:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/tags/r-markdown/</loc>
+    <loc>https://example.org/tags/</loc>
     <lastmod>2020-12-01T21:13:14-05:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/tags/regression/</loc>
-    <lastmod>2020-12-01T21:13:14-05:00</lastmod>
-  </url><url>
-    <loc>http://localhost:4321/tags/</loc>
-    <lastmod>2020-12-01T21:13:14-05:00</lastmod>
-  </url><url>
-    <loc>http://localhost:4321/note/2017/06/14/another-note/</loc>
+    <loc>https://example.org/note/2017/06/14/another-note/</loc>
     <lastmod>2017-06-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/categories/example/</loc>
+    <loc>https://example.org/categories/example/</loc>
     <lastmod>2017-06-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/note/</loc>
+    <loc>https://example.org/note/</loc>
     <lastmod>2017-06-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/tags/tutorial/</loc>
+    <loc>https://example.org/tags/tutorial/</loc>
     <lastmod>2017-06-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/note/2017/06/13/a-quick-note/</loc>
+    <loc>https://example.org/note/2017/06/13/a-quick-note/</loc>
     <lastmod>2017-06-13T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/post/2016/02/14/a-plain-markdown-post/</loc>
+    <loc>https://example.org/post/2016/02/14/a-plain-markdown-post/</loc>
     <lastmod>2016-02-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/tags/blogdown/</loc>
+    <loc>https://example.org/tags/blogdown/</loc>
     <lastmod>2016-02-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/categories/hugo/</loc>
+    <loc>https://example.org/categories/hugo/</loc>
     <lastmod>2016-02-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/tags/markdown/</loc>
+    <loc>https://example.org/tags/markdown/</loc>
     <lastmod>2016-02-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/tags/mathjax/</loc>
+    <loc>https://example.org/tags/mathjax/</loc>
     <lastmod>2016-02-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/tags/pandoc/</loc>
+    <loc>https://example.org/tags/pandoc/</loc>
     <lastmod>2016-02-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/tags/rstudio/</loc>
+    <loc>https://example.org/tags/rstudio/</loc>
     <lastmod>2016-02-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/post/2015/07/23/lorem-ipsum/</loc>
+    <loc>https://example.org/post/2015/07/23/lorem-ipsum/</loc>
     <lastmod>2015-07-23T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:4321/about/</loc>
+    <loc>https://example.org/about/</loc>
   </url>
 </urlset>

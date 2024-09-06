@@ -1,0 +1,258 @@
+---
+title: 'Week 1: Introductory Post'
+author: Jacqui Schlesinger
+date: '2024-09-05'
+slug: week-1-introductory-post
+categories: []
+tags: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+# Load libraries
+library(ggplot2)
+library(maps)
+library(tidyverse)
+library(plotly)
+
+```
+
+to do:
+- write intros / first few p's
+- pick graphs to include
+- make custom theme/ label graphs
+- better comment code
+- add in readings
+- write up rest of writeup
+- css fix
+
+format:
+- intro the blog
+
+- intro to this week
+- questions to answer:
+- How competitive are presidential elections in the United States?
+- Which states vote blue/red and how consistently?
+
+- info from readings included
+- early prediction included
+
+- margins across years by state in electoral college votes (add in percents)
+- map of voting red or blue of states overtime 
+- box size proportional to electoral vote amount map
+
+```{r}
+####----------------------------------------------------------#
+#### Data read in and cleaning
+####----------------------------------------------------------#
+
+### Popular vote data
+# Read presidential popular vote
+d_popvote <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/popvote_1948-2020.csv") # if you run this code please change to location of data
+
+# Pivot data to wide format with party names as columns and two-party vote share as values.
+d_popvote_wide <- d_popvote |>
+    select(year, party, pv2p) |>
+    pivot_wider(names_from = party, values_from = pv2p)
+
+# Modify winner column to show "D" if Democrats win and "R" if Republicans win
+d_popvote_wide <- d_popvote_wide |> 
+    mutate(winner = case_when(democrat > republican ~ "D",
+                              TRUE ~ "R"))
+
+### Shape file data
+# Sequester shapefile of states from `maps` library
+states_map <- map_data("state")
+
+### Candidate votes wide data
+# Read wide version of dataset that can be used to compare candidate votes with one another
+d_pvstate_wide <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/clean_wide_state_2pv_1948_2020.csv") # if you run this code please change to location of data
+
+# Merge d_pvstate_wide with state_map
+d_pvstate_wide$region <- tolower(d_pvstate_wide$state)
+
+pv_map <- d_pvstate_wide |>
+  left_join(states_map, by = "region")
+
+ec <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/ec_full.csv") # if you run this code please change to location of data
+
+
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Extension 1 Part 1: Create a Custom Theme
+####----------------------------------------------------------#
+
+maps_theme <- theme_bw() + 
+    theme(panel.border = element_blank(),     
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          plot.title = element_text(size = 15),
+          strip.text = element_text(size = 9),
+          legend.position = "right",
+          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 9))
+```
+
+
+```{r}
+####----------------------------------------------------------#
+#### Extension 3: Swing State Map Extension
+####----------------------------------------------------------#
+
+# Calculate swing map margins for each state and year (D sub y minus D sub y-4) 
+pv2p_2024_states <- d_pvstate_wide %>%
+  group_by(state) %>%
+  mutate(pv2p_margin = D_pv2p - D_pv2p_lag1, region = tolower(state))
+
+# Join data with states shape file and graph swing for years 1980-2020
+pv2p_2024_states %>% 
+  filter(year >= 1980) %>%
+  left_join(states_map, by = "region") %>%
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = pv2p_margin), color = "black") +
+  facet_wrap(facets = year ~.) +
+  ggtitle("Change in Democratic Vote Margin From Past Election, 1980-2020") + 
+  scale_fill_gradient2(
+    high = "darkblue",
+    mid = "white",
+    low = "red",
+    limits = c(-15, 15),
+    name = "Percentage Point Swing"
+  ) +
+  maps_theme
+
+```
+- swing versus swing state (small swing) 
+- can't tell where it comes from
+
+```{r}
+####----------------------------------------------------------#
+#### Forecast: simplified electoral cycle model
+####----------------------------------------------------------#
+
+# Create prediction (pv2p and margin) based on simplified electoral cycle model: 
+# vote_2024 = 3/4*vote_2020 + 1/4*vote_2016 (lag1, lag2, respectively). 
+pv2p_2024_states_margins <- d_pvstate_wide %>%
+  filter(year == 2020) %>%
+  group_by(state) %>%
+  summarize(D_pv2p_2024 = 3/4 * D_pv2p + 1/4 * D_pv2p_lag1,
+            R_pv2p_2024 = 3/4 * R_pv2p + 1/4 * R_pv2p_lag1) %>%
+  mutate(pv2p_2024_margin = R_pv2p_2024 - D_pv2p_2024,
+         region = tolower(state))
+
+# add electoral
+pv2p_2024_states_margins <- pv2p_2024_states_margins %>%
+  mutate(year = 2024,
+         winner = ifelse(pv2p_2024_margin > 0, "R", "D")) %>%
+  left_join(ec, by = c("state", "year"))
+
+# Plot the margin of victory in a U.S. state map
+base_map <- pv2p_2024_states_margins %>%
+  left_join(states_map, by = "region") %>%
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = pv2p_2024_margin,
+                   text = paste("State:", state,
+                                "<br>Margin:", round(abs(pv2p_2024_margin), 2),
+                                "<br>Projected Winner:", winner,
+                                "<br>Electoral Votes:", electors)),
+               color = "black") +
+  ggtitle("2024 Presidential Margins Forecast (Simplified Electoral Cycle Model)") + 
+  scale_fill_gradient2(high = "firebrick1", 
+                       mid = "white", 
+                       low = "dodgerblue4", 
+                       breaks = c(-50, -25, 0, 25, 50),
+                       limits = c(-50, 50),
+                       name = "Percentage Point Margin") +
+  maps_theme
+
+# Apply plotly to get hover labels
+plotly_map <- ggplotly(base_map, tooltip = "text")
+plotly_map
+
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Extension 3 Cont x Forecast 2024
+####----------------------------------------------------------#
+
+# Create prediction (pv2p and margin) based on simplified electoral cycle model: 
+# vote_2024 = 3/4*vote_2020 + 1/4*vote_2016 (lag1, lag2, respectively). 
+pv2p_2024_states_swing <- d_pvstate_wide %>%
+  filter(year == 2020) %>%
+  group_by(state) %>%
+  mutate(D_pv2p_2024 = 3/4 * D_pv2p + 1/4 * D_pv2p_lag1,
+            R_pv2p_2024 = 3/4 * R_pv2p + 1/4 * R_pv2p_lag1) %>%
+  mutate(pv2p_2024_margin = R_pv2p_2024 - D_pv2p_2024,
+         pv2p_2024_swing =  D_pv2p_2024 - D_pv2p,
+         region = tolower(state))
+
+# add electoral
+pv2p_2024_states_swing <- pv2p_2024_states_swing %>%
+  mutate(year = 2024,
+         winner = ifelse(pv2p_2024_margin > 0, "R", "D")) %>%
+  left_join(ec, by = c("state", "year"))
+
+# Plot the margin of victory in a U.S. state map.
+base_map <- pv2p_2024_states_swing %>%
+  left_join(states_map, by = "region") %>%
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = pv2p_2024_swing,
+                   text = paste("State:", state,
+                                "<br>Swing:", round(pv2p_2024_swing, 2),
+                                "<br>Margin:", round(abs(pv2p_2024_margin), 2),
+                                "<br>Projected Winner:", winner,
+                                "<br>Electoral Votes:", electors)),
+               color = "black") +
+  ggtitle("2024 Presidential Margins Forecast (Simplified Electoral Cycle Model)") + 
+  scale_fill_gradient2(high = "dodgerblue4", 
+                       mid = "white", 
+                       low = "firebrick1", 
+                       breaks = c(-2, -1, 0, 1, 2),
+                       limits = c(-2, 2),
+                       name = "Percentage Point Swing") +
+  maps_theme
+
+# Apply plotly to get hover labels
+plotly_map <- ggplotly(base_map, tooltip = "text")
+plotly_map
+
+```
+- 2016 more red than 2020, just looking at 2020 and 2016, makes sense swings republican 
+
+- the model projects Harris: 276, Trump: 262
+
+
+```{r}
+# Generate projected state winners and merge with electoral college votes to make 
+# summary of electoral college vote distributions.
+pv2p_2024_states_elec <- d_pvstate_wide %>%
+  filter(year == 2020) %>%
+  group_by(state) %>%
+  summarize(D_pv2p_2024 = 3/4 * D_pv2p + 1/4 * D_pv2p_lag1,
+            R_pv2p_2024 = 3/4 * R_pv2p + 1/4 * R_pv2p_lag1) %>%
+  mutate(pv2p_2024_margin = R_pv2p_2024 - D_pv2p_2024,
+         region = tolower(state))
+
+pv2p_2024_states_elec <- pv2p_2024_states_elec %>%
+  mutate(year = 2024,
+         winner = ifelse(R_pv2p_2024 > D_pv2p_2024, "R", "D")) %>%
+  left_join(ec, by = c("state", "year"))
+
+pv2p_2024_states_elec %>%
+  group_by(winner) %>%
+  summarize(electoral_votes = sum(electors))
+
+## Harris: 276
+## Trump: 262
+```
+
+- table of change in electoral votes
