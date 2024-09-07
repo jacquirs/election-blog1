@@ -68,3 +68,37 @@ This data exploration shows that this data has by state results and is unique on
 - consistency measure (color based) on number of elections voted one way or the other? Or weighted by percent of popular vote goes each way?
 - map of voting red or blue of states overtime 
 - box size proportional to electoral vote amount map
+
+
+```{r}
+# group data by state and year
+pv2p_state_year <- d_pvstate_wide %>%
+  group_by(state, year) %>%
+  mutate(region = tolower(state))
+
+# figure out who wins each year, join in state electoral counts
+pv2p_state_year_winner <- pv2p_state_year %>%
+  mutate(winner = ifelse(R_pv2p > D_pv2p, "R", "D")) %>%
+  left_join(ec, by = c("state", "year"))
+
+# count electors for each party for each year
+pv2p_state_year_winner <- pv2p_state_year_winner %>%
+  group_by(year, winner) %>%
+  summarize(electoral_votes = sum(electors))
+
+# Manual data entry for 1960 as it is missing from ec dataset
+# Data on 1960 electoral college from https://www.270towin.com/1960_Election/
+electors_1960 <- tibble(
+  year = 1960,
+  winner = c("R", "D"),
+  electoral_votes = c(303, 219)
+)
+
+# Combine 1960 data
+final_pv2p_state_year_winner <- pv2p_state_year_winner %>%
+  filter(year != 1960) %>%
+  bind_rows(electors_1960) %>%
+  arrange(year, winner)
+
+```
+
