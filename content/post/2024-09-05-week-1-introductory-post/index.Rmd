@@ -106,7 +106,7 @@ This week's explorations focus on data from national presidential election resul
 
 To do this, I examine both electoral college results and two-way popular vote results, margins, and year to year swings. I also implement the Helmut Norpoth electoral cycle model to provide a baseline prediction based solely on prior election results, and examine the efficacy of this approach.
 
-#### Popular Vote Over Time
+### Popular Vote Over Time
 The national popular vote provides information on the percentage of all votes cast nationally that went to a specific candidate. Because of the presence of national and state-by-state third party candidates, it can be helpful to look at a two-way popular vote percentage that a candidate received. This value is calculated similar to the national popular vote percentage, but instead uses only the total votes cast for the two main parties as the total votes, such that the percent of votes for the Democratic and Republican candidates sum to 100%. 
 
 Looking at the two-way popular vote percentage results for Democrats and Republicans in elections 1948 to 2020, we can evaluate how the distribution of the popular vote has changed between the two parties over time.
@@ -150,7 +150,7 @@ diff_calcs
 
 The plot reveals that neither of the two parties has consistently held power over the last 70 years in terms of two-way popular vote, with fluctuations between the two occurring every few election cycles. The differences between the two way popular vote have been both extremely large, like in the case of 1972 when there were 23.6 percentage points between the winner and loser, and extremely small, like in the case of 1960 when there were 0.17 percentage points between Richard Nixon (R) and John F. Kennedy (D). These two-way popular vote margins have fluctuated over the years, but the landslide victories have become less common today, with margins fluctuating still but with consistently tighter races. 
 
-#### Electoral College Results Over Time
+### Electoral College Results Over Time
 The increased tightness of presidential races over time appears to also be present in the results of Electoral College. As the true determinant of presidential election results, the Electoral College provides insight into how close the elections we observed above truly were.   
 
 ```{r}
@@ -190,7 +190,7 @@ d_popvote_wide |>
 
 With 270 electoral votes needed to win the presidency, the above results in 11 Democrat victories and 8 Republican victories since 1948. Similar to popular vote trends, recent elections appear to have fewer landslide victories for one party or the other. This points to an increased competitiveness in presidential elections.
 
-#### Electoral College Versus Two-Way Popular Vote Share
+### Electoral College Versus Two-Way Popular Vote Share
 In close elections, Electoral College victories can often come down to just a few states, even just one **(link)**. Later, I will investigate the electoral and popular vote trends in swing states, responsible for determining the outcome of elections due to their propensity to flip between voting for Republicans or Democrats in state wide popular vote year over year. For now, I will examine  the national electoral votes and two way popular votes since 1948, comparing the two margins of victory over the elections with the largest and smallest margins. 
 
 _1972 (Nixon R vs McGovern D)_: Nixon (R) wins by margin of 23.6 percentage points and 503 electoral votes
@@ -203,7 +203,7 @@ _2000 (Bush R vs Gore D)_: Bush (R) loses two-way popular vote by margin of 0.5 
 
 As seen in 2000 (and 2016, the fifth smallest popular vote margin of 2.32 percentage points more for Clinton (D), who lost), observed fluctuations in both electoral vote and popular vote plots are similar in magnitude, but do not always lead to the same election outcome. Because Electoral College votes are determined by the popular vote within each individual state, to further understand how the popular vote can help predict the winner of the election we will have to explore on a state by state level. 
 
-#### Swing State and Margins Analysis, 1948-2020
+### Swing State and Margins Analysis, 1948-2020
 Instead of looking solely at win margins for the electoral college and popular vote, as we did above, in order to better understand how to use the data we have to predict the 2024 election result it is important to look at changes year over year on the state level. The swing map below plots the change in the popular vote margin in each election year relative to the results in that state from the last election.
 
 ```{r}
@@ -215,9 +215,6 @@ Instead of looking solely at win margins for the electoral college and popular v
 pv2p_2024_states <- d_pvstate_wide %>%
   group_by(state) %>%
   mutate(pv2p_margin = D_pv2p - D_pv2p_lag1, region = tolower(state))
-
-d_pvstate_wide %>%
-  filter(state == "Utah", year == 2016)
 
 # Join data with states shape file and graph swing for years 1980-2020 using facets
 pv2p_2024_states %>% 
@@ -244,7 +241,7 @@ For example, I can dive deeper into results in Utah. In 2008, Republicans won th
 
 States with consistently much smaller swing are actually more likely to be swing states as this small swing could be around a 50-50 vote. For example, states like Pennsylvania and Arizona have had small swing in the last few elections. It is important to both look at the swing and the actual popular vote result to see which states like these are actually swing states, so a swing map itself helps visualize only how much or little states are moving relatively. For example, in 2008, many states swung more democratic than they had in the past for Obama, leading to a lot of blue, but in 2012 Obama still won despite the large amount of red swing in the states due to a smaller surge on President Obama's part for his re-elect.
 
-#### The Helmut Norpoth Model
+### The Helmut Norpoth Model
 As I have shown above, looking at swing and margins alone are not enough to determine whether a candidate will win an election. The same goes for the popular vote outcome nationally, which does not always determine the electoral votes. But looking at state-level popular vote can provide a method for an early and simplified prediction of the 2024 election result based on past results using a simplified version of the [Helmut Northpoth electoral cycle model](http://primarymodel.com/). This simplified model is defined by 
 
 $$ vote_{2024} = 0.75vote_{2020} + 0.25vote_{2016}$$
@@ -381,12 +378,12 @@ pv2p_2024_states_elec %>%
 
 In fact, the model forecasts that Vice President Kamala Harris will win 276 electoral to former president Donald Trump's 262, a democratic victory. 
 
-#### Simplified Norporth Model Pitfalls and Future Forecast Additions
+### Simplified Norporth Model Pitfalls and Future Forecast Additions
 The simplified version of Helmut Norpoth's model, which has been in its un-simplified form greater than 50% effective in its predictions, still misses many of the known drivers of voter behavior. For example, a comparison to [Fair's Electoral Models](https://drive.google.com/drive/u/0/folders/1Sim1ht01NGVFkiCzcx7cOVZo97H02xKj) shows the absence of important economic fundamentals that drive voter behavior, as well as factors including incumbency and party in charge. The variables in Fair's model are all economy based, with the intercept taking into account non economic values like past voting. Additionally, the [impact of published forecasts](https://www-journals-uchicago-edu.ezp-prod1.hul.harvard.edu/doi/pdfplus/10.1086%2F708682) on voters and the [potential ineffectiveness of campaign on-the-ground strategy](https://www-cambridge-org.ezp-prod1.hul.harvard.edu/core/journals/american-political-science-review/article/party-activists-as-campaign-advertisers-the-ground-campaign-as-a-principalagent-problem/6117E8EF4C72A046ABFE6A8FDEDEA95E) are not taken into account here. In future models, these and other factors will be explored descriptively and potentially added to the forecast.   
 
 **Current Forecast: Harris 276 - Trump 262**
 
-##### Data Sources
+### Data Sources
 - Popular vote and two-way vote by candidate for Democrat and Republican candidates since 1948
 - Popular vote and two-way vote by state for Democrats and Republicans since 1948
 - Electoral College electors by state and year
