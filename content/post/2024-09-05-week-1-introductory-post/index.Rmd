@@ -105,7 +105,7 @@ _In this blog, I will attempt to forecast the outcome of the 2024 US presidentia
 This week's focus is on data from national presidential election outcomes, 1948-2020. Before analyzing the factors leading to a candidate's victory, it is important to understand past election trends. The objective of this post is to answer two questions in furtherance of this goal: **how competitive are US presidential elections**, and **which states vote blue/red and how consistently**. To do so, I'll examine Electoral College and two-way popular vote outcomes and implement a simplified Helmut Norpoth model for a baseline prediction solely from prior election results.
 
 ### Popular Vote Over Time
-Instead of using national popular vote, a more focused analysis looks at the two-way popular vote, considering only votes cast for the two main parties. Looking at the two-way popular vote results 1948-2020, I can evaluate how the popular vote distribution has changed between the parties.
+Instead of using national popular vote, a more focused analysis looks at the two-way popular vote, considering only votes cast for the two main parties. I first evaluate how the popular vote distribution has changed between the parties.
 
 ```{r}
 ####----------------------------------------------------------#
@@ -144,10 +144,10 @@ diff_calcs <- d_popvote %>%
 diff_calcs
 ```
 
-From 1948 to 2020, neither party has consistently dominated. Power shifts between Democrats and Republicans occur every few election cycles. The margins have varied significantly, with some elections resulting in large gaps, like the 23.6 percentage-point difference in 1972 between Nixon and McGovern, and others with extremely tight races, such as the 0.17 percentage-point margin in 1960 between Nixon and Kennedy. Over the decades, landslide victories have seemingly become less common, with margins still fluctuating but within consistently tighter races. 
+From 1948 to 2020, power shifts between Democrats and Republicans occurred every few election cycles. The margins varied significantly, with some elections resulting in large gaps, like the 23.6 percentage-point difference in 1972 between Nixon and McGovern, and others with extremely tight races, like the 0.17 percentage-point margin in 1960 between Nixon and Kennedy. Over the decades, landslide victories have seemingly become less common, with margins still fluctuating but within consistently tighter races. 
 
-### Electoral College Results Over Time
-The Electoral College also reflects the increased competitiveness seen in popular vote trends. As the true determinant of presidential elections, it provides insight into how close they truly were. 
+### Electoral College Over Time
+The Electoral College also reflects the increased competitiveness seen in popular vote trends. As the true presidential elections determinant, it shows how close they truly were.
 
 ```{r}
 ####----------------------------------------------------------#
@@ -172,7 +172,7 @@ ggplotly(ecvote_line, tooltip = "text")
 
 ```
 
-The dominance of one party or the other in the Electoral College has similarly declined, with fewer landslide victories in recent years. This points to an _increased competitiveness in presidential elections_.
+The dominance of single parties the Electoral College has similarly declined, with fewer recent landslide victories. This points to an _increased competitiveness in presidential elections_.
 
 ### Electoral College Versus Two-Way Popular Vote Share
 Close elections often hinge on [a few key states](https://books.google.com/books?hl=en&lr=&id=1it4EAAAQBAJ&oi=fnd&pg=PA339&dq=swing+states+became+critical+to+elections&ots=Udo10ht0-f&sig=jVlcrKHiERO7ckvIGSgCJAb4poY#v=onepage&q&f=false) in the Electoral College. Later, I investigate trends within swing states. For now, I examine the national electoral votes and two-way popular votes since 1948, comparing the two margins of victory for elections with the largest and smallest margins:
@@ -185,10 +185,10 @@ _1960 (Nixon vs. Kennedy)_: Kennedy won by margin of 0.17 pp and 84 electoral vo
 
 _2000 (Bush vs. Gore)_: Bush lost the two-way popular vote by 0.5 pp but won electoral college by 5 votes.
 
-As seen in 2000 (and 2016), fluctuations in both electoral and popular vote results are of similar magnitude, but may not lead to the same outcome. _These cases demonstrate how the national popular vote and Electoral College results don’t always align, underscoring the importance of state-level popular vote outcomes in predicting elections._
+As in 2000 (and 2016), fluctuations in both electoral and popular vote results are of similar magnitude, but may not lead to the same outcome. _These cases demonstrate how the national popular vote and Electoral College results don’t always align, underscoring the importance of state-level popular vote outcomes in predicting elections._
 
 ### Swing State and Margins Analysis, 1948-2020
-To better understand how the popular vote and win margins can effect election outcomes, it’s crucial to analyze changes at the state level year-over-year. Looking at each state's swing-- the change in the popular vote margin relative to the results in that state from the last election-- provides insight into where elections might be won or lost.
+To better understand how the popular vote and win margins can effect election outcomes, it’s crucial to analyze changes at the state level. Looking at each state's swing-- the change in the popular vote margin relative to the results in that state from the last election-- provides insight into where elections might be won or lost.
 
 ```{r}
 ####----------------------------------------------------------#
@@ -219,7 +219,7 @@ pv2p_2024_states %>%
 
 ```
 
-States shaded darker swung more toward Republicans (red) and Democrats (blue) compared to their margins in the past election. Importantly, dark shading does not mean a state is competitive--  it is often the opposite. 
+States shaded darker swung more toward Republicans (red) and Democrats (blue) compared to their margins in the past election. Importantly, dark shading does not mean a state is competitive--it is often the opposite. 
 
 For instance, Utah, consistently Republican, saw a red swing in 2012 when Mitt Romney, [a son of Utah](https://link.springer.com/chapter/10.1057/9781137360823_5), was the candidate. This made 2016 appear blue due to a smaller Republican margin, but Utah hasn't voted Democrat since the landslide in 1964, so it is not a swing state.
 
@@ -229,7 +229,7 @@ Conversely, states with consistently smaller swings, like Pennsylvania and Arizo
 While swings and margins provide valuable insight, they alone cannot predict outcomes. The same goes for the popular vote nationally, which does not always determine electoral votes. But looking at state-level popular vote can provide an early 2024 election forecast based only on past results using a simplified version of the [Helmut Northpoth electoral cycle model](http://primarymodel.com/). This is defined by 
 
 $$ vote_{2024} = 0.75vote_{2020} + 0.25vote_{2016}$$
-This is a _predictive model_ of the election, using inputs of past election results to predict a future outcome. The map generated by this model shows predicted margins of victory by state, as well as the projected winner and total electoral votes.
+This is a _predictive model_ of the election, using inputs of past election results to predict future outcomes. The map generated by this model shows predicted margins of victory by state, as well as projected winner and electoral votes.
 
 ```{r}
 ####----------------------------------------------------------#
@@ -279,7 +279,7 @@ plotly_map
 
 ```
 
-States with a small projected margin of victory align with the key battlegrounds in this election: Arizona, Georgia, North Carolina, Pennsylvania, Wisconsin, Michigan, and Nevada. Examining the projected swing of these states compared to the 2020 election helps reveal in which direction these states are moving. 
+States with a small projected margin of victory align with the key battlegrounds in 2024: Arizona, Georgia, North Carolina, Pennsylvania, Wisconsin, Michigan, and Nevada. Examining the projected swing of these states compared to the 2020 election helps reveal in which direction these states are moving. 
 
 ```{r}
 ####----------------------------------------------------------#
@@ -328,7 +328,7 @@ plotly_map
 
 ```
 
-Most states are projected to swing slightly more Republican in 2024 than in 2020, but this does not indicate a Republican victory. In fact, this makes sense for the simplified model, which relies 75% on the 2020 results and 25% on the 2016 results in each state. Many states voted more Republican in 2016 than they did in 2020, so using these years automatically pulls the swings to the Republicans.
+Most states are projected to swing slightly more Republican in 2024 than in 2020, but this does not indicate Republican victory. In fact, this is consistent with the simplified model, relying 75% on the 2020 results and 25% on the 2016 results in each state. Many states voted more Republican in 2016 than they did in 2020, automatically pulling the modeled swings to the Republicans.
 
 ```{r, results = 'hide'}
 ####----------------------------------------------------------#
@@ -360,7 +360,7 @@ pv2p_2024_states_elec %>%
 
 In fact, the model forecasts that Vice President Kamala Harris will win 276 electors to former president Donald Trump's 262, a democratic victory. 
 
-### Simplified Norporth Model Pitfalls and Future Forecast Additions
+### Simplified Model Pitfalls and Future Forecast Additions
 While the simplified model offers a basic prediction, it still misses many of the known drivers of voter behavior. A comparison to [Fair's Electoral Models](https://drive.google.com/drive/u/0/folders/1Sim1ht01NGVFkiCzcx7cOVZo97H02xKj) reveals the absence of  economic fundamentals. The variables in Fair's model are all economy-based, instead using the intercept to account for non-economic values like past voting patterns. 
 
 Additionally, work by Westwood, Messing, and Lelkes (2020) on the [impact of forecasts](https://www-journals-uchicago-edu.ezp-prod1.hul.harvard.edu/doi/pdfplus/10.1086%2F708682) and Enos and Hersch (2015) on the [ineffectiveness of campaign on-the-ground strategy](https://www-cambridge-org.ezp-prod1.hul.harvard.edu/core/journals/american-political-science-review/article/party-activists-as-campaign-advertisers-the-ground-campaign-as-a-principalagent-problem/6117E8EF4C72A046ABFE6A8FDEDEA95E) are not considered.
