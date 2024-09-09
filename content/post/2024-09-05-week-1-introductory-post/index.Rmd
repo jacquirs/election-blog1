@@ -102,7 +102,7 @@ line_plot_theme <- theme_bw() +
 
 _In this blog, I will attempt to forecast the outcome of the 2024 US presidential election. As a part of Gov 1347: Election Analytics, I will use data from a variety of sources to develop a compelling model._
 
-This week's focus is on data from national presidential election outcomes, 1948-2020. Before analyzing the factors leading to a candidate's victory, it is important to understand past election trends. The objective of this post is to answer two questions in furtherance of this goal: **(a) how competitive are presidential elections in the United States**, and **(b) which states vote blue/red and how consistently**. To do so, I'll examine Electoral College and two-way popular vote results and implement a simplified Helmut Norpoth model for a baseline prediction based solely on prior election results.
+This week's focus is on data from national presidential election outcomes, 1948-2020. Before analyzing the factors leading to a candidate's victory, it is important to understand past election trends. The objective of this post is to answer two questions in furtherance of this goal: **how competitive are US presidential elections**, and **which states vote blue/red and how consistently**. To do so, I'll examine Electoral College and two-way popular vote outcomes and implement a simplified Helmut Norpoth model for a baseline prediction solely from prior election results.
 
 ### Popular Vote Over Time
 Instead of using national popular vote, a more focused analysis looks at the two-way popular vote, considering only votes cast for the two main parties. Looking at the two-way popular vote results 1948-2020, I can evaluate how the popular vote distribution has changed between the parties.
@@ -219,14 +219,14 @@ pv2p_2024_states %>%
 
 ```
 
-States with darker shades swung more in the direction of Republicans if red and Democrats if blue, relative to its marginal position in the past election. Importantly, dark shading does not necessarily mean a state is competitive-- in fact, it is the opposite. 
+States shaded darker swung more toward Republicans (red) and Democrats (blue) compared to their margins in the past election. Importantly, dark shading does not mean a state is competitive--  it is often the opposite. 
 
-For instance, Utah consistently votes Republican but saw a red swing in 2012 when Mitt Romney, [a son of Utah](https://link.springer.com/chapter/10.1057/9781137360823_5), was the candidate. This greatly affected the swing in adjacent presidential elections, making 2016 blue with its smaller win-margin. This does not make Utah a swing state, as it has not voted for a Democrat since President Johnson's 1964 landslide.
+For instance, Utah, consistently Republican, saw a red swing in 2012 when Mitt Romney, [a son of Utah](https://link.springer.com/chapter/10.1057/9781137360823_5), was the candidate. This made 2016 appear blue due to a smaller Republican margin, but Utah hasn't voted Democrat since the landslide in 1964, so it is not a swing state.
 
-By contrast, states with consistently smaller swings, like Pennsylvania and Arizona, are more likely to be true swing states. A swing map visualizes only how much states move relatively. For example, in 2008, many states swung more Democratic than the past for Obama, but in 2012, the swing shifted red. However, Obama still won re-election, demonstrating that while swing maps show relative support movement, the popular vote within each state matters.
+Conversely, states with consistently smaller swings, like Pennsylvania and Arizona, are more likely to be true swing states. A swing map visualizes only how states move relatively. For example, in 2008, many states swung more Democratic than the past for Obama, but in 2012, the swing shifted red. However, Obama still won re-election, demonstrating that while swing maps show relative support movement, the popular vote within each state remains crucial.
 
 ### The Helmut Norpoth Model
-While swings and margins provide valuable information, they alone are not enough to predict outcomes. The same goes for the popular vote nationally, which does not always determine the electoral votes. But looking at state-level popular vote can provide an early 2024 election forecast based only on past results using a simplified version of the [Helmut Northpoth electoral cycle model](http://primarymodel.com/). This is defined by 
+While swings and margins provide valuable insight, they alone cannot predict outcomes. The same goes for the popular vote nationally, which does not always determine electoral votes. But looking at state-level popular vote can provide an early 2024 election forecast based only on past results using a simplified version of the [Helmut Northpoth electoral cycle model](http://primarymodel.com/). This is defined by 
 
 $$ vote_{2024} = 0.75vote_{2020} + 0.25vote_{2016}$$
 This is a _predictive model_ of the election, using inputs of past election results to predict a future outcome. The map generated by this model shows predicted margins of victory by state, as well as the projected winner and total electoral votes.
@@ -279,7 +279,7 @@ plotly_map
 
 ```
 
-States with a small projected margin of victory are consistent with the battleground states in this election: Arizona, Georgia, North Carolina, Pennsylvania, Wisconsin, Michigan, and Nevada. We can also look at the projected swing of these states compared to the 2020 election to understand which direction these states are moving in. 
+States with a small projected margin of victory align with the key battlegrounds in this election: Arizona, Georgia, North Carolina, Pennsylvania, Wisconsin, Michigan, and Nevada. Examining the projected swing of these states compared to the 2020 election helps reveal in which direction these states are moving. 
 
 ```{r}
 ####----------------------------------------------------------#
