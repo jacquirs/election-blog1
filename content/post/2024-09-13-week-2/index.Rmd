@@ -19,6 +19,10 @@ library(tidyverse)
 library(plotly)
 library(ggrepel)
 library(car)
+library(readxl)
+library(purrr)
+library(broom)
+library(knitr)
 
 ```
 
@@ -72,11 +76,11 @@ d_inc_econ <- d_popvote |>
   left_join(d_bea |> filter(quarter == "Q2") |> select(year, dpi))
   # N.B. two different sources of data to use, FRED & BEA. 
   # We are using second-quarter data since that is the latest 2024 release. 
-d_inc_econ
 
 # Remove 2020 data
 d_inc_econ_2 <- d_inc_econ |>
   filter(year != 2020)
+
 ```
 
 ```{r}
@@ -95,7 +99,7 @@ scatterplot_theme <- theme_bw() +
 
 _In this blog, I will attempt to forecast the outcome of the 2024 US presidential election. As a part of Gov 1347: Election Analytics, I will use data from a variety of sources to develop a compelling model._
 
-(SHORTEN INTRO)
+(SHORTEN SECTION)
 This week, I will explore the predictive power of economic fundamentals at the national and state level on national popular vote percentage for the incumbent party's candidate. To do so, I will evaluate predictive models for a variety of national economic measures, including implementing cross-validation, and compare this to models based on state-level measures to determine the impact of sociotropic versus rational (CHECK) voting. 
 
 (ADD ECONOMIC FUNDAMENTALS LITERATURE NOTES)
@@ -103,38 +107,64 @@ This week, I will explore the predictive power of economic fundamentals at the n
 Economic fundamentals, whose values have been tracked by agencies including the St. Louis Federal Reserve ([FRED](https://fred.stlouisfed.org/)) and Department of Commerce Bureau of Economic Analysis ([BEA](https://www.bea.gov/)) going back to the early twentieth century, can provide insight on why people vote and how to forecast the result of the 2024 presidential election. Today's analysis will focus on the national popular vote percentage for the incumbent party as the chosen dependent variable. Incumbents are in charge of the economic conditions in the United States leading up to the election, and as such the conditions have been shown to directly impact their vote results (LINK). The use of past data or experience by voters to inform their decisions about a particular candidate is known as retrospective voting. The applicability of the retrospective voting hypothesis will be explored below (LITERATURE).
 
 ### Assumptions and Decisions
+(SHORTEN SECTION)
 Before beginning this analysis, I would like to note decisions I have made in restricting my data. Due to concerns about the potential applicability of older data to today's voters, I have decided for this week to focus on elections 1952-2016. This may be too wide of a range due to changes in who can vote, with laws like the [Voting Rights Act of 1965](https://www.archives.gov/milestone-documents/voting-rights-act) changing the electorate, and how people vote, with indications the the economy may not be as prominent a factor in retrospective voting decisions as it once may have been (LITERATURE). In the future, I plan to weigh older elections using to be determined amounts in my models. I have also decided to exclude 2020, as the pandemic created outlier economic results which could skew the predictions. The 2020 results may effect the 2024 outcome in other uncontrolled ways, creating more bias in my model. This decision will need to be reevaluated in later iterations of my model.
-(NOTE ALSO QUARTER 2)
 
-### National Economic Predictors WRITE
-- model evaluation for a variety of national economic predictors
-- how much is 2024 prediction sensitive to change in the variable
-- what does it tell us about the economic model of voting behavior (add literature)
+### National Economic Predictors
+economic model of voting behavior (add literature)
 
-Q2 GDP
+National economic variables and their relationship to popular vote outcomes can define the economic model of voting behavior. Looking specifically at quarter two results in election years across of variety of government measured variables-- quarter two due to the retrospective model of voting noting that recent events have more impact on voting decisions (LIT)-- I will determine which predictors provide worthwhile insight and could be used to predict 2024 results. The variables I will examine include 
+
+_GDP: gross domestic product in billions_
+_GDP Growth Q2: quarterly GDP growth in Q2_
+_RDPI: real disposable personal income in dollars_
+_RDPI Growth Q2: quarterly RDPI growth in Q2_
+_CPI: consumer price index in dollars_
+_Unemployment: unemployment rate as a percent_
+_SP500 close, open, high, low, adjusted close, and volume: SP500 values in dollars_
+_DPI: disposable personal income_
+
+Per (LIT), I will begin by examining bivariate regression models using GDP growth and RDPI growth quarterly. 
+
 ```{r}
 ####----------------------------------------------------------#
-#### National Variable Scatterplot: Q2 GDP
+#### National Variable Scatterplot: Q2 GDP growth
 ####----------------------------------------------------------#
 
 # fit a bivariate OLS to the data
 reg_econ_2 <- lm(pv2p ~ GDP_growth_quarterly, 
                          data = d_inc_econ_2)
 
-# scatterplot of GDP versus pv2p
-d_inc_econ_2 |> 
+# scatterplot of GDP growth versus pv2p
+scatterplot_gdp_growth <- d_inc_econ_2 |> 
   ggplot(aes(x = GDP_growth_quarterly, y = pv2p, label = year)) + 
-  geom_text() + 
-  geom_smooth(method = "lm", formula = y ~ x, color = "green", fill = "lightgreen") +
+  geom_text(aes(label = year, text = paste("GDP Growth:", round(GDP_growth_quarterly,3), "<br>Popular Vote:", round(pv2p,3))), 
+            nudge_x = 0.02, nudge_y = 0.02, check_overlap = TRUE) + 
+  geom_smooth(method = "lm", formula = y ~ x, color = "green", fill = "lightgreen", show.legend = FALSE) +
   geom_hline(yintercept = 50, lty = 2) + 
   geom_vline(xintercept = 0.01, lty = 2) + 
   labs(x = "Second Quarter GDP Growth (%)", 
        y = "Incumbent Party's National Popular Vote Share", 
        title = "Q2 GDP Growth vs Incumbent National Popular Vote Share") + 
   scatterplot_theme
+
+# convert to plotly
+scatterplot_interactive <- ggplotly(scatterplot_gdp_growth, tooltip = "text")
+
+# handle odd smooth highlighting 
+scatterplot_interactive <- scatterplot_interactive %>%
+  style(
+    hoverinfo = "text", 
+    traces = which(sapply(scatterplot_interactive$x$data, function(trace) "text" %in% names(trace)))
+  ) %>%
+  layout(
+    hovermode = "closest"
+  )
+
+scatterplot_interactive
 ```
 
-```{r}
+```{r, results = 'hide'}
 ####----------------------------------------------------------#
 #### National Variable Numbers and Evaluation: Q2 GDP
 ####----------------------------------------------------------#
@@ -193,8 +223,7 @@ hist(out_samp_errors, main = "Histogram of Cross-Validation Errors Q2 GDP",
      xlab = "Cross-Validation Error", ylab = "Frequency")
 ```
 
-
-```{r}
+```{r, results = 'hide'}
 ####----------------------------------------------------------#
 #### 2024 Prediction: Q2 GDP National
 ####----------------------------------------------------------#
@@ -208,32 +237,47 @@ GDP_new <- d_fred |>
 predict(reg_econ_2, GDP_new, interval = "prediction")
 ```
 
-RDI Q2
 ```{r}
 ####----------------------------------------------------------#
-#### National Variable Scatterplot: Q2 RDPI
+#### National Variable Scatterplot: Q2 RDPI growth
 ####----------------------------------------------------------#
 
 # fit a bivariate OLS to the data
 reg_econ_2 <- lm(pv2p ~ RDPI_growth_quarterly, 
                          data = d_inc_econ_2)
 
-# scatterplot of GDP versus pv2p
-d_inc_econ_2 |> 
+# scatterplot of RDPI growth versus pv2p
+scatterplot_rdpi_growth <- d_inc_econ_2 |> 
   ggplot(aes(x = RDPI_growth_quarterly, y = pv2p, label = year)) + 
-  geom_text() + 
-  geom_smooth(method = "lm", formula = y ~ x, color = "green", fill = "lightgreen") +
+  geom_text(aes(label = year, text = paste("RDPI Growth:", round(RDPI_growth_quarterly,3), "<br>Popular Vote:", round(pv2p,3))), 
+            nudge_x = 0.02, nudge_y = 0.02, check_overlap = TRUE) + 
+  geom_smooth(method = "lm", formula = y ~ x, color = "green", fill = "lightgreen", show.legend = FALSE) +
   geom_hline(yintercept = 50, lty = 2) + 
   geom_vline(xintercept = 0.01, lty = 2) + 
   labs(x = "Second Quarter RDPI Growth (%)", 
        y = "Incumbent Party's National Popular Vote Share", 
        title = "Q2 RDPI Growth vs Incumbent National Popular Vote Share") + 
   scatterplot_theme
+
+# convert to plotly
+scatterplot_interactive <- ggplotly(scatterplot_rdpi_growth, tooltip = "text")
+
+# handle odd smooth highlighting 
+scatterplot_interactive <- scatterplot_interactive %>%
+  style(
+    hoverinfo = "text", 
+    traces = which(sapply(scatterplot_interactive$x$data, function(trace) "text" %in% names(trace)))
+  ) %>%
+  layout(
+    hovermode = "closest"
+  )
+
+scatterplot_interactive
 ```
 
-```{r}
+```{r, results = 'hide'}
 ####----------------------------------------------------------#
-#### National Variable Numbers and Evaluation: Q2 RDPI
+#### National Variable Numbers and Evaluation: Q2 RDPI growth
 ####----------------------------------------------------------#
 # summary of OLS results
 cat("### Summary of OLS Results:\n")
@@ -241,7 +285,7 @@ print(summary(reg_econ_2))
 cat("\n")
 
 # correlation between popular vote and Q2 RDPI
-cat("### Correlation Between Popular Vote and Q2 RDPI:\n")
+cat("### Correlation Between Popular Vote and Q2 RDPI growth:\n")
 correlation <- cor(d_inc_econ_2$RDPI_growth_quarterly, d_inc_econ_2$pv2p)
 print(correlation)
 cat("\n")
@@ -291,128 +335,351 @@ hist(out_samp_errors, main = "Histogram of Cross-Validation Errors Q2 RDPI",
 ```
 
 
-```{r}
+```{r, results = 'hide'}
 ####----------------------------------------------------------#
-#### 2024 Prediction: Q2 RDPI National
+#### 2024 Prediction: Q2 RDPI growth National
 ####----------------------------------------------------------#
 # Sequester 2024 data.
-GDP_new <- d_fred |> 
+RDPI_growth_new <- d_fred |> 
   filter(year == 2024 & quarter == 2) |> 
   select(RDPI_growth_quarterly)
 
 # Predict uncertainty.
 # makes 95% confidence interval unknown what type of distribution 
-predict(reg_econ_2, GDP_new, interval = "prediction")
+predict(reg_econ_2, RDPI_growth_new, interval = "prediction")
 ```
 
-RDPI
+Table of all results
 ```{r}
 ####----------------------------------------------------------#
-#### National Variable Scatterplot: RDPI
+#### Table of all results for comparison
 ####----------------------------------------------------------#
 
-# fit a bivariate OLS to the data
-reg_econ_2 <- lm(pv2p ~ RDPI, 
-                         data = d_inc_econ_2)
+# define the function to fit the regression model and compute statistics so it can be in one table
+get_variable_summary <- function(variable, data, new_data) {
+  # remove rows with NA values in the variable and pv2p columns
+  data_clean <- data %>%
+    filter(!is.na(!!sym(variable)), !is.na(pv2p))
+  
+  # fit bivariate regression model
+  model <- lm(as.formula(paste("pv2p ~", variable)), data = data_clean)
+  model_summary <- summary(model)
+  
+  # compute statistics for regression
+  intercept <- coef(model)["(Intercept)"]
+  slope <- coef(model)[variable]
+  r_squared <- model_summary$r.squared
+  correlation <- cor(data_clean[[variable]], data_clean$pv2p)
+  
+  # predict for pv2p 2024
+  prediction <- predict(model, newdata = new_data, interval = "prediction")
+  
+  # compute mse and rmse errors
+  mse <- mean((model$model$pv2p - model$fitted.values)^2)
+  rmse <- sqrt(mse)
+  
+  # cross-validation
+  out_samp_errors <- sapply(1:1000, function(i) {
+    years_out_samp <- sample(data_clean$year, min(9, nrow(data_clean) - 1), replace = FALSE)
+    mod <- lm(as.formula(paste("pv2p ~", variable)), 
+              data_clean[!(data_clean$year %in% years_out_samp),])
+    out_samp_pred <- predict(mod, data_clean[data_clean$year %in% years_out_samp,])
+    out_samp_truth <- data_clean$pv2p[data_clean$year %in% years_out_samp]
+    mean(out_samp_pred - out_samp_truth)
+  })
+  mean_abs_error <- mean(abs(out_samp_errors))
+  
+  # create result tibble
+  tibble(
+    variable = variable,
+    r_squared = r_squared,
+    prediction_2024 = prediction[1, "fit"],
+    prediction_2024_upper = prediction[1, "upr"],
+    prediction_2024_lower = prediction[1, "lwr"],
+    mean_abs_error = mean_abs_error,
+    rmse = rmse,
+    correlation = correlation,
+    slope = slope,
+    intercept = intercept
+  )
+}
 
-# scatterplot of GDP versus pv2p
-d_inc_econ_2 |> 
-  ggplot(aes(x = RDPI, y = pv2p, label = year)) + 
-  geom_text() + 
-  geom_smooth(method = "lm", formula = y ~ x, color = "green", fill = "lightgreen") +
-  geom_hline(yintercept = 50, lty = 2) + 
-  geom_vline(xintercept = 0.01, lty = 2) + 
-  labs(x = "RDPI ($)", 
-       y = "Incumbent Party's National Popular Vote Share", 
-       title = "RDPI vs Incumbent National Popular Vote Share") + 
-  scatterplot_theme
-```
+# list of variables to analyze
+variables <- c("GDP", "GDP_growth_quarterly", "RDPI", "RDPI_growth_quarterly", 
+               "CPI", "unemployment", "sp500_open", "sp500_high", "sp500_low", 
+               "sp500_close", "sp500_adj_close", "sp500_volume", "dpi")
 
-```{r}
-####----------------------------------------------------------#
-#### National Variable Numbers and Evaluation: RDPI
-####----------------------------------------------------------#
-# summary of OLS results
-cat("### Summary of OLS Results:\n")
-print(summary(reg_econ_2))
-cat("\n")
-
-# correlation between popular vote and Q2 RDPI
-cat("### Correlation Between Popular Vote and RDPI:\n")
-correlation <- cor(d_inc_econ_2$RDPI, d_inc_econ_2$pv2p)
-print(correlation)
-cat("\n")
-
-# evaluate the in-sample fit/ r squared
-cat("### In-Sample Fit (R-squared):\n")
-r_squared <- summary(reg_econ_2)$r.squared
-print(r_squared)
-cat("\n")
-
-# plot residuals
-plot(d_inc_econ_2$year, d_inc_econ_2$pv2p, type = "l",
-     main = "Residual Plot: True Y (Line), Predicted Y (dot) for Each Year",
-     xlab = "Year", 
-     ylab = "National Popular Vote Share")
-points(d_inc_econ_2$year, predict(reg_econ_2, d_inc_econ_2), col = "purple")
-
-# MSE, hard to interpret on its own, need to compare to other models
-cat("### Mean Squared Error (MSE):\n")
-mse <- mean((reg_econ_2$model$pv2p - reg_econ_2$fitted.values)^2)
-print(mse)
-cat("\n")
-
-# RMSE, helpful with outliers
-cat("### Root Mean Squared Error (RMSE):\n")
-rmse <- sqrt(mse)
-print(rmse)
-cat("\n")
-
-# Model Testing: Cross-Validation (1000 Runs)
-out_samp_errors <- sapply(1:1000, function(i) {
-  years_out_samp <- sample(d_inc_econ_2$year, 9) 
-  mod <- lm(pv2p ~ RDPI, 
-            d_inc_econ_2[!(d_inc_econ_2$year %in% years_out_samp),])
-  out_samp_pred <- predict(mod, d_inc_econ_2[d_inc_econ_2$year %in% years_out_samp,])
-  out_samp_truth <- d_inc_econ_2$pv2p[d_inc_econ_2$year %in% years_out_samp]
-  mean(out_samp_pred - out_samp_truth)
+# prepare 2024 data for prediction
+new_data_list <- map(variables, function(var) {
+  if (var == "dpi") {
+    # special handling for dpi because it is in bea not fred
+    d_bea %>%
+      filter(year == 2024 & quarter == "Q2") %>%
+      select(all_of(var))
+  } else {
+    d_fred %>%
+      filter(year == 2024 & quarter == 2) %>%
+      select(all_of(var))
+  }
 })
 
-cat("### Mean Absolute Cross-Validation Error:\n")
-mean_abs_error <- mean(abs(out_samp_errors))
-print(mean_abs_error)
-cat("\n")
+# create a table with all results
+results <- map2_df(variables, new_data_list, ~get_variable_summary(.x, d_inc_econ_2, .y))
 
-hist(out_samp_errors, main = "Histogram of Cross-Validation Errors RDPI",
-     xlab = "Cross-Validation Error", ylab = "Frequency")
+results <- results %>%
+  mutate(across(where(is.numeric), ~round(.x, 3)))
+
+results
+# help from chat gpt on creating the function and map2_df
 ```
 
+
+- model evaluation for a variety of national economic predictors
+- how much is 2024 prediction sensitive to change in the variable
+- choice of predictor will change the model 
+
+### State Level Predictors
+- 2024 unemployment data state by state from fred, does it improve predictive power compared to national data
+- way over-fitting due to only 12 data points in each state
 
 ```{r}
 ####----------------------------------------------------------#
-#### 2024 Prediction: RDPI National
+#### Bring in state by state unemployment data
 ####----------------------------------------------------------#
-# Sequester 2024 data.
-GDP_new <- d_fred |> 
-  filter(year == 2024 & quarter == 2) |> 
-  select(RDPI)
 
-# Predict uncertainty.
-# makes 95% confidence interval unknown what type of distribution 
-predict(reg_econ_2, GDP_new, interval = "prediction")
+# Create a named vector to map abbreviations to state names
+state_abbreviations <- c(
+  DATE = "date",
+  ALURN = "alabama",
+  ARURN = "arkansas",
+  AZURN = "arizona",
+  CAURN = "california",
+  COURN = "colorado",
+  CTURN = "connecticut",
+  DCURN = "district of columbia",
+  DEURN = "delaware",
+  FLURN = "florida",
+  GAURN = "georgia",
+  IAURN = "iowa",
+  IDURN = "idaho",
+  ILURN = "illinois",
+  INURN = "indiana",
+  KSURN = "kansas",
+  KYURN = "kentucky",
+  LAURN = "louisiana",
+  MAURN = "massachusetts",
+  MDURN = "maryland",
+  MEURN = "maine",
+  MIURN = "michigan",
+  MNURN = "minnesota",
+  MOURN = "missouri",
+  MSURN = "mississippi",
+  MTURN = "montana",
+  NCURN = "north carolina",
+  NDURN = "north dakota",
+  NEURN = "nebraska",
+  NHURN = "new hampshire",
+  NJURN = "new jersey",
+  NMURN = "new mexico",
+  NVURN = "nevada",
+  NYURN = "new york",
+  OHURN = "ohio",
+  OKURN = "oklahoma",
+  ORURN = "oregon",
+  PAURN = "pennsylvania",
+  RIURN = "rhode island",
+  SCURN = "south carolina",
+  SDURN = "south dakota",
+  TNURN = "tennessee",
+  TXURN = "texas",
+  UTURN = "utah",
+  VAURN = "virginia",
+  VTURN = "vermont",
+  WAURN = "washington",
+  WIURN = "wisconsin",
+  WVURN = "west virginia",
+  WYURN = "wyoming"
+)
+
+unemp_state <- read_excel("C:/Users/Jacqui Schlesinger/Documents/election-blog1/Unemp.xls") # if you run this code please change to location of data to fit your set up, I am happy to provide this file as well!
+
+# rename columns to match state names
+colnames(unemp_state) <- state_abbreviations[colnames(unemp_state)]
+
+# handle date format
+unemp_state <- unemp_state %>%
+  mutate(date = as.Date(date))
+
+# handle the dates so to group by quarter and year soon
+unemp_state <- unemp_state %>%
+  mutate(
+    year = year(date),
+    quarter = quarter(date)
+  )
+
+# group and take the average
+annual_quarterly_unemp <- unemp_state %>%
+  group_by(year, quarter) %>%
+  summarize(across(where(is.numeric), mean, na.rm = TRUE))
+
+# get Q2 values in each election year
+election_years <- c(1976, 1980, 1984, 1988, 1992, 1996, 2000, 2004, 2008, 2012, 2016, 2020, 2024)
+
+d_unemp_q2 <- annual_quarterly_unemp %>%
+  filter(quarter == 2 & year %in% election_years)
+
 ```
 
-### State Level Predictors
-State Level Predictors
-- 2024 unemployment data state by state from fred, does it improve predictive power compared to national data
+```{r}
+####----------------------------------------------------------#
+#### Bring in state by state popular vote data
+####----------------------------------------------------------#
 
-Insights from Further Literature 
+d_pvstate_wide <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/clean_wide_state_2pv_1948_2020.csv") # if you run this code please change to location of data to fit your set up
+
+d_pvstate_wide <- d_pvstate_wide %>%
+  mutate(state = tolower(state))
+
+# help from chat gpt on this one for how to transform the data correctly 
+
+# Define the president in office for the four years leading up to each election year
+incumbents <- data.frame(
+  year = c(1976, 1980, 1984, 1988, 1992, 1996, 2000, 2004, 2008, 2012, 2016, 2020),
+  incumbent_party = c(
+    "Republican",  # Ford (1972-1976)
+    "Republican",  # Ford (1976-1980)
+    "Republican",  # Reagan (1980-1984)
+    "Republican",  # Reagan (1984-1988)
+    "Republican",  # Bush (1988-1992)
+    "Democratic",  # Clinton (1992-1996)
+    "Democratic",  # Clinton (1996-2000)
+    "Republican",  # Bush (2000-2004)
+    "Republican",  # Bush (2004-2008)
+    "Democratic",  # Obama (2008-2012)
+    "Democratic",  # Obama (2012-2016)
+    "Republican"  # Trump (2016-2020)
+  )
+)
+
+d_pvstate_wide <- d_pvstate_wide %>%
+  filter(year >= 1976)
+
+d_pvstate_wide <- d_pvstate_wide %>%
+  left_join(incumbents, by = "year")
+
+d_pvstate_wide <- d_pvstate_wide %>%
+  mutate(incumbent_pv2p = case_when(
+    incumbent_party == "Democratic" ~ D_pv2p,
+    incumbent_party == "Republican" ~ R_pv2p,
+  ))
+
+d_state_incumbent <- d_pvstate_wide %>%
+  select(year, state, incumbent_pv2p)
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Join popular vote and unemployment data
+####----------------------------------------------------------#
+
+# get unemployment data in long format
+d_unemp_q2_long <- d_unemp_q2 %>%
+  pivot_longer(
+    cols = starts_with("alabama"):starts_with("wyoming"),
+    names_to = "state",
+    values_to = "unemployment_rate"
+  )
+
+# join data together
+d_state_data <- d_unemp_q2_long %>%
+  inner_join(d_state_incumbent, by = c("year", "state"))
+
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Regressions for each state
+####----------------------------------------------------------#
+
+# function to fit the model and extract R-squared and slope, used chatgpt for tibble part and cur_data from purrr
+get_regression_stats <- function(data) {
+  model <- lm(incumbent_pv2p ~ unemployment_rate, data = data)
+  model_summary <- summary(model)
+  
+  tibble(
+    r_squared = model_summary$r.squared,
+    slope = coef(model)["unemployment_rate"],
+    intercept = coef(model)["(Intercept)"],
+    slope_se = sqrt(diag(vcov(model))["unemployment_rate"])
+  )
+}
+
+# Perform regression for each state and summarize results
+regression_summary <- d_state_data %>%
+  group_by(state) %>%
+  summarize(
+    # Apply function to fit model and get statistics
+    stats = list(get_regression_stats(cur_data())),
+    .groups = 'drop'
+  ) %>%
+  unnest(stats)
+
+# Print the results
+print(regression_summary)
+
+```
+
+```{r}
+####----------------------------------------------------------#
+#### 2024 prediction based on the states
+####----------------------------------------------------------#
+
+# Step 1: Extract 2024 unemployment data and pivot to long format
+d_unemp_2024 <- d_unemp_q2 %>%
+  filter(year == 2024) %>%
+  pivot_longer(
+    cols = starts_with("alabama"):starts_with("wyoming"),
+    names_to = "state",
+    values_to = "unemployment_rate"
+  )
+
+# Step 2: Join with regression results to get slopes
+# Assuming regression_summary contains state, r_squared, and slope
+predictions_2024 <- d_unemp_2024 %>%
+  left_join(regression_summary, by = "state") %>%
+  mutate(
+    # Calculate the predicted popular vote
+    predicted_pv2p = intercept + slope * unemployment_rate,
+    
+    # Calculate 95% confidence intervals
+    ci_lower = predicted_pv2p - 1.96 * (slope_se * unemployment_rate),
+    ci_upper = predicted_pv2p + 1.96 * (slope_se * unemployment_rate)
+  )
+predictions_2024
+# Step 3: Calculate the average predicted popular vote for 2024
+average_prediction <- predictions_2024 %>%
+  summarize(
+    average_predicted_pv2p = mean(predicted_pv2p, na.rm = TRUE),
+    average_ci_lower = mean(ci_lower, na.rm = TRUE),
+    average_ci_upper = mean(ci_upper, na.rm = TRUE)
+  )
+
+# Print the result
+print(average_prediction)
+
+```
+- do unep above, write math sections, write lit sections
+
+
+### Rational Versus Sociotropic voting
 - Rational versus sociotropic voting, does it depend on aggregate or local conditions 
-- discussion of literature on rational and sociotropic, economic fundamentals
+
 
 **Current Forecast: Harris XXX - Trump XXX**
 
 ### Data Sources
-- Popular vote by candidate, 1948-2020
-- FRED economic data, c.1927-2024
-- BEA economic data, 1947-2024
+- Popular Vote by Candidate, 1948-2020
+- Popular Vote by State, 1948-2020
+- FRED Economic Data, c.1927-2024
+- BEA Economic Data, 1947-2024
+- FRED Unemployment by State, 1976-2024
