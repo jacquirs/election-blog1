@@ -1,0 +1,177 @@
+---
+title: 'Week 2: Economic Fundamentals and Regression-Based Prediction'
+author: Jacqui Schlesinger
+date: '2024-09-13'
+slug: week-2
+categories: []
+tags: []
+---
+
+
+
+<pre><code>## # A tibble: 19 × 18
+##     year    pv  pv2p winner quarter    GDP GDP_growth_quarterly   RDPI
+##    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;lgl&gt;    &lt;dbl&gt;  &lt;dbl&gt;                &lt;dbl&gt;  &lt;dbl&gt;
+##  1  1948  49.5  52.3 TRUE         2   273.                  6.8    NA 
+##  2  1952  44.4  44.7 FALSE        2   361.                  0.8    NA 
+##  3  1956  57.4  57.8 TRUE         2   446.                  3.3    NA 
+##  4  1960  49.5  49.9 FALSE        2   541.                 -2.1  2422.
+##  5  1964  61.1  61.3 TRUE         2   679.                  4.4  2911.
+##  6  1968  42.7  49.6 FALSE        2   934.                  6.9  3566.
+##  7  1972  60.7  61.8 TRUE         2  1266.                  9.4  4155.
+##  8  1976  47.6  48.9 FALSE        2  1852.                  3    4675.
+##  9  1980  41.0  44.8 FALSE        2  2797.                 -8    5144.
+## 10  1984  58.5  59.1 TRUE         2  4010.                  7.1  5981.
+## 11  1988  53.1  53.8 TRUE         2  5190.                  5.4  6847.
+## 12  1992  37.1  46.4 FALSE        2  6471.                  4.4  7569.
+## 13  1996  49.1  54.8 TRUE         2  8033.                  6.8  8399.
+## 14  2000  48.1  50.3 FALSE        2 10248.                  7.5  9950.
+## 15  2004  50.6  51.3 TRUE         2 12113.                  3.1 11193.
+## 16  2008  45.4  46.2 FALSE        2 14866.                  2.4 12391.
+## 17  2012  50.9  51.9 TRUE         2 16207.                  1.8 13109.
+## 18  2016  47.1  51.2 FALSE        2 18712.                  1.3 14102.
+## 19  2020  46.9  47.7 FALSE        2 19913.                -28   17387.
+## # ℹ 10 more variables: RDPI_growth_quarterly &lt;dbl&gt;, CPI &lt;dbl&gt;,
+## #   unemployment &lt;dbl&gt;, sp500_open &lt;dbl&gt;, sp500_high &lt;dbl&gt;, sp500_low &lt;dbl&gt;,
+## #   sp500_close &lt;dbl&gt;, sp500_adj_close &lt;dbl&gt;, sp500_volume &lt;dbl&gt;, dpi &lt;dbl&gt;</code></pre>
+<p><em>In this blog, I will attempt to forecast the outcome of the 2024 US presidential election. As a part of Gov 1347: Election Analytics, I will use data from a variety of sources to develop a compelling model.</em></p>
+<p>(SHORTEN INTRO)
+This week, I will explore the predictive power of economic fundamentals at the national and state level on national popular vote percentage for the incumbent party’s candidate. To do so, I will evaluate predictive models for a variety of national economic measures, including implementing cross-validation, and compare this to models based on state-level measures to determine the impact of sociotropic versus rational (CHECK) voting.</p>
+<p>(ADD ECONOMIC FUNDAMENTALS LITERATURE NOTES)</p>
+<p>Economic fundamentals, whose values have been tracked by agencies including the St. Louis Federal Reserve (<a href="https://fred.stlouisfed.org/">FRED</a>) and Department of Commerce Bureau of Economic Analysis (<a href="https://www.bea.gov/">BEA</a>) going back to the early twentieth century, can provide insight on why people vote and how to forecast the result of the 2024 presidential election. Today’s analysis will focus on the national popular vote percentage for the incumbent party as the chosen dependent variable. Incumbents are in charge of the economic conditions in the United States leading up to the election, and as such the conditions have been shown to directly impact their vote results (LINK). The use of past data or experience by voters to inform their decisions about a particular candidate is known as retrospective voting. The applicability of the retrospective voting hypothesis will be explored below (LITERATURE).</p>
+<div id="assumptions-and-decisions" class="section level3">
+<h3>Assumptions and Decisions</h3>
+<p>Before beginning this analysis, I would like to note decisions I have made in restricting my data. Due to concerns about the potential applicability of older data to today’s voters, I have decided for this week to focus on elections 1952-2016. This may be too wide of a range due to changes in who can vote, with laws like the <a href="https://www.archives.gov/milestone-documents/voting-rights-act">Voting Rights Act of 1965</a> changing the electorate, and how people vote, with indications the the economy may not be as prominent a factor in retrospective voting decisions as it once may have been (LITERATURE). In the future, I plan to weigh older elections using to be determined amounts in my models. I have also decided to exclude 2020, as the pandemic created outlier economic results which could skew the predictions. The 2020 results may effect the 2024 outcome in other uncontrolled ways, creating more bias in my model. This decision will need to be reevaluated in later iterations of my model.
+(NOTE ALSO QUARTER 2)</p>
+</div>
+<div id="national-economic-predictors-write" class="section level3">
+<h3>National Economic Predictors WRITE</h3>
+<ul>
+<li>model evaluation for a variety of national economic predictors</li>
+<li>how much is 2024 prediction sensitive to change in the variable</li>
+<li>what does it tell us about the economic model of voting behavior (add literature)</li>
+</ul>
+<p>Q2 GDP
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre><code>## ### Summary of OLS Results:</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = pv2p ~ GDP_growth_quarterly, data = d_inc_econ_2)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -6.237 -4.160  0.450  1.904  8.728 
+## 
+## Coefficients:
+##                      Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           49.3751     1.4163  34.862   &lt;2e-16 ***
+## GDP_growth_quarterly   0.7366     0.2655   2.774   0.0135 *  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.463 on 16 degrees of freedom
+## Multiple R-squared:  0.3248,	Adjusted R-squared:  0.2826 
+## F-statistic: 7.697 on 1 and 16 DF,  p-value: 0.01354</code></pre>
+<pre><code>## ### Correlation Between Popular Vote and Q2 GDP:</code></pre>
+<pre><code>## [1] 0.569918</code></pre>
+<pre><code>## ### In-Sample Fit (R-squared):</code></pre>
+<pre><code>## [1] 0.3248066</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre><code>## ### Mean Squared Error (MSE):</code></pre>
+<pre><code>## [1] 17.7027</code></pre>
+<pre><code>## ### Root Mean Squared Error (RMSE):</code></pre>
+<pre><code>## [1] 4.207458</code></pre>
+<pre><code>## ### Mean Absolute Cross-Validation Error:</code></pre>
+<pre><code>## [1] 1.840487</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+<pre><code>##        fit      lwr     upr
+## 1 51.58486 41.85982 61.3099</code></pre>
+<p>RDI Q2
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre><code>## ### Summary of OLS Results:</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = pv2p ~ RDPI_growth_quarterly, data = d_inc_econ_2)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -7.5498 -3.3972 -0.8395  2.8771  9.9899 
+## 
+## Coefficients:
+##                       Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)            49.8653     1.9337  25.787 1.84e-14 ***
+## RDPI_growth_quarterly   0.4604     0.3250   1.417    0.176    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.119 on 16 degrees of freedom
+## Multiple R-squared:  0.1115,	Adjusted R-squared:  0.05595 
+## F-statistic: 2.008 on 1 and 16 DF,  p-value: 0.1757</code></pre>
+<pre><code>## ### Correlation Between Popular Vote and Q2 RDPI:</code></pre>
+<pre><code>## [1] 0.3338966</code></pre>
+<pre><code>## ### In-Sample Fit (R-squared):</code></pre>
+<pre><code>## [1] 0.1114869</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<pre><code>## ### Mean Squared Error (MSE):</code></pre>
+<pre><code>## [1] 23.29567</code></pre>
+<pre><code>## ### Root Mean Squared Error (RMSE):</code></pre>
+<pre><code>## [1] 4.826559</code></pre>
+<pre><code>## ### Mean Absolute Cross-Validation Error:</code></pre>
+<pre><code>## [1] 2.028174</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-8-2.png" width="672" /></p>
+<pre><code>##        fit      lwr      upr
+## 1 50.32576 38.89587 61.75566</code></pre>
+<p>RDPI
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre><code>## ### Summary of OLS Results:</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = pv2p ~ RDPI, data = d_inc_econ_2)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -8.1545 -4.0744  0.6116  2.5321  8.4095 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 54.9865610  3.0212129  18.200 1.24e-10 ***
+## RDPI        -0.0003868  0.0003608  -1.072    0.303    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.219 on 13 degrees of freedom
+##   (3 observations deleted due to missingness)
+## Multiple R-squared:  0.0812,	Adjusted R-squared:  0.01053 
+## F-statistic: 1.149 on 1 and 13 DF,  p-value: 0.3033</code></pre>
+<pre><code>## ### Correlation Between Popular Vote and RDPI:</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre><code>## ### In-Sample Fit (R-squared):</code></pre>
+<pre><code>## [1] 0.08120289</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<pre><code>## ### Mean Squared Error (MSE):</code></pre>
+<pre><code>## [1] 23.60431</code></pre>
+<pre><code>## ### Root Mean Squared Error (RMSE):</code></pre>
+<pre><code>## [1] 4.858426</code></pre>
+<pre><code>## ### Mean Absolute Cross-Validation Error:</code></pre>
+<pre><code>## [1] NA</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-11-2.png" width="672" /></p>
+<pre><code>##        fit      lwr      upr
+## 1 48.42878 34.64531 62.21226</code></pre>
+</div>
+<div id="state-level-predictors" class="section level3">
+<h3>State Level Predictors</h3>
+<p>State Level Predictors
+- 2024 unemployment data state by state from fred, does it improve predictive power compared to national data</p>
+<p>Insights from Further Literature
+- Rational versus sociotropic voting, does it depend on aggregate or local conditions
+- discussion of literature on rational and sociotropic, economic fundamentals</p>
+<p><strong>Current Forecast: Harris XXX - Trump XXX</strong></p>
+</div>
+<div id="data-sources" class="section level3">
+<h3>Data Sources</h3>
+<ul>
+<li>Popular vote by candidate, 1948-2020</li>
+<li>FRED economic data, c.1927-2024</li>
+<li>BEA economic data, 1947-2024</li>
+</ul>
+</div>

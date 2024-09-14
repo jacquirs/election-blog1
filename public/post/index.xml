@@ -6,8 +6,15 @@
     <description>Recent content in Posts on A minimal Hugo website</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 05 Sep 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 13 Sep 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://example.org/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Week 2: Economic Fundamentals and Regression-Based Prediction</title>
+      <link>https://example.org/post/2024/09/13/week-2/</link>
+      <pubDate>Fri, 13 Sep 2024 00:00:00 +0000</pubDate>
+      <guid>https://example.org/post/2024/09/13/week-2/</guid>
+      <description>&lt;pre&gt;&lt;code&gt;## # A tibble: 19 × 18&#xD;&#xA;##     year    pv  pv2p winner quarter    GDP GDP_growth_quarterly   RDPI&#xD;&#xA;##    &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;lgl&amp;gt;    &amp;lt;dbl&amp;gt;  &amp;lt;dbl&amp;gt;                &amp;lt;dbl&amp;gt;  &amp;lt;dbl&amp;gt;&#xD;&#xA;##  1  1948  49.5  52.3 TRUE         2   273.                  6.8    NA &#xD;&#xA;##  2  1952  44.4  44.7 FALSE        2   361.                  0.8    NA &#xD;&#xA;##  3  1956  57.4  57.8 TRUE         2   446.                  3.3    NA &#xD;&#xA;##  4  1960  49.5  49.9 FALSE        2   541.                 -2.1  2422.&#xD;&#xA;##  5  1964  61.1  61.3 TRUE         2   679.                  4.4  2911.&#xD;&#xA;##  6  1968  42.7  49.6 FALSE        2   934.                  6.9  3566.&#xD;&#xA;##  7  1972  60.7  61.8 TRUE         2  1266.                  9.4  4155.&#xD;&#xA;##  8  1976  47.6  48.9 FALSE        2  1852.                  3    4675.&#xD;&#xA;##  9  1980  41.0  44.8 FALSE        2  2797.                 -8    5144.&#xD;&#xA;## 10  1984  58.5  59.1 TRUE         2  4010.                  7.1  5981.&#xD;&#xA;## 11  1988  53.1  53.8 TRUE         2  5190.                  5.4  6847.&#xD;&#xA;## 12  1992  37.1  46.4 FALSE        2  6471.                  4.4  7569.&#xD;&#xA;## 13  1996  49.1  54.8 TRUE         2  8033.                  6.8  8399.&#xD;&#xA;## 14  2000  48.1  50.3 FALSE        2 10248.                  7.5  9950.&#xD;&#xA;## 15  2004  50.6  51.3 TRUE         2 12113.                  3.1 11193.&#xD;&#xA;## 16  2008  45.4  46.2 FALSE        2 14866.                  2.4 12391.&#xD;&#xA;## 17  2012  50.9  51.9 TRUE         2 16207.                  1.8 13109.&#xD;&#xA;## 18  2016  47.1  51.2 FALSE        2 18712.                  1.3 14102.&#xD;&#xA;## 19  2020  46.9  47.7 FALSE        2 19913.                -28   17387.&#xD;&#xA;## # ℹ 10 more variables: RDPI_growth_quarterly &amp;lt;dbl&amp;gt;, CPI &amp;lt;dbl&amp;gt;,&#xD;&#xA;## #   unemployment &amp;lt;dbl&amp;gt;, sp500_open &amp;lt;dbl&amp;gt;, sp500_high &amp;lt;dbl&amp;gt;, sp500_low &amp;lt;dbl&amp;gt;,&#xD;&#xA;## #   sp500_close &amp;lt;dbl&amp;gt;, sp500_adj_close &amp;lt;dbl&amp;gt;, sp500_volume &amp;lt;dbl&amp;gt;, dpi &amp;lt;dbl&amp;gt;&lt;/code&gt;&lt;/pr</description>
+    </item>
     <item>
       <title>Week 1: Introduction and Past National Election Data</title>
       <link>https://example.org/post/2024/09/05/week-1-introductory-post/</link>

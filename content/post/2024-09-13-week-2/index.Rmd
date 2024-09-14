@@ -1,0 +1,418 @@
+---
+title: 'Week 2: Economic Fundamentals and Regression-Based Prediction'
+author: Jacqui Schlesinger
+date: '2024-09-13'
+slug: week-2
+categories: []
+tags: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r, results = 'hide'}
+# Load libraries
+library(ggplot2)
+library(maps)
+library(tidyverse)
+library(plotly)
+library(ggrepel)
+library(car)
+
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Read, merge, and process data
+####----------------------------------------------------------#
+
+# Load popular vote data 
+d_popvote <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/popvote_1948-2020.csv") # if you run this code please change to location of data
+
+# Load economic data from FRED: https://fred.stlouisfed.org. 
+# Variables, units, & ranges: 
+# GDP, billions $, 1947-2024
+# GDP_growth_quarterly, %
+# RDPI, $, 1959-2024
+# RDPI_growth_quarterly, %
+# CPI, $ index, 1947-2024
+# unemployment, %, 1948-2024
+# sp500_, $, 1927-2024 
+d_fred <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/fred_econ.csv")
+
+# Load economic data from the BEA: https://apps.bea.gov/iTable/?reqid=19&step=2&isuri=1&categories=survey#eyJhcHBpZCI6MTksInN0ZXBzIjpbMSwyLDMsM10sImRhdGEiOltbImNhdGVnb3JpZXMiLCJTdXJ2ZXkiXSxbIk5JUEFfVGFibGVfTGlzdCIsIjI2NCJdLFsiRmlyc3RfWWVhciIsIjE5NDciXSxbIkxhc3RfWWVhciIsIjIwMjQiXSxbIlNjYWxlIiwiMCJdLFsiU2VyaWVzIiwiUSJdXX0=.
+# GDP, 1947-2024 (all)
+# GNP
+# RDPI
+# Personal consumption expenditures
+# Goods
+# Durable goods
+# Nondurable goods
+# Services 
+# Population (midperiod, thousands)
+d_bea <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/bea_econ.csv") |> 
+  rename(year = "Year",
+         quarter = "Quarter", 
+         gdp = "Gross domestic product", 
+         gnp = "Gross national product", 
+         dpi = "Disposable personal income", 
+         consumption = "Personal consumption expenditures", 
+         goods = "Goods", 
+         durables = "Durable goods", 
+         nondurables = "Nondurable goods", 
+         services = "Services", 
+         pop = "Population (midperiod, thousands)")
+
+# Filter and merge data. 
+d_inc_econ <- d_popvote |> 
+  filter(incumbent_party == TRUE) |> 
+  select(year, pv, pv2p, winner) |> 
+  left_join(d_fred |> filter(quarter == 2)) |> 
+  left_join(d_bea |> filter(quarter == "Q2") |> select(year, dpi))
+  # N.B. two different sources of data to use, FRED & BEA. 
+  # We are using second-quarter data since that is the latest 2024 release. 
+d_inc_econ
+
+# Remove 2020 data
+d_inc_econ_2 <- d_inc_econ |>
+  filter(year != 2020)
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Create a theme
+####----------------------------------------------------------#
+
+# Create custom theme for line plots
+scatterplot_theme <- theme_bw() + 
+    theme(panel.border = element_blank(),
+          plot.title = element_text(size = 15, hjust = 0.5), 
+          axis.text = element_text(size = 12),
+          axis.line = element_line(colour = "black"))
+```
+
+
+_In this blog, I will attempt to forecast the outcome of the 2024 US presidential election. As a part of Gov 1347: Election Analytics, I will use data from a variety of sources to develop a compelling model._
+
+(SHORTEN INTRO)
+This week, I will explore the predictive power of economic fundamentals at the national and state level on national popular vote percentage for the incumbent party's candidate. To do so, I will evaluate predictive models for a variety of national economic measures, including implementing cross-validation, and compare this to models based on state-level measures to determine the impact of sociotropic versus rational (CHECK) voting. 
+
+(ADD ECONOMIC FUNDAMENTALS LITERATURE NOTES)
+
+Economic fundamentals, whose values have been tracked by agencies including the St. Louis Federal Reserve ([FRED](https://fred.stlouisfed.org/)) and Department of Commerce Bureau of Economic Analysis ([BEA](https://www.bea.gov/)) going back to the early twentieth century, can provide insight on why people vote and how to forecast the result of the 2024 presidential election. Today's analysis will focus on the national popular vote percentage for the incumbent party as the chosen dependent variable. Incumbents are in charge of the economic conditions in the United States leading up to the election, and as such the conditions have been shown to directly impact their vote results (LINK). The use of past data or experience by voters to inform their decisions about a particular candidate is known as retrospective voting. The applicability of the retrospective voting hypothesis will be explored below (LITERATURE).
+
+### Assumptions and Decisions
+Before beginning this analysis, I would like to note decisions I have made in restricting my data. Due to concerns about the potential applicability of older data to today's voters, I have decided for this week to focus on elections 1952-2016. This may be too wide of a range due to changes in who can vote, with laws like the [Voting Rights Act of 1965](https://www.archives.gov/milestone-documents/voting-rights-act) changing the electorate, and how people vote, with indications the the economy may not be as prominent a factor in retrospective voting decisions as it once may have been (LITERATURE). In the future, I plan to weigh older elections using to be determined amounts in my models. I have also decided to exclude 2020, as the pandemic created outlier economic results which could skew the predictions. The 2020 results may effect the 2024 outcome in other uncontrolled ways, creating more bias in my model. This decision will need to be reevaluated in later iterations of my model.
+(NOTE ALSO QUARTER 2)
+
+### National Economic Predictors WRITE
+- model evaluation for a variety of national economic predictors
+- how much is 2024 prediction sensitive to change in the variable
+- what does it tell us about the economic model of voting behavior (add literature)
+
+Q2 GDP
+```{r}
+####----------------------------------------------------------#
+#### National Variable Scatterplot: Q2 GDP
+####----------------------------------------------------------#
+
+# fit a bivariate OLS to the data
+reg_econ_2 <- lm(pv2p ~ GDP_growth_quarterly, 
+                         data = d_inc_econ_2)
+
+# scatterplot of GDP versus pv2p
+d_inc_econ_2 |> 
+  ggplot(aes(x = GDP_growth_quarterly, y = pv2p, label = year)) + 
+  geom_text() + 
+  geom_smooth(method = "lm", formula = y ~ x, color = "green", fill = "lightgreen") +
+  geom_hline(yintercept = 50, lty = 2) + 
+  geom_vline(xintercept = 0.01, lty = 2) + 
+  labs(x = "Second Quarter GDP Growth (%)", 
+       y = "Incumbent Party's National Popular Vote Share", 
+       title = "Q2 GDP Growth vs Incumbent National Popular Vote Share") + 
+  scatterplot_theme
+```
+
+```{r}
+####----------------------------------------------------------#
+#### National Variable Numbers and Evaluation: Q2 GDP
+####----------------------------------------------------------#
+# summary of OLS results
+cat("### Summary of OLS Results:\n")
+print(summary(reg_econ_2))
+cat("\n")
+
+# correlation between popular vote and Q2 GDP
+cat("### Correlation Between Popular Vote and Q2 GDP:\n")
+correlation <- cor(d_inc_econ_2$GDP_growth_quarterly, d_inc_econ_2$pv2p)
+print(correlation)
+cat("\n")
+
+# evaluate the in-sample fit/ r squared
+cat("### In-Sample Fit (R-squared):\n")
+r_squared <- summary(reg_econ_2)$r.squared
+print(r_squared)
+cat("\n")
+
+# plot residuals
+plot(d_inc_econ_2$year, d_inc_econ_2$pv2p, type = "l",
+     main = "Residual Plot: True Y (Line), Predicted Y (dot) for Each Year",
+     xlab = "Year", 
+     ylab = "National Popular Vote Share")
+points(d_inc_econ_2$year, predict(reg_econ_2, d_inc_econ_2), col = "purple")
+
+# MSE, hard to interpret on its own, need to compare to other models
+cat("### Mean Squared Error (MSE):\n")
+mse <- mean((reg_econ_2$model$pv2p - reg_econ_2$fitted.values)^2)
+print(mse)
+cat("\n")
+
+# RMSE, helpful with outliers
+cat("### Root Mean Squared Error (RMSE):\n")
+rmse <- sqrt(mse)
+print(rmse)
+cat("\n")
+
+# Model Testing: Cross-Validation (1000 Runs)
+out_samp_errors <- sapply(1:1000, function(i) {
+  years_out_samp <- sample(d_inc_econ_2$year, 9) 
+  mod <- lm(pv2p ~ GDP_growth_quarterly, 
+            d_inc_econ_2[!(d_inc_econ_2$year %in% years_out_samp),])
+  out_samp_pred <- predict(mod, d_inc_econ_2[d_inc_econ_2$year %in% years_out_samp,])
+  out_samp_truth <- d_inc_econ_2$pv2p[d_inc_econ_2$year %in% years_out_samp]
+  mean(out_samp_pred - out_samp_truth)
+})
+
+cat("### Mean Absolute Cross-Validation Error:\n")
+mean_abs_error <- mean(abs(out_samp_errors))
+print(mean_abs_error)
+cat("\n")
+
+hist(out_samp_errors, main = "Histogram of Cross-Validation Errors Q2 GDP",
+     xlab = "Cross-Validation Error", ylab = "Frequency")
+```
+
+
+```{r}
+####----------------------------------------------------------#
+#### 2024 Prediction: Q2 GDP National
+####----------------------------------------------------------#
+# Sequester 2024 data.
+GDP_new <- d_fred |> 
+  filter(year == 2024 & quarter == 2) |> 
+  select(GDP_growth_quarterly)
+
+# Predict uncertainty.
+# makes 95% confidence interval unknown what type of distribution 
+predict(reg_econ_2, GDP_new, interval = "prediction")
+```
+
+RDI Q2
+```{r}
+####----------------------------------------------------------#
+#### National Variable Scatterplot: Q2 RDPI
+####----------------------------------------------------------#
+
+# fit a bivariate OLS to the data
+reg_econ_2 <- lm(pv2p ~ RDPI_growth_quarterly, 
+                         data = d_inc_econ_2)
+
+# scatterplot of GDP versus pv2p
+d_inc_econ_2 |> 
+  ggplot(aes(x = RDPI_growth_quarterly, y = pv2p, label = year)) + 
+  geom_text() + 
+  geom_smooth(method = "lm", formula = y ~ x, color = "green", fill = "lightgreen") +
+  geom_hline(yintercept = 50, lty = 2) + 
+  geom_vline(xintercept = 0.01, lty = 2) + 
+  labs(x = "Second Quarter RDPI Growth (%)", 
+       y = "Incumbent Party's National Popular Vote Share", 
+       title = "Q2 RDPI Growth vs Incumbent National Popular Vote Share") + 
+  scatterplot_theme
+```
+
+```{r}
+####----------------------------------------------------------#
+#### National Variable Numbers and Evaluation: Q2 RDPI
+####----------------------------------------------------------#
+# summary of OLS results
+cat("### Summary of OLS Results:\n")
+print(summary(reg_econ_2))
+cat("\n")
+
+# correlation between popular vote and Q2 RDPI
+cat("### Correlation Between Popular Vote and Q2 RDPI:\n")
+correlation <- cor(d_inc_econ_2$RDPI_growth_quarterly, d_inc_econ_2$pv2p)
+print(correlation)
+cat("\n")
+
+# evaluate the in-sample fit/ r squared
+cat("### In-Sample Fit (R-squared):\n")
+r_squared <- summary(reg_econ_2)$r.squared
+print(r_squared)
+cat("\n")
+
+# plot residuals
+plot(d_inc_econ_2$year, d_inc_econ_2$pv2p, type = "l",
+     main = "Residual Plot: True Y (Line), Predicted Y (dot) for Each Year",
+     xlab = "Year", 
+     ylab = "National Popular Vote Share")
+points(d_inc_econ_2$year, predict(reg_econ_2, d_inc_econ_2), col = "purple")
+
+# MSE, hard to interpret on its own, need to compare to other models
+cat("### Mean Squared Error (MSE):\n")
+mse <- mean((reg_econ_2$model$pv2p - reg_econ_2$fitted.values)^2)
+print(mse)
+cat("\n")
+
+# RMSE, helpful with outliers
+cat("### Root Mean Squared Error (RMSE):\n")
+rmse <- sqrt(mse)
+print(rmse)
+cat("\n")
+
+# Model Testing: Cross-Validation (1000 Runs)
+out_samp_errors <- sapply(1:1000, function(i) {
+  years_out_samp <- sample(d_inc_econ_2$year, 9) 
+  mod <- lm(pv2p ~ RDPI_growth_quarterly, 
+            d_inc_econ_2[!(d_inc_econ_2$year %in% years_out_samp),])
+  out_samp_pred <- predict(mod, d_inc_econ_2[d_inc_econ_2$year %in% years_out_samp,])
+  out_samp_truth <- d_inc_econ_2$pv2p[d_inc_econ_2$year %in% years_out_samp]
+  mean(out_samp_pred - out_samp_truth)
+})
+
+cat("### Mean Absolute Cross-Validation Error:\n")
+mean_abs_error <- mean(abs(out_samp_errors))
+print(mean_abs_error)
+cat("\n")
+
+hist(out_samp_errors, main = "Histogram of Cross-Validation Errors Q2 RDPI",
+     xlab = "Cross-Validation Error", ylab = "Frequency")
+```
+
+
+```{r}
+####----------------------------------------------------------#
+#### 2024 Prediction: Q2 RDPI National
+####----------------------------------------------------------#
+# Sequester 2024 data.
+GDP_new <- d_fred |> 
+  filter(year == 2024 & quarter == 2) |> 
+  select(RDPI_growth_quarterly)
+
+# Predict uncertainty.
+# makes 95% confidence interval unknown what type of distribution 
+predict(reg_econ_2, GDP_new, interval = "prediction")
+```
+
+RDPI
+```{r}
+####----------------------------------------------------------#
+#### National Variable Scatterplot: RDPI
+####----------------------------------------------------------#
+
+# fit a bivariate OLS to the data
+reg_econ_2 <- lm(pv2p ~ RDPI, 
+                         data = d_inc_econ_2)
+
+# scatterplot of GDP versus pv2p
+d_inc_econ_2 |> 
+  ggplot(aes(x = RDPI, y = pv2p, label = year)) + 
+  geom_text() + 
+  geom_smooth(method = "lm", formula = y ~ x, color = "green", fill = "lightgreen") +
+  geom_hline(yintercept = 50, lty = 2) + 
+  geom_vline(xintercept = 0.01, lty = 2) + 
+  labs(x = "RDPI ($)", 
+       y = "Incumbent Party's National Popular Vote Share", 
+       title = "RDPI vs Incumbent National Popular Vote Share") + 
+  scatterplot_theme
+```
+
+```{r}
+####----------------------------------------------------------#
+#### National Variable Numbers and Evaluation: RDPI
+####----------------------------------------------------------#
+# summary of OLS results
+cat("### Summary of OLS Results:\n")
+print(summary(reg_econ_2))
+cat("\n")
+
+# correlation between popular vote and Q2 RDPI
+cat("### Correlation Between Popular Vote and RDPI:\n")
+correlation <- cor(d_inc_econ_2$RDPI, d_inc_econ_2$pv2p)
+print(correlation)
+cat("\n")
+
+# evaluate the in-sample fit/ r squared
+cat("### In-Sample Fit (R-squared):\n")
+r_squared <- summary(reg_econ_2)$r.squared
+print(r_squared)
+cat("\n")
+
+# plot residuals
+plot(d_inc_econ_2$year, d_inc_econ_2$pv2p, type = "l",
+     main = "Residual Plot: True Y (Line), Predicted Y (dot) for Each Year",
+     xlab = "Year", 
+     ylab = "National Popular Vote Share")
+points(d_inc_econ_2$year, predict(reg_econ_2, d_inc_econ_2), col = "purple")
+
+# MSE, hard to interpret on its own, need to compare to other models
+cat("### Mean Squared Error (MSE):\n")
+mse <- mean((reg_econ_2$model$pv2p - reg_econ_2$fitted.values)^2)
+print(mse)
+cat("\n")
+
+# RMSE, helpful with outliers
+cat("### Root Mean Squared Error (RMSE):\n")
+rmse <- sqrt(mse)
+print(rmse)
+cat("\n")
+
+# Model Testing: Cross-Validation (1000 Runs)
+out_samp_errors <- sapply(1:1000, function(i) {
+  years_out_samp <- sample(d_inc_econ_2$year, 9) 
+  mod <- lm(pv2p ~ RDPI, 
+            d_inc_econ_2[!(d_inc_econ_2$year %in% years_out_samp),])
+  out_samp_pred <- predict(mod, d_inc_econ_2[d_inc_econ_2$year %in% years_out_samp,])
+  out_samp_truth <- d_inc_econ_2$pv2p[d_inc_econ_2$year %in% years_out_samp]
+  mean(out_samp_pred - out_samp_truth)
+})
+
+cat("### Mean Absolute Cross-Validation Error:\n")
+mean_abs_error <- mean(abs(out_samp_errors))
+print(mean_abs_error)
+cat("\n")
+
+hist(out_samp_errors, main = "Histogram of Cross-Validation Errors RDPI",
+     xlab = "Cross-Validation Error", ylab = "Frequency")
+```
+
+
+```{r}
+####----------------------------------------------------------#
+#### 2024 Prediction: RDPI National
+####----------------------------------------------------------#
+# Sequester 2024 data.
+GDP_new <- d_fred |> 
+  filter(year == 2024 & quarter == 2) |> 
+  select(RDPI)
+
+# Predict uncertainty.
+# makes 95% confidence interval unknown what type of distribution 
+predict(reg_econ_2, GDP_new, interval = "prediction")
+```
+
+### State Level Predictors
+State Level Predictors
+- 2024 unemployment data state by state from fred, does it improve predictive power compared to national data
+
+Insights from Further Literature 
+- Rational versus sociotropic voting, does it depend on aggregate or local conditions 
+- discussion of literature on rational and sociotropic, economic fundamentals
+
+**Current Forecast: Harris XXX - Trump XXX**
+
+### Data Sources
+- Popular vote by candidate, 1948-2020
+- FRED economic data, c.1927-2024
+- BEA economic data, 1947-2024
