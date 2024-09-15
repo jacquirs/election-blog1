@@ -126,18 +126,18 @@ Before this analysis, I will note decisions I have made in restricting the data.
 
 
 ### National Economic Predictors
-National economic variables and their relationship to popular vote outcomes can define the economic model of voting behavior. Looking specifically at quarter two results in election years across of variety of government measured variables-- quarter two due research [compiled by Achen and Bartels](https://muse-jhu-edu.ezp-prod1.hul.harvard.edu/book/64646) on the retrospective model noting that recent events have more impact on voting decisions-- I will determine which predictors provide worthwhile insight and could be used to predict 2024 results. The variables I will examine include 
+National economic variables and their relationship to popular vote outcomes can help define the economic model of voting behavior. Specifically focusing on quarter two results in election years across of variety of economic variables-- quarter two based on research [compiled by Achen and Bartels](https://muse-jhu-edu.ezp-prod1.hul.harvard.edu/book/64646) on the retrospective model noting that recent events have more impact on voting decisions-- I will identify which predictors offer valuable insights for forecasting 2024 results. The variables to be examined are: 
 
-_GDP: gross domestic product in billions_
-_GDP Growth Q2: quarterly GDP growth in Q2_
-_RDPI: real disposable personal income in dollars_
-_RDPI Growth Q2: quarterly RDPI growth in Q2_
-_CPI: consumer price index in dollars_
-_Unemployment: unemployment rate as a percent_
-_SP500 close, open, high, low, adjusted close, and volume: SP500 values in dollars_
-_DPI: disposable personal income_
+_GDP:_ gross domestic product (billions)
+_GDP Growth Q2:_ quarterly GDP growth in Q2
+_RDPI:_ real disposable personal income ($)
+_RDPI Growth Q2:_ quarterly RDPI growth in Q2
+_CPI:_ consumer price index ($)
+_Unemployment:_ unemployment rate (%)
+_SP500:_ S&P 500 index close, open, high, low, adjusted close, volume ($)
+_DPI:_ disposable personal income ($)
 
-Per in-class explorations of the best predictive economic fundamentals, I will begin by examining bivariate regression models using GDP growth and RDPI growth quarterly. 
+Based on in-class explorations of effective predictive economic fundamentals, I will begin with bivariate regression models using GDP growth and RDPI growth for Q2.
 
 ```{r}
 ####----------------------------------------------------------#
@@ -362,11 +362,11 @@ RDPI_growth_new <- d_fred |>
 predict(reg_econ_2, RDPI_growth_new, interval = "prediction")
 ```
 
-Analyzing the fit of these two bivariate regression models, it is important to note that neither is particularly strong objectively, as evidenced by the in sample fit. Using RDPI growth only accounts for 11.15% of the variance in incumbent popular vote share($R^2$ metric). Quarter two GDP growth does slightly better, explaining for 32.48% of the variation. While, as I will show below, these are the top two predictors in terms of in-sample fit of the national economic variables described, their overall performance does not indicate strong predictive power. 
+Analyzing the fit of these two bivariate regression models, neither shows strong results and in-sample fit. RDPI growth explains only 11.15% of the variance in incumbent popular vote share ($R^2 metric$), while GDP growth fares slightly better at 32.48%. Despite being the top predictors relatively in terms of in-sample fit, as I will show below, their overall performance does not indicate strong predictive power. 
 
-Additionally, looking at the correlation between these predictors and the popular vote outcomes 1952-2016, both have a moderately strong positive correlation (0.569918 for GDP growth and 0.3338966 for RDPI growth). However, correlation does not imply causation, and as such there is little evidence for a direct causal relationship between either of these economic indicators and popular vote share on their own. There are likely additional omitted variables that I cannot control, as well as  a multivariate relationship possible. It is also worth noting that these models do even worse when including 2020, an outlier year in economic metrics. 
+Additionally, the correlation between these predictors and the popular vote outcomes (1952-2016) is moderately strong and positive: 0.569918 for GDP growth and 0.3338966 for RDPI growth. However, correlation does not imply causation, and there is little evidence of a direct causal relationship between these economic indicators on their own and popular vote share. Additional omitted variables and multivariate relationships likely play a role in the votes that I cannot control for. Notably, the models perform worse when including the 2020 economic outlier year.
 
-A summary of the relationships between these and other national economic variables used as predictors is shown below.
+A summary of the relationships of other national economic variables used as predictors is shown below.
 
 ```{r}
 ####----------------------------------------------------------#
