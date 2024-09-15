@@ -123,9 +123,9 @@ Before this analysis, I will note decisions restricting the data. I will analyze
 
 
 ### National Economic Predictors
-National economic variables and their relationship to popular vote outcomes can help define the economic model of voting behavior. Focusing on quarter two results in election years across of variety of economic variables-- based on research [compiled by Achen and Bartels](https://muse-jhu-edu.ezp-prod1.hul.harvard.edu/book/64646) on the retrospective model noting that recent events impact voting decisions more-- I will identify which predictors offer insights for forecasting 2024 results. The variables examined are: GDP, GDP Growth Q2, RDPI, RDPI Growth Q2, CPI, unemployment rate, SP500 values, and DPI. 
+National economic variables and their relationship to popular vote outcomes help define the economic model of voting behavior. Focusing on Q2 results in election years across economic variables-- based on research [compiled by Achen and Bartels](https://muse-jhu-edu.ezp-prod1.hul.harvard.edu/book/64646) on the retrospective model noting that recent events impact voter decisions more-- I will identify which predictors offer insights for forecasting 2024 results. Variables examined include GDP, GDP Growth Q2, RDPI, RDPI Growth Q2, CPI, unemployment rate, SP500 values, and DPI. 
 
-Based on in-class explorations of effective independent variable choices, I begin with bivariate regression models using GDP growth and RDPI growth.
+Based on in-class analysis of effective independent variables, I begin with bivariate regression models using GDP growth and RDPI growth.
 
 ```{r}
 ####----------------------------------------------------------#
@@ -350,9 +350,9 @@ RDPI_growth_new <- d_fred |>
 predict(reg_econ_2, RDPI_growth_new, interval = "prediction")
 ```
 
-Analyzing the two bivariate regressions, neither shows good in-sample fit. RDPI growth explains only 11.15% of the variance in incumbent popular vote share, while GDP growth fares slightly better at 32.48%. Despite being the best two predictors, as shown below, their overall performance does not indicate strong predictive power. 
+Neither regression shows good in-sample fit: RDPI growth explains only 11.15% of the variance in incumbent popular vote share, while GDP growth fares slightly better at 32.48%. Their overall performance indicate limited predictive power, despite being the best two predictors as shown below.
 
-Additionally, the correlation between these predictors and the popular vote 1952-2016 is moderately strong and positive: 0.569918 for GDP growth and 0.3338966 for RDPI growth. However, correlation does not imply causation, and there is little evidence of direct causal relationships between these economic indicators on their own and popular vote share. Additional omitted variables and multivariate relationships likely play a role that I cannot control for. Notably, the models perform worse when including the outlier 2020 data.
+Additionally, the correlation between these predictors and the popular vote (1952-2016) is moderately strong and positive: 0.570 for GDP growth and 0.334 for RDPI growth. However, correlation does not imply causation, and there is little evidence of direct causal relationships between these single predictors and popular vote share. Additional omitted variables and multivariate relationships likely play a role that I cannot control for. Notably, the models perform worse when including the outlier 2020 data.
 
 A summary of the national economic variables used as predictors is below:
 
@@ -444,9 +444,9 @@ kable(results) %>%
 ```
 
 
-Evaluating these models indicates that none are particularly strong incumbent vote models or statistically significant in predicting future values. All 13 regressions forecast Harris' popular vote percentage between 44.216% and 51.973%, but with 95% confidence intervals including 50%, indicating non-significant results. Additional factors are also needed to understand how Harris may fare given the candidate-swap, a complication I cannot accurately adjust for in bivariate cases. 
+None of the models are particularly strong for the incumbent vote or statistically significant in predicting future values. All 13 regressions forecast Harris' popular vote percentage between 44.216% and 51.973%, but with 95% confidence intervals including 50%, indicating non-significant results. Additional factors are also needed to understand Harris' performance given the candidate-swap, a complication I cannot accurately adjust for in bivariate cases. 
 
-Among the models, Q2 GDP growth performs best across evaluations, showing the highest in-sample fit, smallest root mean squared error, and smallest mean absolute error in out-of-sample cross-validation. This is counter to in-class results, which suggested RDPI growth is the better predictor of incumbent popular vote margin. The predictions for 2024 are also sensitive to predictor choice, suggesting that while economic fundamentals may influence incumbent vote share, there is not a direct bivariate relationship. This raises questions about whether economic fundamentals impact voting directly or indirectly and whether sociotropic or individual voting is more significant.
+Among the models, Q2 GDP growth performs best across evaluations, showing the highest in-sample fit, smallest root mean squared error, and smallest mean absolute error in out-of-sample cross-validation. This contrasts with in-class results, which suggested RDPI growth as the better predictor of incumbent vote margin. Predictions for 2024 are also sensitive to predictor choice, so while economic fundamentals may influence vote share, there is not a direct bivariate relationship. This raises questions about whether economic fundamentals impact voting directly or indirectly, and whether sociotropic or individual voting is more significant.
 
 
 ### State Level Predictors
@@ -665,9 +665,9 @@ plotly_map <- ggplotly(base_map, tooltip = "text")
 plotly_map
 ```
 
-Visualizing these 48 regressions (excluding Hawaii, Alaska, and Washington DC due to data limitations) shows varied in-sample fit values similar to that across national economic fundamentals. State-wide quarter two unemployment rate from elections 1976-2016 has varying the correlation to incumbent vote share-- stronger than national GDP growth was in states like North Dakota and nearly zero in states like Michigan.
+Visualizing these 48 regressions (excluding Hawaii, Alaska, and Washington DC due to data limitations) shows varied in-sample fit values similar to that across national economic fundamentals. State-wide Q2 unemployment rate from elections 1976-2016 has varying correlation to incumbent vote share-- stronger than national GDP growth in states like North Dakota and near-zero in states like Michigan.
 
-Without state-level GDP growth readily available, I cannot test whether it performs better in sociotropic or individual settings. The state-by-state unemployment rate, with an average in-sample fit of 0.132, outperforms the national unemployment rate's near-zero $R^2$ but falls short to national GDP growth.
+Without state-level GDP growth data, I cannot compare its performance in sociotropic or individual settings. The state-by-state unemployment rate, with an average in-sample fit of 0.132, outperforms the national unemployment rate's near-zero $R^2$ but falls short to national GDP growth.
 
 ```{r, include = FALSE}
 ####----------------------------------------------------------#
@@ -706,7 +706,7 @@ print(average_prediction)
 
 ```
 
-Note that each regression has only twelve data-points, likely leading to model overfitting. This issue also affects the national economic data with its slightly larger dataset. The limited number of elections makes it challenging to develop a model with strong out-of-sample performance.
+Note that each regression has only twelve data points, likely leading to model overfitting. This issue also affects the national data, where the limited number of elections makes strong out-of-sample performance challenging.
 
 
 ### Individual Versus Sociotropic Voting Patterns
