@@ -446,7 +446,7 @@ kable(results) %>%
 
 None of the models are particularly strong for the incumbent vote or statistically significant in predicting future values. All 13 regressions forecast Harris' popular vote percentage between 44.216% and 51.973%, but with 95% confidence intervals including 50%, indicating non-significant results. Additional factors are also needed to understand Harris' performance given the candidate-swap, a complication I cannot accurately adjust for in bivariate cases. 
 
-Among the models, Q2 GDP growth performs best across evaluations, showing the highest in-sample fit, smallest root mean squared error, and smallest mean absolute error in out-of-sample cross-validation. This contrasts with in-class results, which suggested RDPI growth as the better predictor of incumbent vote margin. Predictions for 2024 are also sensitive to predictor choice, so while economic fundamentals may influence vote share, there is not a direct bivariate relationship. This raises questions about whether economic fundamentals impact voting directly or indirectly, and whether sociotropic or individual voting is more significant.
+Among the models, Q2 GDP growth performs best across evaluations, showing the highest in-sample fit, smallest root mean squared error, and smallest mean absolute error in out-of-sample cross-validation. This contrasts in-class results, which suggested RDPI growth as the better predictor of incumbent margin. Predictions are also sensitive to predictor choice, so while economic fundamentals may influence vote share, there is not a direct bivariate relationship. This raises questions about whether economic fundamentals impact voting directly or indirectly, and whether sociotropic or individual voting is more significant.
 
 
 ### State Level Predictors
@@ -665,9 +665,9 @@ plotly_map <- ggplotly(base_map, tooltip = "text")
 plotly_map
 ```
 
-Visualizing these 48 regressions (excluding Hawaii, Alaska, and Washington DC due to data limitations) shows varied in-sample fit values similar to that across national economic fundamentals. State-wide Q2 unemployment rate from elections 1976-2016 has varying correlation to incumbent vote share-- stronger than national GDP growth in states like North Dakota and near-zero in states like Michigan.
+Visualizing these 48 regressions (excluding Hawaii, Alaska, and Washington DC due to data limitations) shows varied in-sample fit values similar to that across national economic fundamentals. State-wide Q2 unemployment rate from 1976-2016 has varying correlation to incumbent vote share-- stronger than national GDP growth in states like North Dakota and near-zero in states like Michigan.
 
-Without state-level GDP growth data, I cannot compare its performance in sociotropic or individual settings. The state-by-state unemployment rate, with an average in-sample fit of 0.132, outperforms the national unemployment rate's near-zero $R^2$ but falls short to national GDP growth.
+Without state-level GDP growth data, I cannot compare its performance in sociotropic vs individual settings. The state-by-state unemployment rate, with an average in-sample fit of 0.132, outperforms the national unemployment rate's near-zero $R^2$ but falls short to national GDP growth.
 
 ```{r, include = FALSE}
 ####----------------------------------------------------------#
@@ -712,17 +712,17 @@ Note that each regression has only twelve data points, likely leading to model o
 ### Individual Versus Sociotropic Voting Patterns
 The results suggest that sociotropic voting, where people base their choices on national economic conditions affecting others, is a more likely explanation in the retrospective economic voting model than individual-based voting. This aligns with findings on the importance of national over state economic conditions.
 
-As noted by [Achen and Bartels in "Democracy for Realists: Why Elections Do Not Produce Responsive Government"](https://muse-jhu-edu.ezp-prod1.hul.harvard.edu/book/64646), voters may be retrospective but focus on short-term economic behaviors to evaluate their choices, supporting the use of Q2 election-year metrics. [Scholars Lenz and Healy](https://www.journals.uchicago.edu/doi/abs/10.1086/692785) also point out that economic evaluations during election years may favor economic manipulators over true leaders, providing insight into manipulation of voter decision-making. 
+As noted by [Achen and Bartels in "Democracy for Realists"](https://muse-jhu-edu.ezp-prod1.hul.harvard.edu/book/64646), voters may be retrospective but focus on short-term economic outcomes to make choices, supporting the use of Q2 election-year metrics. [Scholars Lenz and Healy](https://www.journals.uchicago.edu/doi/abs/10.1086/692785) also point out that economic evaluations during election years may favor economic manipulators over true leaders, asking whether voter decision-making is democratic. 
 
-It is also important to consider how voter behaviors have changed over time. Voters may have shifted away from retrospective behavior because of party polarization. Evidence from [Dassoneville and Tien's "Introduction to Forecasting the 2020 US Elections"](https://www.cambridge.org/core/journals/ps-political-science-and-politics/article/abs/introduction-to-forecasting-the-2020-us-elections/78235400F6BB7E2E370214D1A2307028) highlights that such changes and shocks to economic variables may throw off predictions.
+It is also important to consider how voter behaviors have changed. Voters may have shifted away from retrospective behavior because of party polarization. Evidence from [Dassoneville and Tien](https://www.cambridge.org/core/journals/ps-political-science-and-politics/article/abs/introduction-to-forecasting-the-2020-us-elections/78235400F6BB7E2E370214D1A2307028) highlights that such changes and economic shocks may throw off predictions.
 
-Taken together, this exploration and analysis of the literature leads to me use national GDP growth in Q2 as the predictor for the 2024 forecast:
+Together, this exploration and literature analysis leads to me use national Q2 GDP growth as the predictor for my forecast.
 
 **Current Forecast: Harris 51.585% - Trump 48.415%**
 
-with a lack of statistical significance.
+(not statistically significant)
 
 ### Data Sources
-- Popular Vote by Candidate and State, 1948-2020
+- Popular Vote by Candidate, State, 1948-2020
 - FRED Economic Data, 1927-2024
 - BEA Economic Data, 1947-2024
