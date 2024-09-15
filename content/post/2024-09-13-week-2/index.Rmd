@@ -130,12 +130,12 @@ National economic variables and their relationship to popular vote outcomes can 
 
 _GDP:_ gross domestic product (billions)
 _GDP Growth Q2:_ quarterly GDP growth in Q2
-_RDPI:_ real disposable personal income ($)
+_RDPI:_ real disposable personal income (dollars)
 _RDPI Growth Q2:_ quarterly RDPI growth in Q2
-_CPI:_ consumer price index ($)
+_CPI:_ consumer price index (dollars)
 _Unemployment:_ unemployment rate (%)
-_SP500:_ S&P 500 index close, open, high, low, adjusted close, volume ($)
-_DPI:_ disposable personal income ($)
+_SP500:_ S&P 500 index close, open, high, low, adjusted close, volume (dollars)
+_DPI:_ disposable personal income (dollars)
 
 Based on in-class explorations of effective predictive economic fundamentals, I will begin with bivariate regression models using GDP growth and RDPI growth for Q2.
 
@@ -456,14 +456,13 @@ kable(results) %>%
 ```
 
 
-Evaluating each of these models indicates that none are particularly strong in their ability to describe the incumbent popular vote data over time or significant in their ability to predict additional values for the 2024 election that indicate one winner over the other. While all 13 regressions predict Harris' popular vote percentage as the candidate for the incumbent party will be 44.216% to 51.973%, it is worth noting that all of the 95% confidence intervals for these values contain 50%, leading to results that are not significant. Additional factors are also needed to understand how Harris as the technical incumbent but not current president may fare within these models, a variable we cannot accurately reflect with these bivariate cases. 
+Evaluating these models indicates that none are particularly strong in describing incumbent popular vote data over time or significant in their ability to predict future values for the 2024 election that indicate one winner over the other. All 13 regressions forecast Harris' popular vote percentage between 44.216% and 51.973%, but with 95% confidence intervals including 50%, indicating non-significant results. Additional factors are also needed to understand how Harris as the technical incumbent but not current president may fare within these models, a variable we cannot accurately reflect with these bivariate cases. 
 
-While no model is particularly good, the best of the above is GDP growth for Q2 in the election year. It fares best in all methods of model evaluation, including in-sample fit with the highest $R^2$, smallest root mean squared error, and smallest mean absolute error after cross validation for out of sample fit. 
+Among the models, Q2 GDP growth in the election year performs the best across all model evaluations, showing the highest in-sample fit/$R^2$, smallest root mean squared error, and smallest mean absolute error in cross-validation for out-of-sample fit. The predictions for 2024 are also sensitive to the choice of predictor, suggesting that while economic fundamentals may influence incumbent vote outcomes, it may not be a direct bivariate relationship as the choice of predictor changes the model. This raises questions about whether economic fundamentals impact voting directly or indirectly and whether national (sociotropic) versus individual economic measures are more significant, an often explored phenomenon in the literature by scholars like [Gregory Markus of the University of Michigan](https://www.jstor.org/stable/2111314).
 
-The 2024 prediction is also sensitive to the change in the predictive variable, pointing out that there may be some relationship between economic fundamentals and incumbent popular vote outcomes, as supported by the literature (LINK), but it may not be a direct bivariate one as the choice of predictor changes the model. This points to the important question of whether economic fundamentals have a direct or indirect effect on an individuals vote choice, as well as whether the national (sociotropic) or individual economic measures matter, an often explored phenomenon in the literature by scholars like [Gregory B. Markus of the University of Michigan](https://www.jstor.org/stable/2111314). 
 
 ### State Level Predictors
-While sociotropic voting would point to national economic variables having a greater impact on the votes of the people and therefore the incumbent vote share, I will also investigate the potential impact of individual considerations. Some voters may take more into account person economic changes rather than national ones, and as such I will explore state level regressions with the predictor of unemployment rate to determine if this improves the predictive power compared to national data.
+While sociotropic voting suggests national economic variables influence incumbent vote share, I will also explore individual economic considerations. Some voters may focus on personal economic changes rather than national trends. To investigate this, I will examine state-level regressions using unemployment rates to see if they provide better predictive power than national data.
 
 ```{r, include = FALSE}
 ####----------------------------------------------------------#
@@ -678,16 +677,16 @@ plotly_map <- ggplotly(base_map, tooltip = "text")
 plotly_map
 ```
 
-Visualizing the results of these 48 regressions above-- excluding Hawaii, Alaska, and Washington DC due to limitations with data available-- a similar variety of in sample fit values to that of the national economic fundamentals appears. While we are only looking at one predictor, which is specifically Q2 unemployment rate in each state in the election year 1976-2016, the predictive power correlationally is stronger than out best predictor on the national level in states like North Dakota and on the other hand near zero in states like Michigan. 
+Visualizing the results from these 48 regressions above (excluding Hawaii, Alaska, and Washington DC due to data limitations) shows varied in-sample fit values similar to national economic fundamentals. While focusing on Q2 unemployment rate in states from elections 1976-2016, the correlation to incumbent vote-share varies-- stronger than national GDP growth was in states like North Dakota and nearly zero in states like Michigan.
 
-Because state level GDP growth data is not readily available, there is no way to test whether that particular predictor does better in a sociotropic or individual setting. The unemployment rate, here with an average in sample fit of 0.132, does much better than the near 0 variance explained by the national unemployment rate, but still points to GDP growth as the best predictor in this case. This is counter to some literature (LINK), which notes the RDPI growth is a much better predictor of incumbent popular vote, but those are not the results found here. 
+Without state-level GDP growth readily available, I cannot test whether it performs better in sociotropic or individual settings. The state-by-state unemployment rate, with an average in-sample fit of 0.132, outperforms the national unemployment rate's near-zero variance but still falls short compared to national GDP growth. This is counter to in-class results, suggesting RDPI growth is a better predictor of incumbent popular vote share, which is not supported by these results.
 
 ```{r, include = FALSE}
 ####----------------------------------------------------------#
 #### 2024 prediction based on the states
 ####----------------------------------------------------------#
 
-# Step 1: Extract 2024 unemployment data and pivot to long format
+# 2024 unemployment data and pivot to long format
 d_unemp_2024 <- d_unemp_q2 %>%
   filter(year == 2024) %>%
   pivot_longer(
@@ -696,20 +695,18 @@ d_unemp_2024 <- d_unemp_q2 %>%
     values_to = "unemployment_rate"
   )
 
-# Step 2: Join with regression results to get slopes
-# Assuming regression_summary contains state, r_squared, and slope
 predictions_2024 <- d_unemp_2024 %>%
   left_join(regression_summary, by = "state") %>%
   mutate(
-    # Calculate the predicted popular vote
+    # calculate the predicted popular vote
     predicted_pv2p = intercept + slope * unemployment_rate,
     
-    # Calculate 95% confidence intervals
+    # calculate 95% confidence intervals
     ci_lower = predicted_pv2p - 1.96 * (slope_se * unemployment_rate),
     ci_upper = predicted_pv2p + 1.96 * (slope_se * unemployment_rate)
   )
-predictions_2024
-# Step 3: Calculate the average predicted popular vote for 2024
+
+# calculate the average predicted popular vote for 2024
 average_prediction <- predictions_2024 %>%
   summarize(
     average_predicted_pv2p = mean(predicted_pv2p, na.rm = TRUE),
@@ -717,30 +714,29 @@ average_prediction <- predictions_2024 %>%
     average_ci_upper = mean(ci_upper, na.rm = TRUE)
   )
 
-# Print the result
 print(average_prediction)
 
 ```
 
-It is worth noting that there are only twelve data points in each regression, most likely leading to over-fitting of these models. This is also a concern with the slightly larger group of national economic fundamentals data points and in general when creating models to predict election outcomes. The small number of applicable elections makes it difficult to fit a model that works well out of sample. 
+Note that each regression has only twelve data points, most likely leading to model overfitting. This issue also affects the national economic fundamentals data even with its slightly larger dataset. The limited number of elections makes it challenging to develop a model with strong out-of-sample performance.
+
 
 ### Individual Versus Sociotropic Voting Patterns
-Given the results above, sociotropic voting, when people vote based on national economic conditions that effect others and not just themselves, is a more likely explanation in the retrospective economic voting model than is individual circumstance based voting. This is consistent with the importance of aggregate over individual conditions as found in (LINK).
+The results suggest that sociotropic voting, where people base their choices on national economic conditions affecting others, is a more likely explanation in the retrospective economic voting model than individual-based voting. This aligns with findings on the importance of aggregate over individual conditions.
 
-It has also been shown in [Achen and Bartels' "Democracy for Realists: Why Elections Do Not Produce Responsive Government"](https://muse-jhu-edu.ezp-prod1.hul.harvard.edu/book/64646) that voters may be retrospective but focus on short terms before elections in order to evaluate their choices, consistent with our choice of Q2 election year metric. As [scholars Lenz and Healy](https://www.journals.uchicago.edu/doi/abs/10.1086/692785) note, this focus on the economy only during election years may select for the best economic manipulators, not leaders, but never-the-less provides insight on how voters use economic conditions to make decisions. 
+As noted by [Achen and Bartels in "Democracy for Realists: Why Elections Do Not Produce Responsive Government"](https://muse-jhu-edu.ezp-prod1.hul.harvard.edu/book/64646), voters may be retrospective but focus on short terms before elections in order to evaluate their choices, supporting the use of Q2 election-year metrics. [Scholars Lenz and Healy](https://www.journals.uchicago.edu/doi/abs/10.1086/692785) also that economic evaluations during election years only may favor economic manipulators over true leaders, providing insight into manipulations of voter decision-making. 
 
-It is also important to consider how predictors and trends in incumbent popular vote may have changed over the period we are examining. It could be that people used to behave retrospectively but perhaps don’t anymore because parties have moved in a way that people won’t flip between them anymore. Evidence from [Dassoneville and Tien's "Introduction to Forecasting the 2020 US Elections"](https://www.cambridge.org/core/journals/ps-political-science-and-politics/article/abs/introduction-to-forecasting-the-2020-us-elections/78235400F6BB7E2E370214D1A2307028) also highlights that economic variables may be effected by shocks which throw off the predictions, one reason why I decided to remove 2020 from all of my regressions above.
+It is also important to consider how predictors and trends in incumbent popular vote may have changed over the period. Voters may have shifted away from retrospective behavior because parties have moved such that  people won’t flip between them anymore. Evidence from [Dassoneville and Tien's "Introduction to Forecasting the 2020 US Elections"](https://www.cambridge.org/core/journals/ps-political-science-and-politics/article/abs/introduction-to-forecasting-the-2020-us-elections/78235400F6BB7E2E370214D1A2307028) highlights that such changes and shocks to economic variables may throw off predictions, which is why I excluded 2020 data from the analysis.
 
-
-Taken together, this exploration and analysis of the literature leads to me use national GDP growth in quarter two before the election as the predictor in my forecast for 2024 results, leading to a prediction of two way popular vote of
+Taken together, this exploration and analysis of the literature leads to me use national GDP growth in Q2 as the predictor for the 2024 forecast:
 
 **Current Forecast: Harris 51.585% - Trump 48.415%**
 
-with a large margin of error and lack of significant result.
+with a lack of statistical significance.
 
 ### Data Sources
 - Popular Vote by Candidate, 1948-2020
 - Popular Vote by State, 1948-2020
-- FRED Economic Data, c.1927-2024
+- FRED Economic Data, 1927-2024
 - BEA Economic Data, 1947-2024
 - FRED Unemployment by State, 1976-2024
