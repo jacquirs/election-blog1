@@ -1,0 +1,46 @@
+---
+title: 'Week 3: Mutlivariate Analyses'
+author: ''
+date: '2024-09-21'
+slug: week-3-mutlivariate-analyses
+categories: []
+tags: []
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r, results = 'hide'}
+# Load libraries
+library(car)
+library(caret)
+library(CVXR)
+library(glmnet)
+library(tidyverse)
+
+```
+
+Review of current forecasting methodologies
+- silver 2024
+- morris 2024
+- fundamentals and poll based models
+
+Regression Methodologies
+- ridge versus lasso versus elastic net
+- ensemble
+- combined with polling data for explanations
+
+Pollster Quality Evaluations and Polling Only Regressions
+- 2016-2024 pollster ratings from FiveThirtyEight. 
+- How much variation is there in pollster quality
+- build a model (or ensemble model) that uses individual polls from 2016 (president_polls_2016.csv),
+2020 (...2020.csv), and 2024 (...2024.csv). How does your model
+compare to the models this week in lab?
+
+Fundamentals and Polling Elastic Net Regression
+- do it 
+
+Future Improvements
+- state by state 
