@@ -1,5 +1,5 @@
 ---
-title: 'Week 3: Mutlivariate Analyses'
+title: 'Week 3: Advanced Regressions for Polling and Fundamentals Models'
 author: ''
 date: '2024-09-21'
 slug: week-3-mutlivariate-analyses
@@ -7,23 +7,165 @@ categories: []
 tags: []
 ---
 
+<script src="{{< blogdown/postref >}}index_files/kePrint/kePrint.js"></script>
+<link href="{{< blogdown/postref >}}index_files/lightable/lightable.css" rel="stylesheet" />
 
 
-<p>Review of current forecasting methodologies
-- silver 2024
-- morris 2024
-- fundamentals and poll based models</p>
-<p>Regression Methodologies
-- ridge versus lasso versus elastic net
-- ensemble
-- combined with polling data for explanations</p>
-<p>Pollster Quality Evaluations and Polling Only Regressions
-- 2016-2024 pollster ratings from FiveThirtyEight.
-- How much variation is there in pollster quality
-- build a model (or ensemble model) that uses individual polls from 2016 (president_polls_2016.csv),
+<p><em>Please note, this week’s blog will be a little more context heavy as I work to establish the building blocks of a model I hope to add onto each week going forward.</em></p>
+<p>This week, I implement new methodologies to build a more complex election forecast model. I begin by examining the differing forecasting methodologies of experienced forecasters, noting areas of potential integration into my own model. Then, looking at the impact of weekly polling data on election outcomes, I apply new regression techniques to better understand their fit as predictors across election years. Finally, I also integrate economic fundamentals into a combined model that will form the basis of my forecasting approach going forward.</p>
+<div id="current-forecasting-methodologies" class="section level3">
+<h3>Current Forecasting Methodologies</h3>
+<p>Many forecasters’ models today are based off of a combination of polling data and economic fundamentals. Two forecasters, G Elliot Morris of 538 and Nate Silver of the Silver Bulletin, have published advanced breakdowns of their modeling techniques. I will review the elements of each, noting potential methods that I have implemented here or could do so in the future.</p>
+<p>G Elliott Morris’s <a href="https://abcnews.go.com/538/538s-2024-presidential-election-forecast-works/story?id=110867585">538 forecast model</a> for the 2024 presidential election employs a sophisticated approach that incorporates polling averages and state correlations through a geometric decay function, emphasizing the interplay of state similarities based on voting behavior, demographics, and geography. The model combines this polling data with a range of economic fundamentals such as employment metrics, consumer sentiment, and inflation to inform its predictions. This combination of fundamentals and polling, with some weighting scheme within and between the two, interests me for further investigation. 538 utilizes Bayesian regression with regularization techniques to manage uncertainty and biases inherent in polling, simulating numerous electoral scenarios through Markov chain Monte Carlo methods– another future area of work in my model, especially on the simulations front.</p>
+<p>In contrast, Nate Silver’s 2020 <a href="https://fivethirtyeight.com/features/how-fivethirtyeights-2020-presidential-forecast-works-and-whats-different-because-of-covid-19/">(538)</a> and 2024 <a href="https://www.natesilver.net/p/model-methodology-2024">(Silver Bulletin)</a> models adopt a more dynamic framework that adjusts for contemporary uncertainties, particularly those arising from the COVID-19 pandemic in the 2020 model and changes in voter turnout patterns. Silver was not a fan of The Economists’ model when Morris worked there, and additionally <a href="https://www.natesilver.net/p/why-i-dont-buy-538s-new-election">criticized the 538 model</a> predicting a win for Biden post-debate despite changes in polling towards Trump. Silver’s election forecast combines polling data with factors like economic conditions, incumbency, and demographic trends to predict outcomes. It now adjusts for shifts in voter turnout dynamics, reflecting that Democrats currently have more engaged voters, and incorporates Robert F. Kennedy Jr. as a significant third-party candidate, allowing him to impact the race (pre-dropout). It adjusts for polling quality and biases, while also accounting for uncertainty through factors like national shifts and state-level errors. The model simulates thousands of election scenarios, giving more weight to polling closer to Election Day. Recent changes maintain the model’s core methodology while improving accuracy based on recent voting patterns.</p>
+<p>Through these examples, my goal is to achieve a model that can combine factors like polling data, incumbency, and economic fundamentals, as well as use Bayesian models, weighting schemes, and simulation to determine winners in each state.</p>
+</div>
+<div id="recent-polling-trends-and-the-use-of-polling-in-models" class="section level3">
+<h3>Recent Polling Trends and the Use of Polling in Models</h3>
+<p>Using polls to reliably determine popular judgement dates back to Francis Galton’s 1907 article <a href="https://www.nature.com/articles/075450a0.pdf">Vox populi</a>. Today, thousands of polls are conducted each election cycle to understand the state of the race at a given time. But with so many complications in measuring the behavior of voters, it is extremely difficult for a poll to get the “right” answer– that is, a single poll can’t tell us the what the outcome of the election in some number of days will be.</p>
+<p>These difficulties of polling are highlighted in Gelman and King’s <a href="https://www-jstor-org.ezp-prod1.hul.harvard.edu/stable/194212?sid=primo">“Why are american presidential election campaign polls so variable when votes are so predictable?”</a> While the results of polls may fluctuate during a campaign due to specific events, the overall election outcome remains largely predictable based on fundamental political factors. Even predictable events like conventions can cause swings in polls, though these do not have a lasting impact. Voters may appear to change their minds during the campaign, they often make their final decisions based on rational, long-standing preferences instead of short term ones often emphasized by the media. The polling swings are temporary and often do not reflect lasting changes in voter intention.</p>
+<p>For an example of this, we can look at
+GRAPH</p>
+</div>
+<div id="pollster-quality-evaluation" class="section level3">
+<h3>Pollster Quality Evaluation</h3>
+<p>Different pollster methodologies and decisions can impact the accuracy of their polls. To account for this, 538 creates pollster ratings called “pollscores” which account for bias and error, and also look at transparency, number of polls, and percent partisan work. Looking at the variation in pollster quality can provide valuable information about the quality of the polling data I work with below and throughout the rest of my models.</p>
+<table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Metric
+</th>
+<th style="text-align:left;">
+Mean
+</th>
+<th style="text-align:left;">
+Lower_CI
+</th>
+<th style="text-align:left;">
+Upper_CI
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Bias PPM
+</td>
+<td style="text-align:left;">
+-0.02
+</td>
+<td style="text-align:left;">
+-0.057
+</td>
+<td style="text-align:left;">
+0.017
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Error PPM
+</td>
+<td style="text-align:left;">
+0.067
+</td>
+<td style="text-align:left;">
+0.039
+</td>
+<td style="text-align:left;">
+0.096
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pollscore
+</td>
+<td style="text-align:left;">
+0.016
+</td>
+<td style="text-align:left;">
+-0.013
+</td>
+<td style="text-align:left;">
+0.046
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Numeric Grade
+</td>
+<td style="text-align:left;">
+1.744/3
+</td>
+<td style="text-align:left;">
+1.702/3
+</td>
+<td style="text-align:left;">
+1.786/3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Weighted Avg Transparency
+</td>
+<td style="text-align:left;">
+4.05/10
+</td>
+<td style="text-align:left;">
+3.894/10
+</td>
+<td style="text-align:left;">
+4.207/10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Percent Partisan Work
+</td>
+<td style="text-align:left;">
+18.44%
+</td>
+<td style="text-align:left;">
+15.86%
+</td>
+<td style="text-align:left;">
+21.03%
+</td>
+</tr>
+</tbody>
+</table>
+<p>These summary statistics for pollster quality reveal the limits of polling data. The current number one ranked pollster (The New York Times/Siena College) has a pollscore of -1.5, the best possible, no partisan work, and 8.7/10 transparency score. It is worth noting that the Predictive Plus-Minus for pollster’s absolute error, or error_ppm, is calculated as <span class="math inline">\(predictive\ error = adjusted\ error * (n / (n + n_{shrinkage})) + (group\ error\ prior) * (n_{shrinkage} / (n + n_{shrinkage}))\)</span>, and Predictive Plus-Minus for pollster bias, or bias_ppm, is calculated as <span class="math inline">\(predictive\ bias = adjusted\ bias * (n / (n + n_{shrinkage})) + (group\ error\ prior) * (n_{shrinkage} / (n + n_{shrinkage}))\)</span>, per <a href="https://abcnews.go.com/538/538s-pollster-ratings-work/story?id=105398138">538 methodology</a>, where n is the time-weighted number of polls the pollster has released and n_shrinkage is an integer that represents the effective number of polls’ worth of weight to put on the prior.</p>
+<p>Through these complicated formulas, it is clear that pollster ratings are not particularly inspiring in accuracy of their poll results, at least according to these ratings. It is worth noting that transparency, which is a part of 538’s model, is not necessarily a direct correlate with accuracy of results, though this is difficult to test on a poll by poll basis given the lack of true comparison values.</p>
+</div>
+<div id="a-brief-note-on-regression-methodologies" class="section level3">
+<h3>A Brief Note on Regression Methodologies</h3>
+<ul>
+<li>ridge versus lasso versus elastic net</li>
+<li>ensemble</li>
+<li>combined with polling data for explanations</li>
+</ul>
+</div>
+<div id="polling-based-regression-models" class="section level3">
+<h3>Polling-Based Regression Models</h3>
+<ul>
+<li>build a model (or ensemble model) that uses individual polls from 2016 (president_polls_2016.csv),
 2020 (…2020.csv), and 2024 (…2024.csv). How does your model
-compare to the models this week in lab?</p>
-<p>Fundamentals and Polling Elastic Net Regression
-- do it</p>
-<p>Future Improvements
-- state by state</p>
+compare to the models this week in lab?
+GRAPH x2</li>
+</ul>
+</div>
+<div id="combined-fundamentals-and-polling-elastic-net-regression-model" class="section level3">
+<h3>Combined Fundamentals and Polling Elastic Net Regression Model</h3>
+<ul>
+<li>do it</li>
+<li>in future state by state
+REGRESSION TABLE/ EVAL RESULTS</li>
+</ul>
+</div>
+<div id="data-sources" class="section level3">
+<h3>Data Sources</h3>
+<ul>
+<li>Polling average datasets national, state (FiveThirtyEight)</li>
+<li>Pollster aggregate ratings (FiveThirtyEight)</li>
+</ul>
+</div>

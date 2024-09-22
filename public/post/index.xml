@@ -9,11 +9,11 @@
     <lastBuildDate>Sat, 21 Sep 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://example.org/post/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Week 3: Mutlivariate Analyses</title>
+      <title>Week 3: Advanced Regressions for Polling and Fundamentals Models</title>
       <link>https://example.org/post/2024/09/21/week-3-mutlivariate-analyses/</link>
       <pubDate>Sat, 21 Sep 2024 00:00:00 +0000</pubDate>
       <guid>https://example.org/post/2024/09/21/week-3-mutlivariate-analyses/</guid>
-      <description>&lt;p&gt;Review of current forecasting methodologies&#xD;&#xA;- silver 2024&#xD;&#xA;- morris 2024&#xD;&#xA;- fundamentals and poll based models&lt;/p&gt;&#xD;&#xA;&lt;p&gt;Regression Methodologies&#xD;&#xA;- ridge versus lasso versus elastic net&#xD;&#xA;- ensemble&#xD;&#xA;- combined with polling data for explanations&lt;/p&gt;&#xD;&#xA;&lt;p&gt;Pollster Quality Evaluations and Polling Only Regressions&#xD;&#xA;- 2016-2024 pollster ratings from FiveThirtyEight.&#xD;&#xA;- How much variation is there in pollster quality&#xD;&#xA;- build a model (or ensemble model) that uses individual polls from 2016 (president_polls_2016.csv),&#xD;&#xA;2020 (…2020.csv), and 2024 (…2024.csv). How does your model&#xD;&#xA;compare to the models this week in lab?&lt;/p&gt;</description>
+      <description>&lt;script src=&#34;https://example.org/post/2024/09/21/week-3-mutlivariate-analyses/index_files/kePrint/kePrint.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;link href=&#34;https://example.org/post/2024/09/21/week-3-mutlivariate-analyses/index_files/lightable/lightable.css&#34; rel=&#34;stylesheet&#34; /&gt;&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;&lt;p&gt;&lt;em&gt;Please note, this week’s blog will be a little more context heavy as I work to establish the building blocks of a model I hope to add onto each week going forward.&lt;/em&gt;&lt;/p&gt;&#xD;&#xA;&lt;p&gt;This week, I implement new methodologies to build a more complex election forecast model. I begin by examining the differing forecasting methodologies of experienced forecasters, noting areas of potential integration into my own model. Then, looking at the impact of weekly polling data on election outcomes, I apply new regression techniques to better understand their fit as predictors across election years. Finally, I also integrate economic fundamentals into a combined model that will form the basis of my forecasting approach going forward.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Week 2: Economic Fundamentals and Regression-Based Prediction</title>
