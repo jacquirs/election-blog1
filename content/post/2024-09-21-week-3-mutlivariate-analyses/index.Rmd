@@ -351,9 +351,9 @@ d_polls_2024_only <- d_polls_2024_final %>%
 
 ```
 
-```{r, include=FALSE}
+```{r, include=FALSE, results = 'hide'}
 ####----------------------------------------------------------#
-#### Holdover code from lab
+#### Holdover code from lab, mostly used for comparison to other methods as I determined which I would actually use
 ####----------------------------------------------------------#
 
 # Shape and merge polling and election data using November polls. 
@@ -451,7 +451,7 @@ lambda.min.enet <- cv.enet.pollweeks$lambda.min
 
 ```{r, include = FALSE}
 ####----------------------------------------------------------#
-#### 2016 model comparisons
+#### 2016 model comparisons-- chosen models
 ####----------------------------------------------------------#
 
 # create dataset of polling average by week until the election
@@ -520,7 +520,7 @@ d.coefplot |>
 
 ```{r, include = FALSE}
 ####----------------------------------------------------------#
-#### 2020 model comparisons
+#### 2020 model comparisons-- chosen models
 ####----------------------------------------------------------#
 
 # create dataset of polling average by week until the election
@@ -589,6 +589,10 @@ d.coefplot |>
 
 
 ```{r}
+####----------------------------------------------------------#
+#### creating the model from the polling only elastic net regressions
+####----------------------------------------------------------#
+
 # calculate the weight for each row based on days_left
 d_poll_weeks_2024 <- d_polls_2024_final |> 
   group_by(year, party, weeks_left) |>
