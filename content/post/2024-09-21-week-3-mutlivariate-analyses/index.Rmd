@@ -20,6 +20,7 @@ library(glmnet)
 library(tidyverse)
 library(knitr)
 library(kableExtra)
+library(plotly)
 
 ```
 
@@ -55,8 +56,91 @@ Using polls to reliably determine popular judgement dates back to Francis Galton
 
 These difficulties of polling are highlighted in Gelman and King's ["Why are american presidential election campaign polls so variable when votes are so predictable?"](https://www-jstor-org.ezp-prod1.hul.harvard.edu/stable/194212?sid=primo) While the results of polls may fluctuate during a campaign due to specific events, the overall election outcome remains largely predictable based on fundamental political factors. Even predictable events like conventions can cause swings in polls, though these do not have a lasting impact. Voters may appear to change their minds during the campaign, they often make their final decisions based on rational, long-standing preferences instead of short term ones often emphasized by the media. The polling swings are temporary and often do not reflect lasting changes in voter intention.
 
-For an example of this, we can look at 
-GRAPH
+For an example of this, I can look at poll variation over time in the 2020 election, which is similar in variation to other years. "Game-changers" are also included, indicating reasons why polling averages may have changed at a certain period in time. 
+
+```{r}
+####----------------------------------------------------------#
+#### Visualizing poll variation over time: 2020
+####----------------------------------------------------------#
+
+# polling average 2020 plus labels, 
+polling_plot_2020 <- d_pollav_natl |> 
+  filter(year == 2020) |> 
+  ggplot(aes(x = poll_date, y = poll_support, color = party)) +
+  geom_rect(xmin = as.Date("2020-08-17"), xmax = as.Date("2020-08-20"), ymin = 47.5, ymax = 100, alpha = 0.1, color = NA, fill = "grey") + 
+  annotate("text", x = as.Date("2020-08-07"), y = 51.5, label = "DNC", size = 4) +
+  geom_rect(xmin = as.Date("2020-08-24"), xmax = as.Date("2020-08-27"), ymin = 0, ymax = 47.2, alpha = 0.1, color = NA, fill = "grey") +
+  annotate("text", x = as.Date("2020-09-04"), y = 45, label = "RNC", size = 4) +
+  geom_rect(xmin = as.Date("2020-10-02"), xmax = as.Date("2020-10-12"), ymin = 0, ymax = 42.7, alpha = 0.05, color = NA, fill = "grey") +
+  
+  geom_point(size = 1) + 
+  geom_line() + 
+  
+  geom_segment(x = as.Date("2020-03-12"), xend = as.Date("2020-03-12"), y = 0, yend = 44.8, linetype = "dashed", alpha = 0.4, color = "grey") +
+  annotate("text", x = as.Date("2020-03-12"), y = 42.5, label = "COVID \n Market Crash", size = 3) +
+  geom_segment(x = as.Date("2020-04-08"), xend = as.Date("2020-04-08"), y = 49, yend = 100, linetype = "dashed", alpha = 0.4, color = "grey") +
+  annotate("text", x = as.Date("2020-03-25"), y = 51.3, label = "Bernie Ends Run", size = 3) +
+  geom_segment(x = as.Date("2020-04-16"), xend = as.Date("2020-04-16"), y = 0, yend = 44, linetype = "dashed", alpha = 0.4, color = "grey") +
+  annotate("text", x = as.Date("2020-04-16"), y = 44.7, label = "22 mil \n Unemployment", size = 3) +
+  geom_segment(x = as.Date("2020-05-27"), xend = as.Date("2020-05-27"), y = 0, yend = 43, linetype = "dashed", alpha = 0.4, color = "grey") +
+  annotate("text", x = as.Date("2020-06-05"), y = 44, label = "100k COVID Dead, \n George Floyd", size = 3) +
+  
+  geom_segment(x = as.Date("2020-07-14"), xend = as.Date("2020-07-14"), y = 0, yend = 50.3, linetype = "dashed", alpha = 0.4, color = "grey") +
+  annotate("text", x = as.Date("2020-06-19"), y = 47.5, label = "Moderna Announces", size = 3) +
+  
+  geom_segment(x = as.Date("2020-09-29"), xend = as.Date("2020-09-29"), y = 50, yend = 100, linetype = "dashed", alpha = 0.4, color = "grey") +
+  annotate("text", x = as.Date("2020-9-12"), y = 49.5, label = "Pres. Debate", size = 3) +
+  geom_segment(x = as.Date("2020-10-07"), xend = as.Date("2020-10-07"), y = 51.7, yend = 100, linetype = "dashed", alpha = 0.4, color = "grey") +
+  annotate("text", x = as.Date("2020-10-17"), y = 50.3, label = "VP Debate", size = 3) +
+  geom_segment(x = as.Date("2020-10-22"), xend = as.Date("2020-10-22"), y = 52, yend = 100, linetype = "dashed", alpha = 0.4, color = "grey") +
+  annotate("text", x = as.Date("2020-10-30"), y = 51.5, label = "Pres. Debate", size = 3) +
+  annotate("text", x = as.Date("2020-10-15"), y = 43.7, label = "Trump Has COVID", size = 3) +
+  geom_segment(x = as.Date("2020-09-18"), xend = as.Date("2020-09-18"), y = 50, yend = 100, linetype = "dashed", alpha = 0.4, color = "grey") +
+  annotate("text", x = as.Date("2020-09-03"), y = 51.5, label = "RBG Passes", size = 3) +
+  
+  scale_x_date(date_labels = "%b %d") + 
+  scale_color_manual(values = c("dodgerblue4", "firebrick1")) +
+  labs(x = "Date",
+       y = "Average Poll Approval", 
+       title = "Polling Averages by Date with Game Changers, 2020") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold"))
+
+polling_plot_2020
+
+```
+
+The uncertainty and variation in polls compared to the final outcome as described by Gelman and King can be clearly seen here. Looking at 2024 below, there is also a large amount of variation in the polling, making modeling based on weekly polling averages difficult without advanced regression coefficient weighting. 
+
+```{r}
+####----------------------------------------------------------#
+#### Visualizing poll variation over time: 2024
+####----------------------------------------------------------#
+
+# create the 2024 polling plot
+polling_plot_2024 <- d_pollav_natl |> 
+  filter(year == 2024) |> 
+  ggplot(aes(x = poll_date, y = poll_support, color = party)) +
+  geom_point(aes(text = paste("Date:", poll_date, "<br>Support:", round(poll_support,3), "%"))) + 
+  geom_line(stat= "identity") +
+  scale_x_date(breaks = scales::date_breaks("1 month"), date_labels = "%b %d") +
+  scale_color_manual(values = c("dodgerblue4", "firebrick1")) +
+  labs(x = "Date",
+       y = "Average Poll Approval", 
+       title = "Polling Averages by Date, 2024") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+      axis.text = element_text(size = 9),
+      panel.grid.major = element_line(color = "lightgrey", linetype = "dashed")
+  )
+
+# convert to interactive plotly
+interactive_plot_2024 <- ggplotly(polling_plot_2024, tooltip = "text")
+interactive_plot_2024
+
+```
+
+This polling data includes both democratic candidates for this cycle, President Biden and VP Harris. Whether Biden's polling data can be used without adjustment as a proxy for Harris is an open question I will later seek to answer.
 
 ### Pollster Quality Evaluation
 Different pollster methodologies and decisions can impact the accuracy of their polls. To account for this, 538 creates pollster ratings called "pollscores" which account for bias and error, and also look at transparency, number of polls, and percent partisan work. Looking at the variation in pollster quality can provide valuable information about the quality of the polling data I work with below and throughout the rest of my models.
@@ -111,9 +195,7 @@ These summary statistics for pollster quality reveal the limits of polling data.
 Through these complicated formulas, it is clear that pollster ratings are not particularly inspiring in accuracy of their poll results, at least according to these ratings. It is worth noting that transparency, which is a part of 538's model, is not necessarily a direct correlate with accuracy of results, though this is difficult to test on a poll by poll basis given the lack of true comparison values.
 
 ### A Brief Note on Regression Methodologies
-- ridge versus lasso versus elastic net
-- ensemble
-- combined with polling data for explanations
+Following in class evaluation of Ridge, LASSO, and elastic net regressions using cross-validation to find the optimal lambda values that minimize the MSE of predictions in week-level training data, I have decided to focus on the elastic net regularization method for this week. I will also use model ensembles to combine fundamentals and polling data such that I can weigh the different elements' impact by time until election.
 
 ### Polling-Based Regression Models
 - build a model (or ensemble model) that uses individual polls from 2016 (president_polls_2016.csv),
