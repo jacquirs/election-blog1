@@ -351,7 +351,7 @@ d_polls_2024_only <- d_polls_2024_final %>%
 
 ```
 
-```{r, include = FALSE}
+```{r, include=FALSE}
 ####----------------------------------------------------------#
 #### Holdover code from lab
 ####----------------------------------------------------------#
@@ -448,8 +448,6 @@ lambda.min.enet <- cv.enet.pollweeks$lambda.min
 (mse.enet <- mean((predict(enet.pollsweeks, s = lambda.min.enet, newx = x.train) - y.train)^2))
 
 ```
-
-
 
 ```{r, include = FALSE}
 ####----------------------------------------------------------#
