@@ -47,30 +47,26 @@ d_poll_2020 <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/pr
 # polling data from 2016
 d_poll_2016 <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/president_polls_2016.csv") # if you run this code please change to location of data
 
-# popular vote data
-d_vote <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/popvote_1948-2020.csv")
-d_vote$party[d_vote$party == "democrat"] <- "DEM"
-d_vote$party[d_vote$party == "republican"] <- "REP"
-
 ```
-This week, I implement new methodologies for more complex election forecasts. I examine model documentation of experienced forecasters, explore the impact of weekly polling data on election outcomes, apply new regression techniques to polls as predictors, and integrate economic fundamentals into a combined model as the basis of my future forecast.
+_Please note, this week's blog will be a little more context heavy as I work to establish the building blocks of a model I hope to add onto each week going forward._
+
+This week, I implement new methodologies to build a more complex election forecast model. I begin by examining the differing forecasting methodologies of experienced forecasters, noting areas of potential integration into my own model. Then, looking at the impact of weekly polling data on election outcomes, I apply new regression techniques to better understand their fit as predictors across election years. Finally, I also integrate economic fundamentals into a combined model that will form the basis of my forecasting approach going forward.
 
 ### Current Forecasting Methodologies
-Many forecasters' current models blend polling data with economic fundamentals. Reviewing advanced breakdowns from G Elliot Morris of 538 and Nate Silver of the Silver Bulletin, I note potential methods that I have implemented or could adopt. 
+Many forecasters' models today are based off of a combination of polling data and economic fundamentals. Two forecasters, G Elliot Morris of 538 and Nate Silver of the Silver Bulletin, have published advanced breakdowns of their modeling techniques. I will review the elements of each, noting potential methods that I have implemented here or could do so in the future. 
 
-Morris’s [FiveThirtyEight forecast model](https://abcnews.go.com/538/538s-2024-presidential-election-forecast-works/story?id=110867585) for the 2024 election polling averages and state correlations through geometric decay, emphasizing state similarities in voting behavior, geography and demographics as correlates. The model combines this with economic fundamentals such as employment and consumer sentiment. This combination of fundamentals and polling, with some weighting scheme within and between the two, is implemented later. FiveThirtyEight's use of Bayesian regularized regression to manage polling biases and Markov chain Monte Carlo to simulate electoral scenarios are another future area of work in my model.
+G Elliott Morris’s [538 forecast model](https://abcnews.go.com/538/538s-2024-presidential-election-forecast-works/story?id=110867585) for the 2024 presidential election employs a sophisticated approach that incorporates polling averages and state correlations through a geometric decay function, emphasizing the interplay of state similarities based on voting behavior, demographics, and geography. The model combines this polling data with a range of economic fundamentals such as employment metrics, consumer sentiment, and inflation to inform its predictions. This combination of fundamentals and polling, with some weighting scheme within and between the two, interests me for further investigation. 538 utilizes Bayesian regression with regularization techniques to manage uncertainty and biases inherent in polling, simulating numerous electoral scenarios through Markov chain Monte Carlo methods-- another future area of work in my model, especially on the simulations front. 
 
-In contrast, Nate Silver's 2020 [(FiveThirtyEight)](https://fivethirtyeight.com/features/how-fivethirtyeights-2020-presidential-forecast-works-and-whats-different-because-of-covid-19/) and 2024 [(Silver Bulletin)](https://www.natesilver.net/p/model-methodology-2024) models adopt a more dynamic framework that adjusts for contemporary uncertainties, particularly changes in voter turnout patterns. Silver was not a fan of Morris's model at The Economists, and [criticized the new FiveThirtyEight model](https://www.natesilver.net/p/why-i-dont-buy-538s-new-election) predicting a Biden win post-debate despite polling favoring Trump. Silver’s approach combines polling with economic conditions, incumbency, and demographic trends like shifts in voter turnout (more engaged Democrats). The model simulates thousands of election scenarios, giving more weight to polling closer to Election Day rather than fundamentals. Recent changes maintain the model's core methodology while improving accuracy based on recent voting patterns. 
+In contrast, Nate Silver's 2020 [(538)](https://fivethirtyeight.com/features/how-fivethirtyeights-2020-presidential-forecast-works-and-whats-different-because-of-covid-19/) and 2024 [(Silver Bulletin)](https://www.natesilver.net/p/model-methodology-2024) models adopt a more dynamic framework that adjusts for contemporary uncertainties, particularly those arising from the COVID-19 pandemic in the 2020 model and changes in voter turnout patterns. Silver was not a fan of The Economists' model when Morris worked there, and additionally [criticized the 538 model](https://www.natesilver.net/p/why-i-dont-buy-538s-new-election) predicting a win for Biden post-debate despite changes in polling towards Trump. Silver’s election forecast combines polling data with factors like economic conditions, incumbency, and demographic trends to predict outcomes. It now adjusts for shifts in voter turnout dynamics, reflecting that Democrats currently have more engaged voters, and incorporates Robert F. Kennedy Jr. as a significant third-party candidate, allowing him to impact the race (pre-dropout). It adjusts for polling quality and biases, while also accounting for uncertainty through factors like national shifts and state-level errors. The model simulates thousands of election scenarios, giving more weight to polling closer to Election Day. Recent changes maintain the model's core methodology while improving accuracy based on recent voting patterns. 
 
-Through these examples, my goal is to achieve a model that effectively combines polling data, incumbency, and economic fundamentals, utilizing Bayesian models, weighting schemes, and simulations. 
-
+Through these examples, my goal is to achieve a model that can combine factors like polling data, incumbency, and economic fundamentals, as well as use Bayesian models, weighting schemes, and simulation to determine winners in each state. 
 
 ### Recent Polling Trends and the Use of Polling in Models
-Polling-- originating from Francis Galton’s 1907 [Vox populi](https://www.nature.com/articles/075450a0.pdf) on the reliability of popular judgement-- aims to gauge public sentiment but faces challenges in predicting crystallized outcomes. Thousands of polls are conducted to understand the race at a given time. But with so many complications in measuring the behavior of voters, it is extremely difficult for a poll to get the "right" answer.
+Using polls to reliably determine popular judgement dates back to Francis Galton's 1907 article [Vox populi](https://www.nature.com/articles/075450a0.pdf). Today, thousands of polls are conducted each election cycle to understand the state of the race at a given time. But with so many complications in measuring the behavior of voters, it is extremely difficult for a poll to get the "right" answer-- that is, a single poll can't tell us the what the outcome of the election in some number of days will be.
 
-These difficulties of polling are highlighted in Gelman and King's ["Why are american presidential election campaign polls so variable when votes are so predictable?"](https://www-jstor-org.ezp-prod1.hul.harvard.edu/stable/194212?sid=primo) Variability in polls, as discussed in the analysis, shows that while polls fluctuate due to unforseen events, overall outcomes remain largely predictable based on fundamental factors. While voters may appear to change their minds during the campaign, they often make final decisions based on rational, long-standing preferences. Temporary polling swings often don’t reflect lasting changes in voter intentions. 
+These difficulties of polling are highlighted in Gelman and King's ["Why are american presidential election campaign polls so variable when votes are so predictable?"](https://www-jstor-org.ezp-prod1.hul.harvard.edu/stable/194212?sid=primo) While the results of polls may fluctuate during a campaign due to specific events, the overall election outcome remains largely predictable based on fundamental political factors. Even predictable events like conventions can cause swings in polls, though these do not have a lasting impact. Voters may appear to change their minds during the campaign, they often make their final decisions based on rational, long-standing preferences instead of short term ones often emphasized by the media. The polling swings are temporary and often do not reflect lasting changes in voter intention.
 
-For an example of this, look at variations in the 2020 election polling, with "game-changers" indicating significant events that may have influenced polling averages temporarily.
+For an example of this, I can look at poll variation over time in the 2020 election, which is similar in variation to other years. "Game-changers" are also included, indicating reasons why polling averages may have changed at a certain period in time. 
 
 ```{r}
 ####----------------------------------------------------------#
@@ -124,7 +120,7 @@ polling_plot_2020
 
 ```
 
-The variation in polls compared to the final outcome as described by Gelman and King is clearly seen here. For 2024 below, there is also a large amount of uncertainty, making modeling with weekly polling averages require advanced coefficient weighting. 
+The uncertainty and variation in polls compared to the final outcome as described by Gelman and King can be clearly seen here. Looking at 2024 below, there is also a large amount of variation in the polling, making modeling based on weekly polling averages difficult without advanced regression coefficient weighting. 
 
 ```{r}
 ####----------------------------------------------------------#
@@ -154,10 +150,10 @@ interactive_plot_2024
 
 ```
 
-Whether Biden's polling data can be used without adjustment as a proxy for Harris like here is an open question I will later seek to answer.
+This polling data includes both democratic candidates for this cycle, President Biden and VP Harris. Whether Biden's polling data can be used without adjustment as a proxy for Harris is an open question I will later seek to answer.
 
 ### Pollster Quality Evaluation
-Different pollster methodologies and decisions impact the accuracy of polls. To account for this, FiveThirtyEight creates pollster ratings called "pollscores" which account for bias and error, and also look at transparency and percent partisan work. Variation in pollster quality can provide valuable information about the quality of the polling data my model relies on.
+Different pollster methodologies and decisions can impact the accuracy of their polls. To account for this, 538 creates pollster ratings called "pollscores" which account for bias and error, and also look at transparency, number of polls, and percent partisan work. Looking at the variation in pollster quality can provide valuable information about the quality of the polling data I work with below and throughout the rest of my models.
 
 ```{r}
 ####----------------------------------------------------------#
@@ -285,10 +281,10 @@ d_2016_long <- d_polls_pivot_2016 %>%
                values_to = "poll_support")
 
 # add party based on candidate
-d_2016_long$party <- ifelse(d_2016_long$candidate == "rawpoll_clinton", "DEM", "REP")
+d_2016_long$party <- ifelse(df_2016_long$candidate == "rawpoll_clinton", "DEM", "REP")
 
 # create final dataset
-d_polls_2016_final <- d_2016_long[, c("startdate", "days_left", "weeks_left", "samplesize", "poll_support", "party")]
+d_polls_2016_final <- df_2016_long[, c("startdate", "days_left", "weeks_left", "samplesize", "poll_support", "party")]
 
 # add year
 d_polls_2016_final$year <- 2016
@@ -351,105 +347,6 @@ d_polls_2024_only <- d_polls_2024_final %>%
 
 ```
 
-```{r}
-####----------------------------------------------------------#
-#### Holdover code from lab
-####----------------------------------------------------------#
-
-# Shape and merge polling and election data using November polls. 
-d_poll_nov <- d_vote |> 
-  left_join(d_pollav_natl |> 
-              group_by(year, party) |> 
-              top_n(1, poll_date) |> 
-              select(-candidate), 
-            by = c("year", "party")) |> 
-  rename(nov_poll = poll_support) |> 
-  filter(year <= 2020) |> 
-  drop_na()
-
-# OLS: Democratic candidates pv2p on November polling average. 
-ols.nov.1 <- lm(pv2p ~ nov_poll, 
-                data = subset(d_poll_nov, party == "DEM"))
-summary(ols.nov.1)
-
-# OLS: Party-stacked pv2p on November polling average.
-ols.nov.2 <- lm(pv2p ~ nov_poll, 
-                data = d_poll_nov)
-summary(ols.nov.2)
-
-# Create dataset of polling average by week until the election. 
-d_poll_weeks <- d_pollav_natl |> 
-  group_by(year, party, weeks_left) |>
-  summarize(mean_poll_week = mean(poll_support)) |> 
-  filter(weeks_left <= 30) |> 
-  pivot_wider(names_from = weeks_left, values_from = mean_poll_week) |> 
-  left_join(d_vote, by = c("year", "party"))
-
-# Split into training and testing data based on inclusion or exclusion of 2024. 
-d_poll_weeks_train <- d_poll_weeks |> 
-  filter(year <= 2020)
-d_poll_weeks_test <- d_poll_weeks |> 
-  filter(year == 2024)
-
-colnames(d_poll_weeks)[3:33] <- paste0("poll_weeks_left_", 0:30)
-colnames(d_poll_weeks_train)[3:33] <- paste0("poll_weeks_left_", 0:30)
-colnames(d_poll_weeks_test)[3:33] <- paste0("poll_weeks_left_", 0:30)
-
-# Comparison of OLS and regularized regression methods. 
-ols.pollweeks <- lm(paste0("pv2p ~ ", paste0( "poll_weeks_left_", 0:30, collapse = " + ")), 
-                    data = d_poll_weeks_train)
-summary(ols.pollweeks) # N.B. Inestimable: p (31) > n (30)! 
-
-# Separate data into X and Y for training. 
-x.train <- d_poll_weeks_train |>
-  ungroup() |> 
-  select(all_of(starts_with("poll_weeks_left_"))) |> 
-  as.matrix()
-y.train <- d_poll_weeks_train$pv2p
-x.train
-# Ridge. 
-ridge.pollsweeks <- glmnet(x = x.train, y = y.train, alpha = 0) # Set ridge using alpha = 0. 
-
-# Visualize shrinkage. 
-plot(ridge.pollsweeks, xvar = "lambda")
-
-# Get particular coefficients. 
-coef(ridge.pollsweeks, s = 0.1)
-
-# Lasso.
-lasso.pollsweeks <- glmnet(x = x.train, y = y.train, alpha = 1) # Set lasso using alpha = 1.
-
-# Visualize shrinkage.
-plot(lasso.pollsweeks, xvar = "lambda")
-
-# Get particular coefficients.
-coef(lasso.pollsweeks, s = 0.1)
-
-# Elastic net.
-enet.pollsweeks <- glmnet(x = x.train, y = y.train, alpha = 0.5) # Set elastic net using alpha = 0.5.
-
-# Visualize shrinkage.
-plot(enet.pollsweeks, xvar = "lambda")
-
-# Can use cross-validated versions to find the optimal values of lambda that minimize the MSE of your predictions. 
-# N.B. Use set.seed() and your favorite number e.g., 12345, 02138, before each CV/any stochastic call if you want your results to be stable. 
-cv.ridge.pollweeks <- cv.glmnet(x = x.train, y = y.train, alpha = 0)
-cv.lasso.pollweeks <- cv.glmnet(x = x.train, y = y.train, alpha = 1)
-cv.enet.pollweeks <- cv.glmnet(x = x.train, y = y.train, alpha = 0.5)
-
-# Get minimum lambda values 
-lambda.min.ridge <- cv.ridge.pollweeks$lambda.min
-lambda.min.lasso <- cv.lasso.pollweeks$lambda.min
-lambda.min.enet <- cv.enet.pollweeks$lambda.min
-
-# Predict on training data using lambda values that minimize MSE.
-(mse.ridge <- mean((predict(ridge.pollsweeks, s = lambda.min.ridge, newx = x.train) - y.train)^2))
-(mse.lasso <- mean((predict(lasso.pollsweeks, s = lambda.min.lasso, newx = x.train) - y.train)^2))
-(mse.enet <- mean((predict(enet.pollsweeks, s = lambda.min.enet, newx = x.train) - y.train)^2))
-
-```
-
-
 
 ```{r, include = FALSE}
 ####----------------------------------------------------------#
@@ -484,7 +381,7 @@ y.train <- d_poll_weeks_2016$pv2p
 
 # Elastic net
 enet.pollsweeks_2016 <- glmnet(x = x.train, y = y.train, alpha = 0.5) # Set elastic net using alpha = 0.5.
-mse.enet <- mean((predict(enet.pollsweeks_2016, s = lambda.min.enet, newx = x.train) - y.train)^2)
+mse.enet <- mean((predict(enet.pollsweeks, s = lambda.min.enet, newx = x.train) - y.train)^2)
 cat("enet", mse.enet)
 
 # Ridge
@@ -501,7 +398,7 @@ cat("\nlasso", mse.lasso)
 d.coefplot <- data.frame("OLS" = coef(ols.pollweeks)[-1], 
                          "Ridge" = coef(ridge.pollsweeks, s = lambda.min.ridge)[-1], 
                          "Lasso" = coef(lasso.pollsweeks, s = lambda.min.lasso)[-1], 
-                         "Elastic Net" = coef(enet.pollsweeks_2016, s = lambda.min.enet)[-1]) |> 
+                         "Elastic Net" = coef(enet.pollsweeks, s = lambda.min.enet)[-1]) |> 
   rownames_to_column("coef_name") |> 
   pivot_longer(cols = -coef_name, names_to = "method", values_to = "coef_est") |> 
   mutate(week = rep(0:30, each = 4))
@@ -553,7 +450,7 @@ y.train <- d_poll_weeks_2020$pv2p
 
 # Elastic net
 enet.pollsweeks_2020 <- glmnet(x = x.train, y = y.train, alpha = 0.5) # Set elastic net using alpha = 0.5.
-mse.enet <- mean((predict(enet.pollsweeks_2020, s = lambda.min.enet, newx = x.train) - y.train)^2)
+mse.enet <- mean((predict(enet.pollsweeks, s = lambda.min.enet, newx = x.train) - y.train)^2)
 cat("enet", mse.enet)
 
 # Ridge
@@ -570,7 +467,7 @@ cat("\nlasso", mse.lasso)
 d.coefplot <- data.frame("OLS" = coef(ols.pollweeks)[-1], 
                          "Ridge" = coef(ridge.pollsweeks, s = lambda.min.ridge)[-1], 
                          "Lasso" = coef(lasso.pollsweeks, s = lambda.min.lasso)[-1], 
-                         "Elastic Net" = coef(enet.pollsweeks_2020, s = lambda.min.enet)[-1]) |> 
+                         "Elastic Net" = coef(enet.pollsweeks, s = lambda.min.enet)[-1]) |> 
   rownames_to_column("coef_name") |> 
   pivot_longer(cols = -coef_name, names_to = "method", values_to = "coef_est") |> 
   mutate(week = rep(0:30, each = 4))
@@ -600,10 +497,6 @@ d_poll_weeks_2024 <- d_polls_2024_final |>
 
 # bring in correct column names
 colnames(d_poll_weeks_2024)[3:25] <- paste0("poll_weeks_left_", 8:30)
-
-election_day_2024 <- "2024-11-05"
-today <- "2024-09-18"
-days_left <- as.numeric(as.Date(election_day_2024) - as.Date(today))
 
 # weight by dats to election
 d_poll_weeks_2024 <- d_poll_weeks_2024 %>%
@@ -652,154 +545,16 @@ kable(final_predictions,
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-Compared to the single polls-alone elastic net regression run in lab (Harris 51.79268% - Trump 50.65879%), these results are quite similar despite the very different weighting scheme with the ensemble of elastic net regressions. For more model specifications, see the GitHub code. This forecast can be improved upon by adding fundamentals, as below.
-
+Compared to the single polls alone elastic net regression run in lab this week (Harris 51.79268% - Trump 50.65879%), these results are quite similar despite the very different weighting scheme with the ensemble of elastic net regressions. For more model specifications, see the GitHub code. This
 
 ### Combined Fundamentals and Polling Elastic Net Regression Model
-A combined fundamentals and polling model may help get closer to the ground truth of how voters think. The trouble with this ensemble is determining what should matter more closer to election day: polls or fundamentals. I will compare two combined models to understand this decision. In the future, I will add in state-by-state results and incumbency.
+A combined fundamentals and polling model may help get closer to the ground truth of how voters think. The trouble with this ensemble is determining what should matter more closer to election day: polls or fundamentals. 
 
-```{r, include = FALSE}
-####----------------------------------------------------------#
-#### Model ensembling set up
-####----------------------------------------------------------#
-
-# Estimate models using polls alone, fundamentals alone, and combined fundamentals and polls. 
-# Read economic data. 
-d_econ <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/fred_econ.csv") |> 
-  filter(quarter == 2)
-
-# Combine datasets and create vote lags. 
-d_combined <- d_econ |> 
-  left_join(d_poll_weeks, by = "year") |> 
-  filter(year %in% c(unique(d_vote$year), 2024)) |> 
-  group_by(party) |> 
-  mutate(pv2p_lag1 = lag(pv2p, 1), 
-         pv2p_lag2 = lag(pv2p, 2)) |> 
-  ungroup() |> 
-  mutate(gdp_growth_x_incumbent = GDP_growth_quarterly * incumbent, 
-         rdpi_growth_quarterly = RDPI_growth_quarterly * incumbent,
-         cpi_x_incumbent = CPI * incumbent,
-         unemployment_x_incumbent = unemployment * incumbent,
-         sp500_x_incumbent = sp500_close * incumbent) # Generate interaction effects.
-```
-
-```{r, include = FALSE}
-####----------------------------------------------------------#
-#### fundamentals for ensemble
-####----------------------------------------------------------#
-
-# Create fundamentals-only dataset and split into training and test sets. 
-d_fund <- d_combined |> 
-  select("year", "pv2p", "GDP", "GDP_growth_quarterly", "RDPI", "RDPI_growth_quarterly", "CPI", "unemployment", "sp500_close",
-         "incumbent", "gdp_growth_x_incumbent", "rdpi_growth_quarterly", "cpi_x_incumbent", "unemployment_x_incumbent", "sp500_x_incumbent", 
-         "pv2p_lag1", "pv2p_lag2") 
-
-x.train.fund <- d_fund |> 
-  filter(year <= 2020) |>
-  select(-c(year, pv2p)) |> 
-  slice(-c(1:9)) |> 
-  as.matrix()
-y.train.fund <- d_fund |> 
-  filter(year <= 2020) |> 
-  select(pv2p) |> 
-  slice(-c(1:9)) |> 
-  as.matrix()
-x.test.fund <- d_fund |> 
-  filter(year == 2024) |> 
-  select(-c(year, pv2p)) |> 
-  as.matrix()
-
-set.seed(02138)
-enet.fund <- cv.glmnet(x = x.train.fund, y = y.train.fund, intercept = FALSE, alpha = 0.5)
-lambda.min.enet.fund <- enet.fund$lambda.min
-
-# Predict 2024 national pv2p share using elastic-net. 
-(fund.pred <- predict(enet.fund, s = lambda.min.enet.fund, newx = x.test.fund))
-```
-
-```{r, include = FALSE}
-####----------------------------------------------------------#
-#### unused-- combined model set up
-####----------------------------------------------------------#
-
-# Sequester data for combined model.
-d_combo <- d_combined |> 
-  select("year", "pv2p", "GDP", "GDP_growth_quarterly", "RDPI", "RDPI_growth_quarterly", "CPI", "unemployment", "sp500_close",
-         "incumbent", "gdp_growth_x_incumbent", "rdpi_growth_quarterly", "cpi_x_incumbent", "unemployment_x_incumbent", "sp500_x_incumbent", 
-         "pv2p_lag1", "pv2p_lag2", all_of(paste0("poll_weeks_left_", 7:30))) 
-
-x.train.combined <- d_combo |> 
-  filter(year <= 2020) |> 
-  select(-c(year, pv2p)) |> 
-  slice(-c(1:9)) |> 
-  as.matrix()
-y.train.combined <- d_combo |>
-  filter(year <= 2020) |> 
-  select(pv2p) |> 
-  slice(-c(1:9)) |> 
-  as.matrix()
-x.test.combined <- d_combo |>
-  filter(year == 2024) |> 
-  select(-c(year, pv2p)) |> 
-  drop_na() |> 
-  as.matrix()
-  
-# Estimate combined model (unweighted)
-enet.combined <- cv.glmnet(x = x.train.combined, y = y.train.combined, intercept = FALSE, alpha = 0.5)
-lambda.min.enet.combined <- enet.combined$lambda.min
-
-```
-
-```{r, include = FALSE}
-####----------------------------------------------------------#
-#### Ensemble options
-####----------------------------------------------------------#
-# Ensemble 2: Weight based on polls mattering closer to November. (Nate Silver)
-election_day_2024 <- "2024-11-05"
-today <- "2024-09-18"
-days_left <- as.numeric(as.Date(election_day_2024) - as.Date(today))
-
-(poll_model_weight <- 1- (1/sqrt(days_left)))
-(fund_model_weight <- 1/sqrt(days_left))
-
-(ensemble.2.pred <- final_prediction_2024 * poll_model_weight + fund.pred * fund_model_weight) 
-
-# Ensemble 3. Weight based on fundamentals mattering closer to November. (Gelman & King, 1993)
-(poll_model_weight <- 1/sqrt(days_left))
-(fund_model_weight <- 1-(1/sqrt(days_left)))
-
-(ensemble.3.pred <- final_prediction_2024 * poll_model_weight + fund.pred * fund_model_weight)
-
-```
-
-```{r}
-# Sample data for ensemble predictions
-final_predictions <- data.frame(
-  Ensemble = c("Ensemble 2", "Ensemble 2", "Ensemble 3", "Ensemble 3"),
-  Party = c("Democrat", "Republican", "Democrat", "Republican"),
-  Prediction = c(51.71210, 50.22182, 51.31497, 50.00100),
-  Poll_Weight = c(0.1443376, 0.1443376, 0.1443376, 0.8556624)
-)
-
-# make kable
-kable(final_predictions[, c("Party", "Prediction")], 
-                         col.names = c("Party", "Prediction")) %>%
-  kable_styling(full_width = F) %>%
-  row_spec(0, bold = TRUE, background = "#0072B2", color = "white") %>%
-  row_spec(1:4, color = "black") %>%
-  pack_rows("Polls More", 1, 2) %>%
-  pack_rows("Fundamentals More", 3, 4) %>%
-  add_header_above(c("Combined Model Predictions for 2024 Election" = 2)) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-
-```
-
-Like with the polling-only model, these show Harris slightly leading Trump, though by slim margins. Additionally, weighing polls or fundamentals more as November nears leads to the emphasized group having a weight nearly 85% of the ensemble model, a large influence that really only results in a 0.2 to 0.4 percentage point difference given the above. However, that could be the margin of victory. The similarities in prediction also indicate a variety of factors working together over one strongly correlated one. For now, my final prediction is the unweighted average of the three done here today
-
-**Current Forecast: Harris 51.0645% - Trump 50.1031%**
-
+- do it 
+- in future state by state
+REGRESSION TABLE/ EVAL RESULTS
 
 ### Data Sources
-- Pollster Aggregate Ratings
-- 2016, 2020, and 2024 Polling Results
-- Popular Vote by Candidate, 1948-2020
+- Polling average datasets national (FiveThirtyEight)
+- Pollster aggregate ratings (FiveThirtyEight)
+- 2016, 2020, and 2024 polling results

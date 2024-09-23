@@ -198,7 +198,7 @@ x.train <- d_poll_weeks_train |>
   select(all_of(starts_with("poll_weeks_left_"))) |> 
   as.matrix()
 y.train <- d_poll_weeks_train$pv2p
-
+x.train
 # Ridge. 
 ridge.pollsweeks <- glmnet(x = x.train, y = y.train, alpha = 0) # Set ridge using alpha = 0. 
 

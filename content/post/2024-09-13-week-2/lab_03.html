@@ -274,6 +274,28 @@ d_poll_weeks &lt;- d_pollav_natl |&gt;
   left_join(d_vote, by = c(&quot;year&quot;, &quot;party&quot;))</code></pre>
 <pre><code>## `summarise()` has grouped output by &#39;year&#39;, &#39;party&#39;. You can override using the
 ## `.groups` argument.</code></pre>
+<pre class="r"><code> d_poll_weeks</code></pre>
+<pre><code>## # A tibble: 30 × 40
+## # Groups:   year, party [30]
+##     year party   `0`   `1`   `2`   `3`   `4`   `5`   `6`   `7`   `8`   `9`  `10`
+##    &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1  1968 DEM    39.1  33.7  32.9  31.9  31.9  31.9  32.7  33.5  33.5  34.0  34.1
+##  2  1968 REP    47.7  47.5  47.4  47.2  47.2  47.1  46.9  46.9  46.9  46.9  46.9
+##  3  1972 DEM    33.7  32.3  32.3  30.9  29.9  28.3  27.4  28.3  28.5  29.0  28.5
+##  4  1972 REP    57.9  58.3  58.5  59.2  60.0  61.3  61.4  61.6  60.8  60.3  59.3
+##  5  1976 DEM    45.0  43.3  43.2  44.6  46.5  47.2  47.6  49.0  49.5  51.2  51.8
+##  6  1976 REP    44.6  41.7  41.7  42.1  43.4  41.8  39.2  37.5  37.0  38.2  37.6
+##  7  1980 DEM    41.5  39.9  38.3  37.0  35.8  35.7  36.8  37.0  36.9  36.5  34.4
+##  8  1980 REP    43.9  41.6  41.5  41.8  40.3  39.7  39.1  39.1  40.4  40.9  42.4
+##  9  1984 DEM    38.9  38.2  39.7  39.1  36.9  37.0  37.5  37.4  38.0  37.6  38.6
+## 10  1984 REP    56.9  56.1  56.1  56.6  57.1  56.1  56.0  57.2  57.6  57.0  55.4
+## # ℹ 20 more rows
+## # ℹ 27 more variables: `11` &lt;dbl&gt;, `12` &lt;dbl&gt;, `13` &lt;dbl&gt;, `14` &lt;dbl&gt;,
+## #   `15` &lt;dbl&gt;, `16` &lt;dbl&gt;, `17` &lt;dbl&gt;, `18` &lt;dbl&gt;, `19` &lt;dbl&gt;, `20` &lt;dbl&gt;,
+## #   `21` &lt;dbl&gt;, `22` &lt;dbl&gt;, `23` &lt;dbl&gt;, `24` &lt;dbl&gt;, `25` &lt;dbl&gt;, `26` &lt;dbl&gt;,
+## #   `27` &lt;dbl&gt;, `28` &lt;dbl&gt;, `29` &lt;dbl&gt;, `30` &lt;dbl&gt;, winner &lt;lgl&gt;,
+## #   candidate &lt;chr&gt;, pv &lt;dbl&gt;, pv2p &lt;dbl&gt;, incumbent &lt;lgl&gt;,
+## #   incumbent_party &lt;lgl&gt;, prev_admin &lt;lgl&gt;</code></pre>
 <pre class="r"><code># Split into training and testing data based on inclusion or exclusion of 2024. 
 d_poll_weeks_train &lt;- d_poll_weeks |&gt; 
   filter(year &lt;= 2020)
@@ -452,9 +474,9 @@ lambda.min.enet &lt;- cv.enet.pollweeks$lambda.min
 (mse.ridge &lt;- mean((predict(ridge.pollsweeks, s = lambda.min.ridge, newx = x.train) - y.train)^2))</code></pre>
 <pre><code>## [1] 9.575001</code></pre>
 <pre class="r"><code>(mse.lasso &lt;- mean((predict(lasso.pollsweeks, s = lambda.min.lasso, newx = x.train) - y.train)^2))</code></pre>
-<pre><code>## [1] 1.89766</code></pre>
+<pre><code>## [1] 4.545942</code></pre>
 <pre class="r"><code>(mse.enet &lt;- mean((predict(enet.pollsweeks, s = lambda.min.enet, newx = x.train) - y.train)^2))</code></pre>
-<pre><code>## [1] 2.813939</code></pre>
+<pre><code>## [1] 2.325853</code></pre>
 <pre class="r"><code># Generate plot comparing coefficients for each of the weeks. 
 d.coefplot &lt;- data.frame(&quot;OLS&quot; = coef(ols.pollweeks)[-1], 
                          &quot;Ridge&quot; = coef(ridge.pollsweeks, s = lambda.min.ridge)[-1], 

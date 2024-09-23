@@ -202,7 +202,7 @@ d_poll_weeks <- d_pollav_natl |>
   filter(weeks_left <= 30) |> 
   pivot_wider(names_from = weeks_left, values_from = mean_poll_week) |> 
   left_join(d_vote, by = c("year", "party"))
- 
+ d_poll_weeks
 ```
 
 ```{r}
