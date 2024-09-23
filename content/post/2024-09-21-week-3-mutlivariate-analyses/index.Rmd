@@ -53,6 +53,8 @@ d_vote$party[d_vote$party == "democrat"] <- "DEM"
 d_vote$party[d_vote$party == "republican"] <- "REP"
 
 ```
+_Please note, this week’s blog will be a little more context heavy as I work to establish the building blocks of a model I hope to add onto each week going forward._
+
 This week, I implement new methodologies for more complex election forecasts. I examine model documentation of experienced forecasters, explore the impact of weekly polling data on election outcomes, apply new regression techniques to polls as predictors, and integrate economic fundamentals into a combined model as the basis of my future forecast.
 
 ### Current Forecasting Methodologies
