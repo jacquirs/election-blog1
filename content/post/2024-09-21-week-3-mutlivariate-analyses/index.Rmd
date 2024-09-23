@@ -393,9 +393,9 @@ d_poll_weeks_train <- d_poll_weeks |>
 d_poll_weeks_test <- d_poll_weeks |> 
   filter(year == 2024)
 
-## colnames(d_poll_weeks)[3:33] <- paste0("poll_weeks_left_", 0:30)
-## colnames(d_poll_weeks_train)[3:33] <- paste0("poll_weeks_left_", 0:30)
-## colnames(d_poll_weeks_test)[3:33] <- paste0("poll_weeks_left_", 0:30)
+colnames(d_poll_weeks)[3:33] <- paste0("poll_weeks_left_", 0:30)
+colnames(d_poll_weeks_train)[3:33] <- paste0("poll_weeks_left_", 0:30)
+colnames(d_poll_weeks_test)[3:33] <- paste0("poll_weeks_left_", 0:30)
 
 # Comparison of OLS and regularized regression methods. 
 ols.pollweeks <- lm(paste0("pv2p ~ ", paste0( "poll_weeks_left_", 0:30, collapse = " + ")), 
