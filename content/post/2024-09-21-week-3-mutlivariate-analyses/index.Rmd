@@ -351,10 +351,12 @@ d_polls_2024_only <- d_polls_2024_final %>%
 
 ```
 
-```{r, include=FALSE, results = 'hide'}
+```{r, include = FALSE, results='hide'}
 ####----------------------------------------------------------#
 #### Holdover code from lab, mostly used for comparison to other methods as I determined which I would actually use
 ####----------------------------------------------------------#
+
+# NOTE: due to the include = FALSE, results='hide' not rendering right on the blog, I have commented out summary and other lines rhat would print, but I did not end up using them in my blog analysis as I decided elastic net was the best. They use ## for clarity
 
 # Shape and merge polling and election data using November polls. 
 d_poll_nov <- d_vote |> 
@@ -370,12 +372,12 @@ d_poll_nov <- d_vote |>
 # OLS: Democratic candidates pv2p on November polling average. 
 ols.nov.1 <- lm(pv2p ~ nov_poll, 
                 data = subset(d_poll_nov, party == "DEM"))
-summary(ols.nov.1)
+## summary(ols.nov.1)
 
 # OLS: Party-stacked pv2p on November polling average.
 ols.nov.2 <- lm(pv2p ~ nov_poll, 
                 data = d_poll_nov)
-summary(ols.nov.2)
+## summary(ols.nov.2)
 
 # Create dataset of polling average by week until the election. 
 d_poll_weeks <- d_pollav_natl |> 
@@ -391,14 +393,14 @@ d_poll_weeks_train <- d_poll_weeks |>
 d_poll_weeks_test <- d_poll_weeks |> 
   filter(year == 2024)
 
-colnames(d_poll_weeks)[3:33] <- paste0("poll_weeks_left_", 0:30)
-colnames(d_poll_weeks_train)[3:33] <- paste0("poll_weeks_left_", 0:30)
-colnames(d_poll_weeks_test)[3:33] <- paste0("poll_weeks_left_", 0:30)
+## colnames(d_poll_weeks)[3:33] <- paste0("poll_weeks_left_", 0:30)
+## colnames(d_poll_weeks_train)[3:33] <- paste0("poll_weeks_left_", 0:30)
+## colnames(d_poll_weeks_test)[3:33] <- paste0("poll_weeks_left_", 0:30)
 
 # Comparison of OLS and regularized regression methods. 
 ols.pollweeks <- lm(paste0("pv2p ~ ", paste0( "poll_weeks_left_", 0:30, collapse = " + ")), 
                     data = d_poll_weeks_train)
-summary(ols.pollweeks) # N.B. Inestimable: p (31) > n (30)! 
+## summary(ols.pollweeks) # N.B. Inestimable: p (31) > n (30)! 
 
 # Separate data into X and Y for training. 
 x.train <- d_poll_weeks_train |>
@@ -411,25 +413,25 @@ x.train
 ridge.pollsweeks <- glmnet(x = x.train, y = y.train, alpha = 0) # Set ridge using alpha = 0. 
 
 # Visualize shrinkage. 
-plot(ridge.pollsweeks, xvar = "lambda")
+## plot(ridge.pollsweeks, xvar = "lambda")
 
 # Get particular coefficients. 
-coef(ridge.pollsweeks, s = 0.1)
+## coef(ridge.pollsweeks, s = 0.1)
 
 # Lasso.
 lasso.pollsweeks <- glmnet(x = x.train, y = y.train, alpha = 1) # Set lasso using alpha = 1.
 
 # Visualize shrinkage.
-plot(lasso.pollsweeks, xvar = "lambda")
+## plot(lasso.pollsweeks, xvar = "lambda")
 
 # Get particular coefficients.
-coef(lasso.pollsweeks, s = 0.1)
+## coef(lasso.pollsweeks, s = 0.1)
 
 # Elastic net.
 enet.pollsweeks <- glmnet(x = x.train, y = y.train, alpha = 0.5) # Set elastic net using alpha = 0.5.
 
 # Visualize shrinkage.
-plot(enet.pollsweeks, xvar = "lambda")
+## plot(enet.pollsweeks, xvar = "lambda")
 
 # Can use cross-validated versions to find the optimal values of lambda that minimize the MSE of your predictions. 
 # N.B. Use set.seed() and your favorite number e.g., 12345, 02138, before each CV/any stochastic call if you want your results to be stable. 
@@ -443,9 +445,9 @@ lambda.min.lasso <- cv.lasso.pollweeks$lambda.min
 lambda.min.enet <- cv.enet.pollweeks$lambda.min
 
 # Predict on training data using lambda values that minimize MSE.
-(mse.ridge <- mean((predict(ridge.pollsweeks, s = lambda.min.ridge, newx = x.train) - y.train)^2))
-(mse.lasso <- mean((predict(lasso.pollsweeks, s = lambda.min.lasso, newx = x.train) - y.train)^2))
-(mse.enet <- mean((predict(enet.pollsweeks, s = lambda.min.enet, newx = x.train) - y.train)^2))
+mse.ridge <- mean((predict(ridge.pollsweeks, s = lambda.min.ridge, newx = x.train) - y.train)^2)
+mse.lasso <- mean((predict(lasso.pollsweeks, s = lambda.min.lasso, newx = x.train) - y.train)^2)
+mse.enet <- mean((predict(enet.pollsweeks, s = lambda.min.enet, newx = x.train) - y.train)^2)
 
 ```
 
