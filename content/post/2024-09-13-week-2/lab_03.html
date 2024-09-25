@@ -197,11 +197,11 @@ d_pollav_natl |&gt;
 
 # Read election results data. 
 d_vote &lt;- read_csv(&quot;C:/Users/Jacqui Schlesinger/Documents/election-blog1/popvote_1948-2020.csv&quot;)</code></pre>
-<pre><code>## Rows: 38 Columns: 9
+<pre><code>## Rows: 40 Columns: 11
 ## ── Column specification ────────────────────────────────────────────────────────
 ## Delimiter: &quot;,&quot;
 ## chr (2): party, candidate
-## dbl (3): year, pv, pv2p
+## dbl (5): year, pv, pv2p, deminc, juneapp
 ## lgl (4): winner, incumbent, incumbent_party, prev_admin
 ## 
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
@@ -275,7 +275,7 @@ d_poll_weeks &lt;- d_pollav_natl |&gt;
 <pre><code>## `summarise()` has grouped output by &#39;year&#39;, &#39;party&#39;. You can override using the
 ## `.groups` argument.</code></pre>
 <pre class="r"><code> d_poll_weeks</code></pre>
-<pre><code>## # A tibble: 30 × 40
+<pre><code>## # A tibble: 30 × 42
 ## # Groups:   year, party [30]
 ##     year party   `0`   `1`   `2`   `3`   `4`   `5`   `6`   `7`   `8`   `9`  `10`
 ##    &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
@@ -290,12 +290,12 @@ d_poll_weeks &lt;- d_pollav_natl |&gt;
 ##  9  1984 DEM    38.9  38.2  39.7  39.1  36.9  37.0  37.5  37.4  38.0  37.6  38.6
 ## 10  1984 REP    56.9  56.1  56.1  56.6  57.1  56.1  56.0  57.2  57.6  57.0  55.4
 ## # ℹ 20 more rows
-## # ℹ 27 more variables: `11` &lt;dbl&gt;, `12` &lt;dbl&gt;, `13` &lt;dbl&gt;, `14` &lt;dbl&gt;,
+## # ℹ 29 more variables: `11` &lt;dbl&gt;, `12` &lt;dbl&gt;, `13` &lt;dbl&gt;, `14` &lt;dbl&gt;,
 ## #   `15` &lt;dbl&gt;, `16` &lt;dbl&gt;, `17` &lt;dbl&gt;, `18` &lt;dbl&gt;, `19` &lt;dbl&gt;, `20` &lt;dbl&gt;,
 ## #   `21` &lt;dbl&gt;, `22` &lt;dbl&gt;, `23` &lt;dbl&gt;, `24` &lt;dbl&gt;, `25` &lt;dbl&gt;, `26` &lt;dbl&gt;,
 ## #   `27` &lt;dbl&gt;, `28` &lt;dbl&gt;, `29` &lt;dbl&gt;, `30` &lt;dbl&gt;, winner &lt;lgl&gt;,
 ## #   candidate &lt;chr&gt;, pv &lt;dbl&gt;, pv2p &lt;dbl&gt;, incumbent &lt;lgl&gt;,
-## #   incumbent_party &lt;lgl&gt;, prev_admin &lt;lgl&gt;</code></pre>
+## #   incumbent_party &lt;lgl&gt;, prev_admin &lt;lgl&gt;, deminc &lt;dbl&gt;, juneapp &lt;dbl&gt;</code></pre>
 <pre class="r"><code># Split into training and testing data based on inclusion or exclusion of 2024. 
 d_poll_weeks_train &lt;- d_poll_weeks |&gt; 
   filter(year &lt;= 2020)
@@ -474,9 +474,9 @@ lambda.min.enet &lt;- cv.enet.pollweeks$lambda.min
 (mse.ridge &lt;- mean((predict(ridge.pollsweeks, s = lambda.min.ridge, newx = x.train) - y.train)^2))</code></pre>
 <pre><code>## [1] 9.575001</code></pre>
 <pre class="r"><code>(mse.lasso &lt;- mean((predict(lasso.pollsweeks, s = lambda.min.lasso, newx = x.train) - y.train)^2))</code></pre>
-<pre><code>## [1] 3.491738</code></pre>
+<pre><code>## [1] 3.61215</code></pre>
 <pre class="r"><code>(mse.enet &lt;- mean((predict(enet.pollsweeks, s = lambda.min.enet, newx = x.train) - y.train)^2))</code></pre>
-<pre><code>## [1] 4.228987</code></pre>
+<pre><code>## [1] 2.325853</code></pre>
 <pre class="r"><code># Generate plot comparing coefficients for each of the weeks. 
 d.coefplot &lt;- data.frame(&quot;OLS&quot; = coef(ols.pollweeks)[-1], 
                          &quot;Ridge&quot; = coef(ridge.pollsweeks, s = lambda.min.ridge)[-1], 
@@ -618,9 +618,9 @@ enet.combined &lt;- cv.glmnet(x = x.train.combined, y = y.train.combined, interc
 
 # Predict 2024 national pv2p share using elastic-net.
 (combo.pred &lt;- predict(enet.combined, s = lambda.min.enet.combined, newx = x.test.combined))</code></pre>
-<pre><code>## Warning in cbind2(1, newx): number of rows of result is not a multiple of
-## vector length (arg 1)</code></pre>
-<pre><code>##      s1</code></pre>
+<pre><code>##            s1
+## [1,] 50.57824
+## [2,] 47.98181</code></pre>
 <pre class="r"><code># Ensemble 1: Predict based on unweighted (or equally weighted) ensemble model between polls and fundamentals models. 
 (unweighted.ensemble.pred &lt;- (polls.pred + fund.pred)/2)</code></pre>
 <pre><code>##            s1

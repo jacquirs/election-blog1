@@ -17,34 +17,19 @@
     <loc>https://example.org/post/2024/09/05/week-1-introductory-post/</loc>
     <lastmod>2024-09-05T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://example.org/categories/</loc>
-    <lastmod>2020-12-01T21:13:14-05:00</lastmod>
-  </url><url>
-    <loc>https://example.org/post/2020/12/01/hello-r-markdown/</loc>
-    <lastmod>2020-12-01T21:13:14-05:00</lastmod>
-  </url><url>
-    <loc>https://example.org/tags/plot/</loc>
-    <lastmod>2020-12-01T21:13:14-05:00</lastmod>
-  </url><url>
-    <loc>https://example.org/categories/r/</loc>
-    <lastmod>2020-12-01T21:13:14-05:00</lastmod>
-  </url><url>
-    <loc>https://example.org/tags/r-markdown/</loc>
-    <lastmod>2020-12-01T21:13:14-05:00</lastmod>
-  </url><url>
-    <loc>https://example.org/tags/regression/</loc>
-    <lastmod>2020-12-01T21:13:14-05:00</lastmod>
-  </url><url>
-    <loc>https://example.org/tags/</loc>
-    <lastmod>2020-12-01T21:13:14-05:00</lastmod>
-  </url><url>
     <loc>https://example.org/note/2017/06/14/another-note/</loc>
+    <lastmod>2017-06-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/categories/</loc>
     <lastmod>2017-06-14T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://example.org/categories/example/</loc>
     <lastmod>2017-06-14T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://example.org/note/</loc>
+    <lastmod>2017-06-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/tags/</loc>
     <lastmod>2017-06-14T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://example.org/tags/tutorial/</loc>
