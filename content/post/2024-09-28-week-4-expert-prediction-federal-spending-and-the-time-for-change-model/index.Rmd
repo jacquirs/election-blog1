@@ -78,7 +78,7 @@ d_poll_weeks <- d_pollav_natl |>
 
 This week, I will explore the importance of several new variables to determine how to best predict two way popular vote within contentious states in the 2024 presidential election. These include incumbency measures, federal spending, and expert prediction. I will them discuss the comparison of past models to the time for change model and finish with my new prediction using super learning. 
 
-### Analysis of the Incumbency Advantage
+### Historical Analysis of Incumbency
 The incumbency status of a party or particular candidate can effect how they are perceived by the electorate and as a result their popular vote outcome, as mentioned in past weeks. The question lies in the mechanism behind the incumbent advantage or disadvantage: does it focus solely on the incumbent president and their specific actions or benefit the party of the incumbent in general? 
 
 ```{r, include = FALSE}
@@ -147,24 +147,54 @@ While looking at incumbent presidents appears to show that incumbents have a gre
 
 This is supported by the literature, but with even more limited support for incumbent candidates. According to [Brown (2014)](https://www.cambridge.org/core/journals/journal-of-experimental-political-science/article/voters-dont-care-much-about-incumbency/ECFE39E003912F8AF65C2AD14A34BD8C), the electoral advantage typically associated with incumbents is largely due to structural factors rather than voter preference. In a randomized survey experiment, Brown found that once these structural advantages are held constant, voters exhibit minimal preference for incumbents over challengers. Furthermore, the study demonstrated that partisanship, rather than incumbency, plays a larger role in shaping voter preferences, and there is no significant evidence of incumbency fatigue or diminishing support for long-serving incumbents.
 
+### Incumbency Advantages and Disadvantages 
+Just because the direct study by Brown does not reveal that incumbency alone makes people vote one way or the other does not mean that they are not at an advantage. For incumbent candidates, a variety of institutional factors may impact the result of an election in their favor. 
+
+the factors
+Bully pulpit
+Politicians in office command public attention such that people know who they are and they can shape public opinion 
+Don’t have to fight for media or name recognition
+Campaigning
+Have time advantage, never stop campaigning 
+Party nominations
+Challengers have to fight other in nomination and this gives advantage to incumbent who is not beat up by opponents and don’t have to use resources for that
+Powers of the office
+Powers of office can help reelection
+Can control spending to gain favor with constituents
+Pork barrel spending
+Spending targeted at certain districts 
+Helps with reelection 
+Theoretical reasons to believe this would help in reelection but not a lot of empirical evidence 
+On president level, relationship between federal spending on disaster in an area and votes for the incumbent in that area
+Seems like buying votes
+
+
+General incumbency considerations
+Components of incumbency advantage?: 
+More media coverage, name recognition 
+Campaign finance access 
+"Pork" → short-term economic gains (Bartels 2008), credit-claiming (Kriner and Reeves, 2012)
+Possible disadvantages of incumbency?
+Polarized electorate → partisanship, not incumbency matters (Donovan et al., 2019) Recessions, disasters → blame attribution (Achen and Bartels, 2016) Incumbency fatigue 
+
 Both candidates in 2024 have name recognition and past experience with the electorate, which may be difficult to model exactly, but with these results it seems acceptable to assume that the impact of incumbency for both candidates may be negligible or cancel each other out. 
 
-### Historical Impact of Federal Spending 
-For incumbent candidates, a variety of institutional factorsmay impact the result of an election in their favor. 
+
+### Historical Impact of Federal Spending
 - literature
 - what can I include in my model
 - one graph
 
-Expert Prediction Accuracy
+### Expert Prediction Accuracy
 - analysis of their accuracy
 - how well did they do in 2020 state level comparison
 - two maps
 - how to include them (only building models for states that aren't for certain)
 
-New Comparison Benchmark: The Time for Change Model
+### The Time for Change Model
 MAY CUT
 - what is it
 - how do my past models compare
 
-This Week's Prediction Using Super Learning
+### This Week's Prediction Using Super Learning
 - do prediction using super learning, maybe try to add in expert prediction or funding variable? 
