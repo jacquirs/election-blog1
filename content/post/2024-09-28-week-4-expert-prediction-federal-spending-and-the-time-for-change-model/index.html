@@ -31,11 +31,12 @@ tags: []
 </div>
 <div id="historical-impact-of-federal-spending" class="section level3">
 <h3>Historical Impact of Federal Spending</h3>
-<ul>
-<li>literature</li>
-<li>what can I include in my model</li>
-<li>one graph</li>
-</ul>
+<p><em>Is federal spending something I should use to predict popular vote outcomes? We will find that that answer is no.</em> <a href="https://www.cambridge.org/core/journals/journal-of-experimental-political-science/article/voters-dont-care-much-about-incumbency/ECFE39E003912F8AF65C2AD14A34BD8C">Kriner and Reeves (2012)</a> find that increased federal spending in local communities boosts electoral support for incumbent presidents or their party’s nominee, with particularly strong effects in battleground states. The study highlights that federal grants serve as “electoral currency,” particularly where local congressional representatives align with the president’s party. However, the electoral benefits of spending are not uniform, with liberal and moderate voters rewarding presidents more than conservatives. This underscores the nuanced role of federal spending in shaping electoral outcomes, dependent on partisan dynamics, voter ideology, and electoral context.</p>
+<p>In my own analysis, I will first look at how federal spending/ pork spending is distributed; presidents may propose a budget that is equitable, to all constituents (universalism), rewards co-partisans (partisanship), or targets electorally important constituents (electoral particularism). Then, I will determine if and how this federal spending has changed over time to see if it is worthwhile to include in my model.</p>
+<p>Note that below, core states are those where the president/ incumbent has a large number of co-partisans.
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>Within each state type, spending across types of years is not statistically significantly different, indicating that president’s don’t simply spend more in election years, or that the budget take much more time than this period. between swing and core states, the difference is statistically significant, meaning presidents spend more in swing states on average, 1988-2008. This disproves the co-partisans explanation for federal funding, instead supporting that the budget is used to influence more competitive states. Additionally, as shown in class, incumbents don’t spend statistically significantly more on average when themselves versus their successors are running in an election year. This means Harris will likely not have different spending from what there would have been with Biden as an incumbent candidate, allowing this data to be used in predictions if it proves useful.</p>
+<p>However, when running regressions to predict popular vote outcomes as a function of the interaction between federal grant spending and state, including year fixed effects, the model does not do well on the state level. This data is also not likely relevant for 2024 due to it ending in 2008, and therefore <em>will not be used in my final prediction model</em>.</p>
 </div>
 <div id="expert-prediction-accuracy" class="section level3">
 <h3>Expert Prediction Accuracy</h3>
@@ -58,6 +59,14 @@ tags: []
 <li>do prediction using super learning, maybe try to add in expert prediction or funding variable?</li>
 </ul>
 </div>
-<div id="data" class="section level2">
-<h2>### Data</h2>
+<div id="data-sources" class="section level3">
+<h3>Data Sources</h3>
+<ul>
+<li>Polls, State and National, 1968-2024</li>
+<li>Popular Vote and Incumbency, State and National, 1948-2020</li>
+<li>FRED Economic Data</li>
+<li>Federal Grants, State and County, 1988-2008</li>
+<li>Cook Political Report Ratings, 1988-2020</li>
+<li>Sabato’s Crystal Ball Ratings, 2004-2024</li>
+</ul>
 </div>

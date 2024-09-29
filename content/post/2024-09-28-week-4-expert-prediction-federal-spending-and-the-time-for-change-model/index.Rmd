@@ -26,6 +26,7 @@ library(RColorBrewer)
 library(sf)
 library(tidyverse)
 library(viridis)
+library(plotly)
 ```
 
 ```{r}
@@ -48,6 +49,9 @@ d_econ <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/fred_ec
 d_pollav_natl <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/national_polls_1968-2024.csv") # if you run this code please change to location of data
 
 d_pollav_state <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/state_polls_1968-2024.csv") # if you run this code please change to location of data
+
+# Read federal grants dataset from Kriner & Reeves (2008) 
+d_pork_state <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/fedgrants_bystate_1988-2008.csv") # if you run this code please change to location of data
 ```
 
 ```{r}
@@ -163,9 +167,47 @@ Incumbency also has theoretical disadvantages, including that polarized electora
 Both candidates in 2024 have name recognition and past experience with the electorate, which may be difficult to model incumbency effects exactly, but with these results it seems acceptable to assume that the impact of incumbency for both candidates may be negligible or cancel each other out. 
 
 ### Historical Impact of Federal Spending
-- literature
-- what can I include in my model
-- one graph
+_Is federal spending something I should use to predict popular vote outcomes? We will find that that answer is no._  [Kriner and Reeves (2012)](https://www.cambridge.org/core/journals/journal-of-experimental-political-science/article/voters-dont-care-much-about-incumbency/ECFE39E003912F8AF65C2AD14A34BD8C) find that increased federal spending in local communities boosts electoral support for incumbent presidents or their party’s nominee, with particularly strong effects in battleground states. The study highlights that federal grants serve as "electoral currency," particularly where local congressional representatives align with the president's party. However, the electoral benefits of spending are not uniform, with liberal and moderate voters rewarding presidents more than conservatives. This underscores the nuanced role of federal spending in shaping electoral outcomes, dependent on partisan dynamics, voter ideology, and electoral context.
+
+In my own analysis, I will first look at how federal spending/ pork spending is distributed; presidents may propose a budget that is equitable, to all constituents (universalism), rewards co-partisans (partisanship), or targets electorally important constituents (electoral particularism). Then, I will determine if and how this federal spending has changed over time to see if it is worthwhile to include in my model. 
+
+Note that below, core states are those where the president/ incumbent has a large number of co-partisans.
+```{r}
+####----------------------------------------------------------#
+#### Analysis of National Pork Spending by Type
+####----------------------------------------------------------#
+
+d_pork_state |> 
+  filter(!is.na(state_year_type)) |> 
+  group_by(state_year_type) |>
+  summarize(mean_grant = mean(grant_mil, na.rm = T), se_grant = sd(grant_mil, na.rm = T)/sqrt(n())) |> 
+  ggplot(aes(x = state_year_type, y = mean_grant, ymin = mean_grant-1.96*se_grant, ymax = mean_grant+1.96*se_grant)) + 
+  coord_flip() + 
+  geom_bar(stat = "identity", fill = "#38812F") + 
+  geom_errorbar(aes(ymin = mean_grant - 1.96 * se_grant, ymax = mean_grant + 1.96 * se_grant), 
+                width = 0.2, color = "black") + 
+  geom_text(aes(label = paste0("$", round(mean_grant, 2))), 
+            hjust = 0.5, vjust = -1.2, size = 3.5, fontface = "bold", color = "black") +
+  geom_text(aes(y = mean_grant - 1.96 * se_grant, 
+                label = paste0("$", round(mean_grant - 1.96 * se_grant, 2))), 
+            vjust = 2, size = 3, color = "white") + 
+  geom_text(aes(y = mean_grant + 1.96 * se_grant, 
+                label = paste0("$", round(mean_grant + 1.96 * se_grant, 2))), 
+            vjust = 2, size = 3, color = "black") + 
+  labs(x = "Type of State & Year", 
+       y = "Federal Grant Spending (Millions of $)", 
+       title = "Federal Grant Spending by State Election Type") + 
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+        axis.text = element_text(size = 9),
+        panel.grid.major = element_line(color = "lightgrey"))
+
+```
+
+Within each state type, spending across types of years is not statistically significantly different, indicating that president's don't simply spend more in election years, or that the budget take much more time than this period. between swing and core states, the difference is statistically significant, meaning presidents spend more in swing states on average, 1988-2008. This disproves the co-partisans explanation for federal funding, instead supporting that the budget is used to influence more competitive states. Additionally, as shown in class, incumbents don't spend statistically significantly more on average when themselves versus their successors are running in an election year. This means Harris will likely not have different spending from what there would have been with Biden as an incumbent candidate, allowing this data to be used in predictions if it proves useful. 
+
+However, when running regressions to predict popular vote outcomes as a function of the interaction between federal grant spending and state, including year fixed effects, the model does not do well on the state level. This data is also not likely relevant for 2024 due to it ending in 2008, and therefore _will not be used in my final prediction model_.
+
 
 ### Expert Prediction Accuracy
 - analysis of their accuracy
@@ -181,5 +223,10 @@ MAY CUT
 ### This Week's Prediction Using Super Learning
 - do prediction using super learning, maybe try to add in expert prediction or funding variable? 
 
-### Data
-- 
+### Data Sources
+- Polls, State and National, 1968-2024
+- Popular Vote and Incumbency, State and National, 1948-2020
+- FRED Economic Data
+- Federal Grants, State and County, 1988-2008
+- Cook Political Report Ratings, 1988-2020
+- Sabato's Crystal Ball Ratings, 2004-2024
