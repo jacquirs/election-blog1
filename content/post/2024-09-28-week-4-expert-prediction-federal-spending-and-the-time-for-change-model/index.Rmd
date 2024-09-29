@@ -1,0 +1,170 @@
+---
+title: 'Week 4: Expert Prediction, Federal Spending, and the Time for Change Model'
+author: Jacqui Schlesinger
+date: '2024-09-28'
+slug: week-4-expert-prediction-federal-spending-and-the-time-for-change-model
+categories: []
+tags: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Load in libraries
+####----------------------------------------------------------#
+
+library(car)
+library(caret)
+library(CVXR)
+library(glmnet)
+library(kableExtra)
+library(maps)
+library(RColorBrewer)
+library(sf)
+library(tidyverse)
+library(viridis)
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Read, merge, and process data
+####----------------------------------------------------------#
+
+# Read incumbency/vote data
+d_vote <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/popvote_1948-2020.csv") # if you run this code please change to location of data
+
+d_state_vote <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/state_popvote_1948_2020.csv") # if you run this code please change to location of data
+d_vote$party[d_vote$party == "democrat"] <- "DEM"
+d_vote$party[d_vote$party == "republican"] <- "REP"
+
+# Read economic data
+d_econ <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/fred_econ.csv") |> 
+  filter(quarter == 2) # if you run this code please change to location of data
+
+# Read polling and election results data
+d_pollav_natl <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/national_polls_1968-2024.csv") # if you run this code please change to location of data
+
+d_pollav_state <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/state_polls_1968-2024.csv") # if you run this code please change to location of data
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Data Manipulation
+####----------------------------------------------------------#
+
+# Shape and merge polling and election data using November polls
+d_poll_nov <- d_vote |> 
+  left_join(d_pollav_natl |> 
+              group_by(year, party) |> 
+              top_n(1, poll_date) |> 
+              select(-candidate), 
+            by = c("year", "party")) |> 
+  rename(nov_poll = poll_support) |> 
+  filter(year <= 2020) |> 
+  drop_na()
+
+# Create dataset of polling average by week until the election
+d_poll_weeks <- d_pollav_natl |> 
+  group_by(year, party, weeks_left) |>
+  summarize(mean_poll_week = mean(poll_support)) |> 
+  filter(weeks_left <= 30) |> 
+  pivot_wider(names_from = weeks_left, values_from = mean_poll_week) |> 
+  left_join(d_vote, by = c("year", "party"))
+
+```
+
+This week, I will explore the importance of several new variables to determine how to best predict two way popular vote within contentious states in the 2024 presidential election. These include incumbency measures, federal spending, and expert prediction. I will them discuss the comparison of past models to the time for change model and finish with my new prediction using super learning. 
+
+### Analysis of the Incumbency Advantage
+The incumbency status of a party or particular candidate can effect how they are perceived by the electorate and as a result their popular vote outcome, as mentioned in past weeks. The question lies in the mechanism behind the incumbent advantage or disadvantage: does it focus solely on the incumbent president and their specific actions or benefit the party of the incumbent in general? 
+
+```{r, include = FALSE}
+####----------------------------------------------------------#
+#### Descriptive statistics on the incumbency advantage
+####----------------------------------------------------------#
+
+# Approach 1: how many elections has an incumbent president won
+d_vote |> 
+  filter(winner) |> 
+  select(year, win_party = party, win_cand = candidate) |> 
+  mutate(win_party_last = lag(win_party, order_by = year),
+         win_cand_last = lag(win_cand, order_by = year)) |> 
+  mutate(reelect_president = win_cand_last == win_cand) |> 
+  filter(year > 1948 & year < 2024) |> 
+  group_by(reelect_president) |> 
+  summarize(N = n()) |> 
+  mutate(Percent = round(N/sum(N) * 100, 2)) |>
+  as.data.frame()
+
+
+# Approach 2: out of the 11 elections with incumbents winning, what happened
+inc_tab <- d_vote |> 
+  filter(year > 1948 & year < 2024) |>
+  select(year, party, candidate, incumbent, winner) |> 
+  pivot_wider(names_from = party, 
+              values_from = c(candidate, incumbent, winner)) |> 
+  filter(incumbent_DEM == TRUE | incumbent_REP == TRUE)
+
+
+cat(paste0("Elections with At Least One Incumbent Running: ", nrow(inc_tab), "\n",
+   "Incumbent Victories: ", (sum(inc_tab$incumbent_REP & inc_tab$winner_REP) + 
+                             sum(inc_tab$incumbent_DEM & inc_tab$winner_DEM)), "\n",
+    "Percentage: ", round((sum(inc_tab$incumbent_REP & inc_tab$winner_REP) + 
+                           sum(inc_tab$incumbent_DEM & inc_tab$winner_DEM))/
+                           nrow(inc_tab)*100, 2)))
+
+# cont approach 2: in the six elections since 2000
+inc_tab |> 
+  filter(year >= 2000)
+       
+# Approach 3: how many elections has the incumbent party won 
+d_vote |> 
+  filter(winner) |> 
+  select(year, win_party = party, win_cand = candidate) |> 
+  mutate(win_party_last = lag(win_party, order_by = year),
+         win_cand_last = lag(win_cand, order_by = year)) |> 
+  mutate(reelect_party = win_party_last == win_party) |> 
+  filter(year > 1948 & year < 2024) |> 
+  group_by(reelect_party) |> 
+  summarize(N = n()) |> 
+  mutate(Percent = round(N/sum(N) * 100, 2)) |>
+  as.data.frame()
+
+# Approach 4: elections where the winner served in the previous admin
+100*round(prop.table(table(`prev_admin` = d_vote$prev_admin[d_vote$year > 1948 & 
+                                     d_vote$year < 2024 & 
+                                     d_vote$winner == TRUE])), 4)
+
+
+```
+
+Diving deeper into the results of presidential elections since 1952, I can aggregate the results of incumbent candidates and incumbent parties to see if they benefit from their prior positions. Of these 18 elections, only 33% have re-elected a sitting president. However, only 11 of these elections included an incumbent who was running, and 63.64% won (7 out of 11 elections). Additionally, looking only at the 6 elections since 2000, 4 of which included incumbents, 3 of the 4 won, Donald Trump being the only one who wasn't re-elected. 
+
+While looking at incumbent presidents appears to show that incumbents have a greater than random chance of winning a re-election campaign, looking at incumbent party results does not tell the same story. The incumbent party has lost 10 of the last 18 presidential elections since 1952, and filtering for elections where the candidate served in the previous administration, only 27.78% won. 
+
+This is supported by the literature, but with even more limited support for incumbent candidates. According to [Brown (2014)](https://www.cambridge.org/core/journals/journal-of-experimental-political-science/article/voters-dont-care-much-about-incumbency/ECFE39E003912F8AF65C2AD14A34BD8C), the electoral advantage typically associated with incumbents is largely due to structural factors rather than voter preference. In a randomized survey experiment, Brown found that once these structural advantages are held constant, voters exhibit minimal preference for incumbents over challengers. Furthermore, the study demonstrated that partisanship, rather than incumbency, plays a larger role in shaping voter preferences, and there is no significant evidence of incumbency fatigue or diminishing support for long-serving incumbents.
+
+Both candidates in 2024 have name recognition and past experience with the electorate, which may be difficult to model exactly, but with these results it seems acceptable to assume that the impact of incumbency for both candidates may be negligible or cancel each other out. 
+
+### Historical Impact of Federal Spending 
+For incumbent candidates, a variety of institutional factorsmay impact the result of an election in their favor. 
+- literature
+- what can I include in my model
+- one graph
+
+Expert Prediction Accuracy
+- analysis of their accuracy
+- how well did they do in 2020 state level comparison
+- two maps
+- how to include them (only building models for states that aren't for certain)
+
+New Comparison Benchmark: The Time for Change Model
+MAY CUT
+- what is it
+- how do my past models compare
+
+This Week's Prediction Using Super Learning
+- do prediction using super learning, maybe try to add in expert prediction or funding variable? 

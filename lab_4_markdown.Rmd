@@ -668,6 +668,10 @@ pred_1 <- as.numeric(predict(mod_1, newdata = subset(d_state_combo, year == 2020
 pred_2 <- as.numeric(predict(mod_2, newdata = subset(d_state_combo, year == 2020)))
 pred_3 <- as.numeric(predict(mod_3, newdata = subset(d_state_combo, year == 2020)))
 
+pred_1
+pred_2
+pred_3
+
 ```
 
 ```{r}
