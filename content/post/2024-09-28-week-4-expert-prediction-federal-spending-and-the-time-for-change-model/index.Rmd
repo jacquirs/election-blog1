@@ -1,8 +1,8 @@
 ---
-title: 'Week 4: Expert Prediction, Federal Spending, and the Time for Change Model'
+title: 'Week 4: Incumbency, Expert Prediction, and Super Learning in Models'
 author: Jacqui Schlesinger
 date: '2024-09-28'
-slug: week-4-expert-prediction-federal-spending-and-the-time-for-change-model
+slug: week-4
 categories: []
 tags: []
 ---
@@ -80,7 +80,7 @@ d_poll_weeks <- d_pollav_natl |>
 
 ```
 
-This week, I will explore the importance of several new variables to determine how to best predict two way popular vote within contentious states in the 2024 presidential election. These include incumbency measures, federal spending, and expert prediction. I will them discuss the comparison of past models to the time for change model and finish with my new prediction using super learning. 
+This week, I will explore the importance of several new variables to determine how to best predict two way popular vote within contentious states in the 2024 presidential election. These include incumbency measures, federal spending, and expert prediction. I will finish with my new prediction using super learning.
 
 ### Historical Analysis of Incumbency
 The incumbency status of a party or particular candidate can effect how they are perceived by the electorate and as a result their popular vote outcome, as mentioned in past weeks. The question lies in the mechanism behind the incumbent advantage or disadvantage: does it focus solely on the incumbent president and their specific actions or benefit the party of the incumbent in general? 
@@ -210,15 +210,14 @@ However, when running regressions to predict popular vote outcomes as a function
 
 
 ### Expert Prediction Accuracy
+A much better variable to consider how to integrate into my model is expert prediction of the election. Organizations like the Cook Political Report and Sabato's Crystal Ball rate states by their competitiveness on a 7 point scale, ranging from strong democrat to strong republican likelihood of victory. I will first analyze the general accuracy of these two ratings organziations, then look specifically at their 2020 state level comparison. I will then draw insights that can be used for my future model. 
+
+
+
 - analysis of their accuracy
 - how well did they do in 2020 state level comparison
 - two maps
 - how to include them (only building models for states that aren't for certain)
-
-### The Time for Change Model
-MAY CUT
-- what is it
-- how do my past models compare
 
 ### This Week's Prediction Using Super Learning
 - do prediction using super learning, maybe try to add in expert prediction or funding variable? 

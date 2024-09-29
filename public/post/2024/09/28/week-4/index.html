@@ -1,11 +1,39 @@
----
-title: 'Week 4: Incumbency, Expert Prediction, and Super Learning in Models'
-author: Jacqui Schlesinger
-date: '2024-09-28'
-slug: week-4
-categories: []
-tags: []
----
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Week 4: Incumbency, Expert Prediction, and Super Learning in Models | A minimal Hugo website</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+    
+  </head>
+
+  <body>
+    <nav>
+    <ul class="menu">
+      
+      <li><a href="/">Home</a></li>
+      
+      <li><a href="/about/">About</a></li>
+      
+      <li><a href="/categories/">Categories</a></li>
+      
+      <li><a href="/tags/">Tags</a></li>
+      
+      <li><a href="/index.xml">Subscribe</a></li>
+      
+    </ul>
+    <hr/>
+    </nav>
+
+<div class="article-meta">
+<h1><span class="title">Week 4: Incumbency, Expert Prediction, and Super Learning in Models</span></h1>
+<h2 class="author">Jacqui Schlesinger</h2>
+<h2 class="date">2024/09/28</h2>
+</div>
+
+<main>
 
 
 
@@ -34,7 +62,7 @@ tags: []
 <p><em>Is federal spending something I should use to predict popular vote outcomes? We will find that that answer is no.</em> <a href="https://www.cambridge.org/core/journals/journal-of-experimental-political-science/article/voters-dont-care-much-about-incumbency/ECFE39E003912F8AF65C2AD14A34BD8C">Kriner and Reeves (2012)</a> find that increased federal spending in local communities boosts electoral support for incumbent presidents or their party’s nominee, with particularly strong effects in battleground states. The study highlights that federal grants serve as “electoral currency,” particularly where local congressional representatives align with the president’s party. However, the electoral benefits of spending are not uniform, with liberal and moderate voters rewarding presidents more than conservatives. This underscores the nuanced role of federal spending in shaping electoral outcomes, dependent on partisan dynamics, voter ideology, and electoral context.</p>
 <p>In my own analysis, I will first look at how federal spending/ pork spending is distributed; presidents may propose a budget that is equitable, to all constituents (universalism), rewards co-partisans (partisanship), or targets electorally important constituents (electoral particularism). Then, I will determine if and how this federal spending has changed over time to see if it is worthwhile to include in my model.</p>
 <p>Note that below, core states are those where the president/ incumbent has a large number of co-partisans.
-<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<img src="https://example.org/post/2024/09/28/week-4/index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>Within each state type, spending across types of years is not statistically significantly different, indicating that president’s don’t simply spend more in election years, or that the budget take much more time than this period. between swing and core states, the difference is statistically significant, meaning presidents spend more in swing states on average, 1988-2008. This disproves the co-partisans explanation for federal funding, instead supporting that the budget is used to influence more competitive states. Additionally, as shown in class, incumbents don’t spend statistically significantly more on average when themselves versus their successors are running in an election year. This means Harris will likely not have different spending from what there would have been with Biden as an incumbent candidate, allowing this data to be used in predictions if it proves useful.</p>
 <p>However, when running regressions to predict popular vote outcomes as a function of the interaction between federal grant spending and state, including year fixed effects, the model does not do well on the state level. This data is also not likely relevant for 2024 due to it ending in 2008, and therefore <em>will not be used in my final prediction model</em>.</p>
 </div>
@@ -65,3 +93,20 @@ tags: []
 <li>Sabato’s Crystal Ball Ratings, 2004-2024</li>
 </ul>
 </div>
+
+</main>
+
+  <footer>
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<script src="//cdn.jsdelivr.net/combine/npm/katex/dist/katex.min.js,npm/katex/dist/contrib/auto-render.min.js,npm/@xiee/utils/js/render-katex.js" defer></script>
+
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.min.js" defer></script>
+
+  
+  <hr/>
+  © <a href="https://yihui.org">Yihui Xie</a> 2017 &ndash; 2024 | <a href="https://github.com/yihui">Github</a> | <a href="https://twitter.com/xieyihui">Twitter</a>
+  
+  </footer>
+  </body>
+</html>
+
