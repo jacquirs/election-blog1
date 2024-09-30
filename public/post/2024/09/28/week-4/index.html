@@ -68,9 +68,11 @@
 </div>
 <div id="expert-prediction-accuracy" class="section level3">
 <h3>Expert Prediction Accuracy</h3>
-<p>A much better variable to consider how to integrate into my model is expert prediction of the election. Organizations like the Cook Political Report and Sabato’s Crystal Ball rate states by their competitiveness on a 7 point scale, ranging from strong democrat to strong republican likelihood of victory. I will first analyze the general accuracy of these two ratings organziations, then look specifically at their 2020 state level comparison. I will then draw insights that can be used for my future model.</p>
+<p>A much better variable to consider how to integrate into my model is expert prediction of the election. Organizations like the Cook Political Report and Sabato’s Crystal Ball rate states by their competitiveness on a 7 point scale, ranging from strong democrat to strong republican likelihood of victory. I will first analyze the general accuracy of these two ratings organizations, then look specifically at their 2020 state level comparison. I will then draw insights that can be used for my future model.</p>
+<p>To compare these two and their 2020 predictions, I will first compare them to each other. In 2020, they agreed on 42 states, including DC, and disagreed on 9. These disagreements were mostly on their level of confidence, though in the case of Georgia, Minnesota, New Hampshire, and North Carolina one rated it as a toss up but the other had it slightly swinging to one party. Overall, they were very similar in their predictions, and have becoming more similar each year since 2004 when they had about 65% match rate.</p>
+<p>I can also compare the accuracy of each in 2020, when Cook was 88.2% correct and Sabato was 98% correct. It is worth noting that Sabato had 0 states as toss ups while Cook had 6, potentially responsible for the differences due to their bearishness in choosing outcomes. A toss up counts as an automatic incorrect in this way, which may not be the best approach. Sabato only missed on North Carolina in this case, which Cooke also got wrong, and its other five are also ones it got wrong due to rating them toss up. If we did not count toss ups as wrong, Cooke would have 0 incorrect predictions and Sabato would have 1. In this way, they seems to have similar accuracy in 2020.</p>
+<p>Looking more closely at the predictions for 2020, I will compare how well they did in each state.</p>
 <ul>
-<li>analysis of their accuracy</li>
 <li>how well did they do in 2020 state level comparison</li>
 <li>two maps</li>
 <li>how to include them (only building models for states that aren’t for certain)</li>

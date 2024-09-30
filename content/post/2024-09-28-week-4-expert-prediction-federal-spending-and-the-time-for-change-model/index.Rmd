@@ -210,11 +210,161 @@ However, when running regressions to predict popular vote outcomes as a function
 
 
 ### Expert Prediction Accuracy
-A much better variable to consider how to integrate into my model is expert prediction of the election. Organizations like the Cook Political Report and Sabato's Crystal Ball rate states by their competitiveness on a 7 point scale, ranging from strong democrat to strong republican likelihood of victory. I will first analyze the general accuracy of these two ratings organziations, then look specifically at their 2020 state level comparison. I will then draw insights that can be used for my future model. 
+A much better variable to consider how to integrate into my model is expert prediction of the election. Organizations like the Cook Political Report and Sabato's Crystal Ball rate states by their competitiveness on a 7 point scale, ranging from strong democrat to strong republican likelihood of victory. I will first analyze the general accuracy of these two ratings organizations, then look specifically at their 2020 state level comparison. I will then draw insights that can be used for my future model. 
+
+```{r}
+####----------------------------------------------------------#
+#### Read in expert data from CPR
+####----------------------------------------------------------#
+
+# Read expert prediction data
+# Read data from Cook Political Report. 
+# Years: 1988-2020
+# IMPORTANT: Please do not commit/push this data to GitHub or share it anywhere outside of this course!
+d_cook <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/CPR_EC_Ratings.csv")[,-1] |> 
+  mutate(rating_numeric = case_when(Rating == "Solid D" ~ 1,
+                                    Rating == "Likely D" ~ 2,
+                                    Rating == "Lean D" ~ 3,
+                                    Rating == "Toss Up" ~ 4,
+                                    Rating == "Lean R" ~ 5,
+                                    Rating == "Likely R" ~ 6,
+                                    Rating == "Solid R" ~ 7)) |> 
+  mutate(solid_D = as.numeric(rating_numeric == 1),
+         likely_D = as.numeric(rating_numeric == 2),
+         lean_D = as.numeric(rating_numeric == 3),
+         toss_up = as.numeric(rating_numeric == 4),
+         lean_R = as.numeric(rating_numeric == 5),
+         likely_R = as.numeric(rating_numeric == 6),
+         solid_R = as.numeric(rating_numeric == 7))
+# if you run this code please change to location of data
+
+# Read data from Sabato's Crystal Ball
+# Years: 2004-2024
+d_sabato <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/sabato_crystal_ball_ratings.csv") |> 
+  rename(state_abb = state) # if you run this code please change to location of data
+
+state_abb_xwalk <- d_state_vote |>
+  mutate(state_abb = state.abb[match(d_state_vote$state, state.name)]) |> 
+  select(state, state_abb) |> 
+  distinct() 
+state_abb_xwalk[51,]$state <- "District of Columbia"
+state_abb_xwalk[51,]$state_abb <- "DC"
+
+d_sabato <- d_sabato |> 
+  left_join(state_abb_xwalk, by = "state_abb") |>
+  mutate(safe_D = as.numeric(rating == 1),
+         likely_D = as.numeric(rating == 2),
+         lean_D = as.numeric(rating == 3),
+         toss_up = as.numeric(rating == 4),
+         lean_R = as.numeric(rating == 5),
+         likely_R = as.numeric(rating == 6),
+         safe_R = as.numeric(rating == 7))
+# Ratings: 
+# 1: Safe Democrat
+# 2: Likely Democrat
+# 3: Lean Democrat
+# 4: Toss Up
+# 5: Lean Republican
+# 6: Likely Republican
+# 7: Safe Republican
+
+```
+
+```{r, include = FALSE}
+####----------------------------------------------------------#
+#### Compare ratings to each other
+####----------------------------------------------------------#
+
+# 2020 Comparison. 
+d_sabato_2020 <- d_sabato |> 
+  filter(year == 2020) |> 
+  select(state, sabato_rating = rating)
+
+d_expert_2020 <- d_cook |> 
+  filter(Cycle == 2020) |> 
+  select(state = State, cook_rating = rating_numeric) |> 
+  left_join(d_sabato_2020, by = "state") |> 
+  mutate(rating_match = as.numeric(cook_rating == sabato_rating))
+
+d_expert_2020$state[d_expert_2020$rating_match == 0 & !is.na(d_expert_2020$sabato_rating)]
+# Why the NAs? Cook makes ratings for Maine and Nebraska districts separately. 
+# These may be important for the 2024 election, but are difficult to find data for. 
+
+d_expert_2020 <- d_expert_2020 |> 
+  drop_na()
+
+d_expert_2020$rating_match |> table()
+
+# Compare rating mismatches for 2020.
+d_expert_2020[d_expert_2020$state %in% c(d_expert_2020$state[d_expert_2020$rating_match == 0]),]
+```
+
+```{r, include = FALSE}
+####----------------------------------------------------------#
+#### Calculate yearly match rate 
+####----------------------------------------------------------#
+
+# Combine expert predictions generally
+d_expert <- d_cook |> 
+  select(year = Cycle, state = State, cook_rating = rating_numeric) |> 
+  left_join(d_sabato |> select(year, state, sabato_rating = rating), by = c("year", "state")) |> 
+  mutate(rating_match = as.numeric(cook_rating == sabato_rating)) |> 
+  drop_na()
+
+d_expert |> 
+  group_by(year) |> 
+  summarize(mean_match_rate = mean(rating_match)) 
+```
+
+To compare these two and their 2020 predictions, I will first compare them to each other. In 2020, they agreed on 42 states, including DC, and disagreed on 9. These disagreements were mostly on their level of confidence, though in the case of Georgia, Minnesota, New Hampshire, and North Carolina one rated it as a toss up but the other had it slightly swinging to one party. Overall, they were very similar in their predictions, and have becoming more similar each year since 2004 when they had about 65% match rate. 
+
+```{r, include = FALSE}
+####----------------------------------------------------------#
+#### Compare general 2020 results
+####----------------------------------------------------------#
+
+# Merge in 2020 state vote data. 
+d_state_vote_2020 <- d_state_vote |> 
+  filter(year == 2020) |> 
+  select(state, year, R_pv2p, D_pv2p) |> 
+  mutate(margin = D_pv2p - R_pv2p, 
+         winner = ifelse(D_pv2p > R_pv2p, "D", "R"))
+d_state_vote_2020[d_state_vote_2020$state == "District Of Columbia",]$state <- "District of Columbia"
+
+d_expert_2020 <- d_expert_2020 |>
+  left_join(d_state_vote_2020, by = "state")
+
+# See which expert group was more accurate for 2020 (counting toss ups as misses). 
+d_expert_2020 <- d_expert_2020 |> 
+  mutate(cook_correct = as.numeric((winner == "D" & cook_rating < 4) | 
+                                   (winner == "R" & cook_rating > 4)),
+         sabato_correct = as.numeric((winner == "D" & sabato_rating < 4) | 
+                                     (winner == "R" & sabato_rating > 4)))
+
+# print how many of each are correct
+d_expert_2020 |>
+  select(cook_correct, sabato_correct) |> 
+  colMeans()
+
+# how many 4s did each one have 
+sum(d_expert_2020$sabato_rating == 4, na.rm = TRUE)
+sum(d_expert_2020$cook_rating == 4, na.rm = TRUE)
+
+# Which states did Cook miss? 
+d_expert_2020[d_expert_2020$cook_correct == 0,]$state
+d_expert_2020[d_expert_2020$cook_correct == 0,] |> view()
+
+# Sabato? 
+d_expert_2020[d_expert_2020$sabato_correct == 0,]$state
+d_expert_2020[d_expert_2020$sabato_correct == 0,] |> view()
+
+```
+
+I can also compare the accuracy of each in 2020, when Cook was 88.2% correct and Sabato was 98% correct. It is worth noting that Sabato had 0 states as toss ups while Cook had 6, potentially responsible for the differences due to their bearishness in choosing outcomes. A toss up counts as an automatic incorrect in this way, which may not be the best approach. Sabato only missed on North Carolina in this case, which Cooke also got wrong, and its other five are also ones it got wrong due to rating them toss up. If we did not count toss ups as wrong, Cooke would have 0 incorrect predictions and Sabato would have 1. In this way, they seems to have similar accuracy in 2020.
+
+Looking more closely at the predictions for 2020, I will compare how well they did in each state. For this comparison, I will need to develop a method to evaluate their performance above a simple correct/ incorrect method. 
 
 
-
-- analysis of their accuracy
 - how well did they do in 2020 state level comparison
 - two maps
 - how to include them (only building models for states that aren't for certain)
