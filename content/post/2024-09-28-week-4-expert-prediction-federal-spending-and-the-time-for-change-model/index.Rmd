@@ -372,11 +372,11 @@ sum(d_expert_2020$cook_rating == 4, na.rm = TRUE)
 
 # Which states did Cook miss? 
 d_expert_2020[d_expert_2020$cook_correct == 0,]$state
-d_expert_2020[d_expert_2020$cook_correct == 0,] |> view()
+d_expert_2020[d_expert_2020$cook_correct == 0,]
 
 # Sabato? 
 d_expert_2020[d_expert_2020$sabato_correct == 0,]$state
-d_expert_2020[d_expert_2020$sabato_correct == 0,] |> view()
+d_expert_2020[d_expert_2020$sabato_correct == 0,]
 
 ```
 
