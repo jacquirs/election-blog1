@@ -82,11 +82,11 @@ d_poll_weeks <- d_pollav_natl |>
 
 ```
 
-This week, I will explore the importance of several new variables to predict the two-way popular vote within contentious states in the 2024 presidential election. Key factors include incumbency measures, federal spending, and expert prediction. I finish with my new prediction using super learning.
+This week, I will explore the importance of new variables to predict the two-way popular vote within contentious states in the presidential election. Key factors include incumbency measures, federal spending, and expert prediction. I finish with my new prediction using super learning.
 
 
 ### Historical Analysis of Incumbency
-The incumbency status of a party or candidate influences how they are perceived by the electorate and popular vote outcome, as mentioned in past weeks. The core question is in the mechanism behind the incumbency advantage: is it reflective of the incumbent president alone or benefits the party in general?
+The incumbency status of a party or candidate influences their perception by the electorate and their popular vote outcome, as mentioned in past weeks. The core question is in the mechanism behind the incumbency advantage: is it reflective of the incumbent president alone or benefits the party in general?
 
 ```{r, include = FALSE}
 ####----------------------------------------------------------#
@@ -148,32 +148,32 @@ d_vote |>
 
 ```
 
-Analyzing presidential elections since 1952, I can aggregate the results of incumbent candidates and parties to see who benefits. Of 18 elections, only 33% have re-elected a sitting president. However, among 11 elections with incumbents, 63.64% won. In the 6 elections since 2000, three out of four incumbents were re-elected, with Donald Trump being the exception. 
+Analyzing presidential elections since 1952, I aggregate the results of incumbent candidates and parties to see who benefits. Of 18 elections, only 33% re-elected a sitting president. However, among 11 elections with incumbents, 63.64% won. In the 6 elections since 2000, three of four incumbents were re-elected, with Donald Trump as the exception. 
 
-While incumbent presidents show a greater than random chance of winning re-election, incumbent parties present a different narrative: they have lost 10 of the last 18 elections, and only 27.78% won when filtering for candidates from the previous administration.
+While incumbent presidents show a greater-than-random chance of re-election, incumbent parties present a different narrative: they have lost 10 of the last 18 elections, and only 27.78% won when filtering for candidates from the previous administration.
 
 
 ### Incumbency Advantages and Disadvantages 
-Diving deeper into the source of the incumbency advantage, I explore a variety of institutional factors that may impact an election in their favor. These include:
+Diving deeper into the incumbency advantage source, I explore institutional factors that may impact an election in their favor. These include:
 
 - Bully Pulpit: can shape public opinion and have media attention
 - Campaigning: have a continuous campaigning advantage
-- Party Nominations: challengers must fight for nomination, while incumbents conserve resources
+- Party Nominations: challengers fight for nomination while incumbents conserve resources
 - Powers of the Office: can control spending to win favor with constituent
-- Pork Barrel Spending: can target certain districts for reelection 
+- Pork Barrel Spending: can target certain districts 
 
-While these advantages are theoretically significant, empirical evidence remains limited. Presidential spending on disasters is one that has some empirical evidence behind its impact on the presidential level.
+While these are theoretically significant, empirical evidence remains limited. Presidential spending on disasters has some empirical evidence of impact at the presidential vote level.
 
-This is explored in the literature. According to [Brown (2014)](https://www.cambridge.org/core/journals/journal-of-experimental-political-science/article/voters-dont-care-much-about-incumbency/ECFE39E003912F8AF65C2AD14A34BD8C), the electoral advantage typically linked to incumbents arises more from structural factors than from voter preferences. Brown's randomized survey experiment showed that, when controlling for these structural advantages, voters display minimal preference for incumbents over challengers. Furthermore, it demonstrated that partisanship, rather than incumbency, shapes voter preferences, with no significant evidence of incumbency fatigue or diminishing support for long-serving incumbents.
+According to [Brown (2014)](https://www.cambridge.org/core/journals/journal-of-experimental-political-science/article/voters-dont-care-much-about-incumbency/ECFE39E003912F8AF65C2AD14A34BD8C), the electoral advantage typically linked to incumbents arises more from structural factors than from voter preferences. Brown's randomized survey experiment showed that, when controlling for these structural advantages, voters display minimal preference for incumbents over challengers. Furthermore, partisanship, rather than incumbency, shapes voter preferences, with no significant evidence of incumbency fatigue or diminishing support for long-serving incumbents.
 
 Incumbency also has theoretical disadvantages, including that polarized electorates lead partisanship to matter more as in [Donovan et al (2019)](https://fisherpub.sjf.edu/polisci_facpub/14/). Recessions and disasters are also blamed on incumbents, per [Achen and Bartel (2016)](https://www.jstor.org/stable/j.ctvc7770q). Incumbency fatigue, though disproved in Brown's study, may need to further study on its influence in this election specifically. 
 
 In 2024, it seems acceptable to assume that the impact of incumbency for both candidates may be negligible or cancel each other out. 
 
 ### Historical Impact of Federal Spending
-_Is federal spending something I should use to predict popular vote outcomes? We will find that that answer is no._  [Kriner and Reeves (2012)](https://www.cambridge.org/core/journals/journal-of-experimental-political-science/article/voters-dont-care-much-about-incumbency/ECFE39E003912F8AF65C2AD14A34BD8C) find that increased federal spending in communities boosts electoral support for incumbent presidents or their party’s nominee, with strong effects in battleground states. Federal grants serve as "electoral currency," particularly where congress-people align with the president's party. However, the electoral benefits of spending are not uniform, with liberal/moderate voters rewarding presidents more than conservatives. This underscores the nuanced role of federal spending in shaping electoral outcomes, dependent on partisan dynamics, voter ideology, and electoral context.
+_Is federal spending something I should use to predict popular vote outcomes? The answer is no._  [Kriner and Reeves (2012)](https://www.cambridge.org/core/journals/journal-of-experimental-political-science/article/voters-dont-care-much-about-incumbency/ECFE39E003912F8AF65C2AD14A34BD8C) find that increased federal spending boosts electoral support for incumbents, especially in battleground states. Federal grants serve as "electoral currency," particularly where congresspeople align with the president's party. However, the benefits of spending vary, with liberal/ moderate voters rewarding presidents more than conservatives, highlighting the nuanced role of federal spending in electoral outcomes based on partisan dynamics, voter ideology, and electoral context.
 
-My analysis focuses on how federal/pork spending is distributed over time: whether presidents propose a budget that is equitable to all constituents (universalism), rewards co-partisans (partisanship), or targets electorally important constituents (electoral particularism). Then, I determine if it is worthwhile to include in my model. 
+My analysis focuses on the distribution of federal/pork spending over time: whether presidents propose equitable budgets (universalism), reward co-partisans (partisanship), or target electorally important constituents (electoral particularism).
 
 Note: core states are where the president has a large number of co-partisans.
 
@@ -209,13 +209,13 @@ d_pork_state |>
 
 ```
 
-Within each state-type, spending across years is not statistically significantly different, indicating that presidents don't simply spend more in election years, or that the budget takes more time than this. Between swing and core states, the difference is statistically significant; presidents spend more in swing states on average, 1988-2008. This disproves the co-partisan explanation, instead supporting that the budget is used to influence competitive states. Additionally, incumbents don't spend statistically significantly more on average when they versus their successors are running. This means Harris will likely not have different spending from if Biden was an incumbent candidate.
+Within each state group, spending across years is not statistically-significantly different, indicating that presidents don't spend more in election years or that the budget takes time. However, between swing and core states, the difference is statistically significant; presidents spent more in swing states on average 1988-2008, supporting that the budget is used to influence competitive states. Additionally, incumbents do not spend significantly more when they versus their successors are running. This means Harris will likely not have different spending than Biden would as candidate.
 
-Running regressions to predict popular vote outcomes as a function of the interaction between federal grant spending and votes, including year fixed effects, does not do well on the state level. This data is also not likely relevant with its range, and therefore _will not be used in my final prediction model_.
+Running regressions to predict popular vote outcomes based on the interaction between federal grant spending and votes, including year fixed effects, does not do well on the state level and _is not useful for my final prediction model_.
 
 
 ### Expert Prediction Accuracy
-A more promising variable is expert predictions from organizations like the Cook Political Report and Sabato’s Crystal Ball, which rate states on a 7-point scale for competitiveness, ranging from strong democrat (1) to strong republican (7) likelihood of victory.
+A more promising variable is expert predictions from organizations like the Cook Political Report and Sabato’s Crystal Ball, which rate states on a 7-point scale for competitiveness, ranging from strong democrat (1) to strong republican (7) victory likelihood.
 
 ```{r}
 ####----------------------------------------------------------#
@@ -337,7 +337,7 @@ d_expert <- d_expert |>
 
 ```
 
-In 2020, they agreed on 42 states, including DC, and disagreed on 9. These disagreements were mostly on their level of confidence, though in the case of Georgia, Minnesota, New Hampshire, and North Carolina one rated it a toss up but the other a swing for one party. Overall, they are very similar in their predictions, and have become more similar each year since 2004 when they had about 65% match rate. 
+In 2020, they agreed on 42 states, including DC. Their disagreements were mostly on level of confidence, though in the case of Georgia, Minnesota, New Hampshire, and North Carolina one rated it a toss up but the other a swing to one party. Overall, their predictions are very similar, and have become closer each year since 2004, when they had 65% matches. 
 
 ```{r, include = FALSE}
 ####----------------------------------------------------------#
@@ -381,9 +381,9 @@ d_expert_2020[d_expert_2020$sabato_correct == 0,]
 
 ```
 
-Cook's accuracy in 2020 was 88.2%, while Sabato's was 98%. Notably, Sabato had no toss-ups, which may affect their accuracy assessment. Cook has 6, all from rating states as toss-ups bearishly and therefore automatically incorrect in this case. Sabato only missed on North Carolina. If we did not count toss ups as wrong, Cooke would have 0 incorrect predictions and Sabato would have 1. In this way, they have similar accuracy in 2020.
+Cook's accuracy in 2020 was 88.2%, while Sabato's was 98%. Notably, Sabato had no toss-ups, which affects their accuracy assessment. Cook has 6, all from rating states as toss-ups bearishly and therefore marked automatically incorrect. Sabato only missed North Carolina. If we did not count toss-ups as wrong, Cooke would have 0 incorrect predictions to Sabato's 1. In this way, they have similar accuracy in 2020.
 
-Below I evaluate predictions using a numerical method, assessing how well experts performed in each state beyond simple correct/incorrect counts. I create a numerical method 0 to 1, 1 meaning good certain prediction (rated as strongly going to one party and it does) and 0 meaning incorrect certain prediction (rated as strongly going to one party but it goes to the other). In the future, I would add another dimension for ratings match between the two expert predictions. 
+Below I evaluate predictions using a numerical method, assessing how well experts performed in each state beyond simple correct/incorrect counts. I create a numerical method 0 to 1, 1 meaning good certain prediction (rated as strongly going to a party and it does) and 0 meaning incorrect certain prediction (rated as strongly going to a party but it goes to the other). In the future, I would add another dimension for ratings matches. 
 
 ```{r}
 ####----------------------------------------------------------#
@@ -516,7 +516,7 @@ combined_plot
 
 ```
 
-As shown above, both expert prediction sites did extremely well in their predictions for 2020. Their predictions appear reliable, especially for moderate-strong states. With this in mind, my state-level model will be built only in states deemed competitive in the 2024 election by expert prediction.
+As shown above, both expert predictions did extremely well in 2020 predictions. Their predictions appear reliable, especially for moderate-strong states. With this in mind, my state-level model will be built only in states deemed competitive in the 2024 election by expert prediction.
 
 ```{r, include = FALSE}
 # 2024 Comparison:
