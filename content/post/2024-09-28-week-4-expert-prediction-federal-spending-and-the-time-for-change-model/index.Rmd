@@ -318,6 +318,22 @@ d_expert <- d_cook |>
 d_expert |> 
   group_by(year) |> 
   summarize(mean_match_rate = mean(rating_match)) 
+
+# Merge in voting data
+d_state_vote_wide <- d_state_vote |> 
+  select(state, year, R_pv2p, D_pv2p, R_pv2p_lag1, R_pv2p_lag2, D_pv2p_lag1, D_pv2p_lag2) |>
+  mutate(margin = D_pv2p - R_pv2p, 
+         winner = ifelse(D_pv2p > R_pv2p, "D", "R"))
+d_state_vote_wide[d_state_vote_wide$state == "District Of Columbia",]$state <- "District of Columbia"
+d_expert <- d_expert |> 
+  left_join(d_state_vote_wide, 
+            by = c("state", "year"))
+d_expert <- d_expert |> 
+  mutate(cook_correct = as.numeric((winner == "D" & cook_rating < 4) | 
+                                     (winner == "R" & cook_rating > 4)),
+         sabato_correct = as.numeric((winner == "D" & sabato_rating < 4) | 
+                                       (winner == "R" & sabato_rating > 4)))
+
 ```
 
 To compare these two and their 2020 predictions, I will first compare them to each other. In 2020, they agreed on 42 states, including DC, and disagreed on 9. These disagreements were mostly on their level of confidence, though in the case of Georgia, Minnesota, New Hampshire, and North Carolina one rated it as a toss up but the other had it slightly swinging to one party. Overall, they were very similar in their predictions, and have becoming more similar each year since 2004 when they had about 65% match rate. 
@@ -542,6 +558,30 @@ Because this week mostly focused on understanding which additional variables to 
 ####----------------------------------------------------------#
 #### Super learning at the state level for swing states.
 ####----------------------------------------------------------#
+
+# Split poll data into training and testing data based on inclusion or exclusion of 2024. 
+d_poll_weeks_train_inc <- d_poll_weeks |> 
+  filter(incumbent & year <= 2020)
+d_poll_weeks_test_inc <- d_poll_weeks |> 
+  filter(incumbent & year == 2024)
+
+colnames(d_poll_weeks)[3:33] <- paste0("poll_weeks_left_", 0:30)
+colnames(d_poll_weeks_train_inc)[3:33] <- paste0("poll_weeks_left_", 0:30)
+colnames(d_poll_weeks_test_inc)[3:33] <- paste0("poll_weeks_left_", 0:30)
+
+# Combine datasets and create vote lags. 
+d_combined <- d_econ |> 
+  left_join(d_poll_weeks, by = "year") |> 
+  filter(year %in% c(unique(d_vote$year), 2024)) |> 
+  group_by(party) |> 
+  mutate(pv2p_lag1 = lag(pv2p, 1), 
+         pv2p_lag2 = lag(pv2p, 2)) |> 
+  ungroup() |> 
+  mutate(gdp_growth_x_incumbent = GDP_growth_quarterly * incumbent, 
+         rdpi_growth_quarterly = RDPI_growth_quarterly * incumbent,
+         cpi_x_incumbent = CPI * incumbent,
+         unemployment_x_incumbent = unemployment * incumbent,
+         sp500_x_incumbent = sp500_close * incumbent) # Generate interaction effects.
 
 # Sequester data for combined model.
 d_combo_inc <- d_combined |> 
