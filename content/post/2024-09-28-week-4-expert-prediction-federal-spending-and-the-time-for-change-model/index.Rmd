@@ -27,6 +27,8 @@ library(sf)
 library(tidyverse)
 library(viridis)
 library(plotly)
+library(knitr)
+library(kableExtra)
 ```
 
 ```{r}
@@ -152,6 +154,7 @@ While looking at incumbent presidents appears to show that incumbents have a gre
 
 ### Incumbency Advantages and Disadvantages 
 Diving deeper into the structural factors that could be a source of the incumbency advantage for candidates, I will explore a variety of institutional factors may impact the result of an election in their favor. These factors include:
+
 - Bully Pulpit: ability to shape public opinion, as well as access to name recognition and media attention 
 - Campaigning: have a time advantage, never stop campaigning 
 - Party Nominations: challengers have to fight for nomination while incumbent isn't beat up and doesn’t use resources
@@ -172,6 +175,7 @@ _Is federal spending something I should use to predict popular vote outcomes? We
 In my own analysis, I will first look at how federal spending/ pork spending is distributed; presidents may propose a budget that is equitable, to all constituents (universalism), rewards co-partisans (partisanship), or targets electorally important constituents (electoral particularism). Then, I will determine if and how this federal spending has changed over time to see if it is worthwhile to include in my model. 
 
 Note that below, core states are those where the president/ incumbent has a large number of co-partisans.
+
 ```{r}
 ####----------------------------------------------------------#
 #### Analysis of National Pork Spending by Type
@@ -362,15 +366,293 @@ d_expert_2020[d_expert_2020$sabato_correct == 0,] |> view()
 
 I can also compare the accuracy of each in 2020, when Cook was 88.2% correct and Sabato was 98% correct. It is worth noting that Sabato had 0 states as toss ups while Cook had 6, potentially responsible for the differences due to their bearishness in choosing outcomes. A toss up counts as an automatic incorrect in this way, which may not be the best approach. Sabato only missed on North Carolina in this case, which Cooke also got wrong, and its other five are also ones it got wrong due to rating them toss up. If we did not count toss ups as wrong, Cooke would have 0 incorrect predictions and Sabato would have 1. In this way, they seems to have similar accuracy in 2020.
 
-Looking more closely at the predictions for 2020, I will compare how well they did in each state. For this comparison, I will need to develop a method to evaluate their performance above a simple correct/ incorrect method. 
+Looking more closely at the predictions for 2020, I will compare how well they did in each state. For this comparison, I will need to develop a method to evaluate their performance above a simple correct/ incorrect method. To do this, I will use a numerical method 0 to 1, 1 meaning good certain prediction (rated as strongly going to one party and it does) and 0 meaning incorrect certain prediction (rated as strongly going to one party but it goes to the other). In the future, I would add another dimension for ratings match between the two expert predictions. 
+
+```{r}
+####----------------------------------------------------------#
+#### Create graph of 2020 results
+####----------------------------------------------------------#
+
+# define the 0 to 1 range and how it is calculated
+correctness_score <- function(prediction, correct) {
+  if (correct == 1) {
+    if (prediction == 1 || prediction == 7) {
+      return(1) 
+    } else if (prediction == 2 || prediction == 6) {
+      return(0.8) 
+    } else if (prediction == 3 || prediction == 5) {
+      return(0.6) 
+    }
+  } else if (correct == 0) {
+    if (prediction == 4) {
+      return(0.5)
+    } else if (prediction == 3 || prediction == 5) {
+      return(0.3) 
+    } else if (prediction == 2 || prediction == 6) {
+      return(0.1)
+    } else if (prediction == 1 || prediction == 7) {
+      return(0)
+    }
+  }
+  return(NA)  # catch potential issues
+}
 
 
-- how well did they do in 2020 state level comparison
-- two maps
-- how to include them (only building models for states that aren't for certain)
+# apply to sabato
+d_expert_2020$sabato_correctness_score <- mapply(correctness_score, d_expert_2020$sabato_rating, d_expert_2020$sabato_correct)
+
+# apply to cook
+d_expert_2020$cook_correctness_score <- mapply(correctness_score, d_expert_2020$cook_rating, d_expert_2020$cook_correct)
+
+```
+
+
+```{r}
+####----------------------------------------------------------#
+#### Create the maps
+####----------------------------------------------------------#
+
+# create custom theme for maps 
+maps_theme <- theme_bw() + 
+    theme(panel.border = element_blank(),     
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          plot.title = element_text(size = 12),
+          strip.text = element_text(size = 9),
+          legend.position = "right",
+          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 9))
+
+# sequester shapefile of states from maps library
+states_map <- map_data("state")
+
+d_expert_2020 <- d_expert_2020 %>%
+  mutate(rounded_margin = round(margin,2))
+
+# create the Cook correctness score map
+cook_map <- d_expert_2020 |>
+  mutate(region = tolower(state)) |>
+  left_join(states_map, by = "region") |>
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = cook_correctness_score, 
+                   text = paste("State:", state, 
+                                "<br>Winner:", winner, 
+                                "<br>Margin:", rounded_margin, 
+                                "<br>Cook Rating:", cook_rating, 
+                                "<br>Cook Correct:", ifelse(cook_correct == 1, "Yes", "No"))),
+               color = "black") +
+  scale_fill_gradient2(
+    high = "darkgreen",
+    low = "white",
+    limits = c(0, 1),
+    name = "Correctness Rating"
+  ) +
+  maps_theme
+
+# create the Sabato correctness score map
+sabato_map <- d_expert_2020 |>
+  mutate(region = tolower(state)) |>
+  left_join(states_map, by = "region") |>
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = sabato_correctness_score, 
+                   text = paste("State:", state, 
+                                "<br>Winner:", winner, 
+                                "<br>Margin:", rounded_margin,
+                                "<br>Sabato Rating:", sabato_rating, 
+                                "<br>Sabato Correct:", ifelse(sabato_correct == 1, "Yes", "No"))),
+               color = "black") +
+  scale_fill_gradient2(
+    high = "darkgreen",
+    low = "white",
+    limits = c(0, 1),
+    name = "Correctness Rating"
+  ) +
+  maps_theme
+
+# convert to plotly
+cook_plotly <- ggplotly(cook_map, tooltip = "text")
+sabato_plotly <- ggplotly(sabato_map, tooltip = "text")
+
+
+# combine plots
+combined_plot <- subplot(cook_plotly, sabato_plotly, nrows = 1, titleX = FALSE, titleY = FALSE)
+
+combined_plot <- combined_plot %>%
+  layout(
+    title = list(text = "Comparison Between Ratings Correctness",
+                 font = list(size = 16),
+                 x = 0.5),
+    annotations = list(
+      list(x = 0.2, y = 0, text = "Cook Ratings", showarrow = FALSE, xref='paper', yref='paper',
+           font = list(size = 12)),
+      list(x = 0.8, y = 0, text = "Sabato Ratings", showarrow = FALSE, xref='paper', yref='paper',
+           font = list(size = 12))
+    ),
+    height = 300,
+    width = 750
+  )
+
+combined_plot
+
+```
+
+As shown above, both expert prediction sites did extremely well in their predictions for 2020. Note that 7 on each of the ratings scales is strong democrat and 1 is strong republican. It appears that expert predictions, especially in states that are rated as moderate-strong for either party, can be counted on in 2020 or past elections to go for that party. As such, I can use this to inform my model. With this in mind, I will look at what states are considered safe versus competitive in the 2024 election, planning to build models in the future on a state by state level only for those deemed competitive. 
+
+```{r, include = FALSE}
+# 2024 Comparison:
+
+# 2024 toss-ups? 
+# 7 from Cook: https://www.cookpolitical.com/ratings/presidential-race-ratings
+
+# 191 EV (Solid D) + 34 (Likely D) + 1 (Lean D) = 226 EV Dem
+# 93 Toss Up EV
+  # 11 AZ
+  # 16 GA
+  # 15 MI
+  # 6 NV
+  # 16 NC
+  # 19 PA
+  # 10 WI
+# 148 (Solid R) + 71 (Likely R) + 0 (Lean R) = 219 EV Rep
+
+# Sabato: 
+# https://centerforpolitics.org/crystalball/2024-president/
+d_sabato |> 
+  filter(year == 2024 & rating == 4) |> 
+  select(state)
+
+# 226 D EV
+# 93 ? EV
+# 219 R EV
+
+# Conclusion: Both have same set of states as each. 
+# Importance of these swing states!
+
+```
+
+Sabato and Cook agree on the same seven critical toss up states for 2024: Arizona, Georgia, Michigan, Nevada, North Carolina, Pennsylvania, and Wisconsin. Cook has one learn democrat, Nebraska's second congressional district, but due to its size polling and other information might not be available. Sabato has no leans in either direction. These are the states I will be sure to focus on going forward. This gives us a starting point of 226 democratic electoral votes and 219 republican electoral votes. 
 
 ### This Week's Prediction Using Super Learning
-- do prediction using super learning, maybe try to add in expert prediction or funding variable? 
+Because this week mostly focused on understanding which additional variables to include in my future model, my final prediction will focus on a more advanced version of last week's ensemble model of polling and economic fundamentals. I will look only at swing states in this model.
+
+```{r}
+####----------------------------------------------------------#
+#### Super learning at the state level for swing states.
+####----------------------------------------------------------#
+
+# Sequester data for combined model.
+d_combo_inc <- d_combined |> 
+  filter(incumbent) |> 
+  select("year", "pv2p", "GDP", "GDP_growth_quarterly", "RDPI", "RDPI_growth_quarterly", "CPI", "unemployment", "sp500_close",
+         "rdpi_growth_quarterly", "pv2p_lag1", "pv2p_lag2", all_of(paste0("poll_weeks_left_", 7:30))) 
+
+x.train.combined <- d_combo_inc |> 
+  filter(year <= 2020) |> 
+  select(-c(year, pv2p)) |> 
+  slice(-1) |> 
+  as.matrix()
+y.train.combined <- d_combo_inc |>
+  filter(year <= 2020) |> 
+  select(pv2p) |> 
+  slice(-1) |> 
+  as.matrix()
+x.test.combined <- d_combo_inc |>
+  filter(year == 2024) |> 
+  select(-c(year, pv2p)) |> 
+  drop_na() |> 
+  as.matrix()
+  
+
+# Get set of states where we have polling data for 2024 according to 538 poll averages.
+states_2024 <- d_pollav_state$state[d_pollav_state$year == 2024] |> unique()
+
+# Predicting for Democratic incumbents.
+# Simplifications and assumptions: 
+  # Assuming Harris can be treated as incumbent for 2024 (could test either)
+  # Getting weights from testing models on 2020 (could do different years)
+  # Pooled models (could run state-specific models)
+  # Using LOO-CV on 2020 (could do K-fold CV)
+  # Using average poll support across all 30 weeks until election (could do weekly support, various imputation methods)
+d_state_combo <- d_pollav_state |> 
+  filter((state %in% states_2024)) |> 
+  group_by(year, state, party) |>
+  mutate(mean_pollav = mean(poll_support)) |>
+  top_n(1, poll_date) |> 
+  rename(latest_pollav = poll_support) |> 
+  ungroup() |> 
+  left_join(d_vote |> select(-pv, -pv2p), by = c("year", "party")) |> 
+  filter(party == "DEM") |> 
+  left_join(d_state_vote_wide, by = c("year", "state")) 
+
+# Model 1. Polling averages only. 
+mod_1 <- lm(D_pv2p ~ latest_pollav + mean_pollav, 
+            data = subset(d_state_combo, year < 2020))
+
+# Model 2. Lagged vote model. 
+mod_2 <- lm(D_pv2p ~ D_pv2p_lag1 + D_pv2p_lag2, 
+            data = subset(d_state_combo, year < 2020))
+
+# Model 3. Combined models. 
+mod_3 <- lm(D_pv2p ~ incumbent + latest_pollav + mean_pollav + D_pv2p_lag1 + D_pv2p_lag2, 
+            data = subset(d_state_combo, year < 2020))
+
+# Predictions from each model. 
+pred_1 <- as.numeric(predict(mod_1, newdata = subset(d_state_combo, year == 2020)))
+pred_2 <- as.numeric(predict(mod_2, newdata = subset(d_state_combo, year == 2020)))
+pred_3 <- as.numeric(predict(mod_3, newdata = subset(d_state_combo, year == 2020)))
+
+# Get weights to build super learner. 
+d_weight <- data.frame("truth" = d_state_combo$D_pv2p[d_state_combo$year == 2020],
+                       "polls" = pred_1,
+                       "lag_vote" = pred_2,
+                       "combo" = pred_3)
+
+# Constrained optimization for ensemble mod weights. 
+mod_ensemble <- lm(truth ~ polls + lag_vote + combo, 
+                   data = d_weight)
+
+# Get weights and estimated weighted ensemble via constrained regression. make sum to one
+c <- 3 # number of models
+predictions <- cbind(pred_1, pred_2, pred_3)
+y.test <- d_weight$truth
+w <- lm(y.test ~ predictions-1)
+beta <- Variable(c)
+objective <- Minimize(sum_squares(y.test - predictions %*% beta))
+prob <- Problem(objective)
+constraints(prob) <- list(beta >= 0, beta <= 1)
+solution_prob <- solve(prob)
+weights <- solution_prob$getValue(beta)
+
+# Predict using previous model output.
+ensemble_pred <- cbind("state" = subset(d_state_combo, year == 2020)$state,
+                       "pred" = round(as.numeric(t(weights) %*% t(predictions)), 3)) |> 
+  as.data.frame()
+
+ensemble_pred <- ensemble_pred |> 
+  mutate(winner = ifelse(pred > 50, "D", "R"))
+
+# states to highlight
+highlight_states <- c("Arizona", "Georgia", "Michigan", "Nevada", "North Carolina", 
+                      "Pennsylvania", "Wisconsin")
+
+# create kable
+kable(ensemble_pred, col.names = c("State", "D Pop Vote Prediction", "Winner")) |>
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = F
+  ) |>
+  row_spec(0, bold = TRUE, background = "#FFFFE0") |>
+  row_spec(which(ensemble_pred$state %in% highlight_states), 
+           background = "lightgreen") 
+
+```
+
+The results from the super learning model for the states identified as important from expert prediction are shown in green. This leads to a prediction:
+
+**Current Forecast: Harris 303 - Trump 235**
 
 ### Data Sources
 - Polls, State and National, 1968-2024
