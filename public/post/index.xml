@@ -6,8 +6,15 @@
     <description>Recent content in Posts on A minimal Hugo website</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 28 Sep 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 05 Oct 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://example.org/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Week 5: Demographics, Turnout, and the First Stage of Our Final Prediction</title>
+      <link>https://example.org/post/2024/10/05/week-5/</link>
+      <pubDate>Sat, 05 Oct 2024 00:00:00 +0000</pubDate>
+      <guid>https://example.org/post/2024/10/05/week-5/</guid>
+      <description>&lt;p&gt;&lt;em&gt;Note: For this week of class, I was in charge of putting together a presentation of my findings. As a result, this post and the accompanying code as seen on Github contain many more plots than in past weeks, many of which are simply descriptive and exploratory statistics.&lt;/em&gt;&lt;/p&gt;&#xD;&#xA;&lt;p&gt;Happy 30 days until the election all! This week, I focus on refining my models by introducing the final fundamentals I have learned in class, demographics and turnout data. Additionally, I hone in on the states identified last week through expert prediction to be those I will model exclusively as they are the swing states that could decided the next president of the United States. These states are &lt;strong&gt;Wisconsin, Pennsylvania, North Carolina, Nevada, Michigan, Georgia, and Arizona&lt;/strong&gt;.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Week 4: Incumbency, Expert Prediction, and Super Learning in Models</title>
       <link>https://example.org/post/2024/09/28/week-4/</link>

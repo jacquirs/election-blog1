@@ -78,7 +78,7 @@ d_pollav_state <- d_state_polls |>
 ####----------------------------------------------------------#
 #### Replication of Kim & Zilinsky (2023).
 ####----------------------------------------------------------#
-                             
+
 # Read processed ANES data. 
 anes <- read_dta("anes_timeseries_cdf_stata_20220916.dta") # Total ANES Cumulative Data File. 
 
