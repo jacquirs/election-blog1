@@ -35,6 +35,8 @@
 
 <main>
 
+<script src="https://example.org/post/2024/10/05/week-5/index_files/kePrint/kePrint.js"></script>
+<link href="https://example.org/post/2024/10/05/week-5/index_files/lightable/lightable.css" rel="stylesheet" />
 
 
 <p><em>Note: For this week of class, I was in charge of putting together a presentation of my findings. As a result, this post and the accompanying code as seen on Github contain many more plots than in past weeks, many of which are simply descriptive and exploratory statistics.</em></p>
@@ -49,7 +51,7 @@ The gender splits of each state are not surprising, with most being around 50/50
 <p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-10-1.png" width="50%" />
 The distribution of race demographics in the states of interest is more varied than gender. As certain racial demographics may lead to certain political views, which I will attempt to explore later, these different makeups may lead to differing support for the two candidates in these states. The fact that the voters have different characteristics may make it likely that they may support different candidates. It is important also to note that while many states have a large number of white people on the voterfile, large groups of minorities like the hispanic popular of Arizona or African American population of Georgia are often cited on the news as important voting blocks to watch for. However, it is likely that these groups are not a monolith.</p>
 <p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-11-1.png" width="50%" />
-The variation in age may also effect turnout or popular vote outcomes, especially when combined with other demographic variables. Age is consistently found to be a good predictor of turnout in logit regressions of historical data, as in <a href="https://www.jstor.org/stable/30024496">Matsusaka and Palida (1997)</a>. They also find education to be a good predictor. Looking later at Kim and Zelinsky (2023), I will explore how much of past turnout and popular vote outcomes these and other demographic variables can really explain.</p>
+The variation in age may also effect turnout or popular vote outcomes, especially when combined with other demographic variables. Age is consistently found to be a good predictor of turnout in logit regressions of historical data, as in <a href="https://www.jstor.org/stable/30024496">Matsusaka and Palida (1997)</a>. They also find education to be a good predictor. Looking later at <a href="https://link.springer.com/content/pdf/10.1007/s11109-022-09816-z.pdf">Kim and Zelinsky (2023)</a>, I will explore how much of past turnout and popular vote outcomes these and other demographic variables can really explain.</p>
 <p>While looking at demographics alone can tell me about the makeup of each state, it is also important to understand how each group acts. Below, I plot the percent of people in each age x race category that voted in the 2020 general election. For many groups, it surprisingly low, while for others there is incredibly high turnout (though these groups are consistently very small). The height of each bar represents the percentage of people in that age and race category who voted in the 2020 general election.</p>
 <p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-1.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-2.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-3.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-4.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-5.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-6.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-7.png" width="40%" />
 As is often observed in the literature, there is low turnout in 2020 among young people, but it is worth noting that 18 is the first year they can vote, and the ages in this data are up to date with 2024, making that group significantly smaller in the first place. To understand whether young people actually vote less, it would be best to dive into those currently aged 22-28 to see if and how they voted in 2020.</p>
@@ -59,11 +61,654 @@ As is often observed in the literature, there is low turnout in 2020 among young
 </div>
 <div id="demographics-and-prediction" class="section level3">
 <h3>Demographics and Prediction</h3>
-<ul>
-<li>kim and zelinsky replication, plots</li>
-<li>lit review</li>
-<li>will I use them</li>
-</ul>
+<p>In <a href="https://link.springer.com/content/pdf/10.1007/s11109-022-09816-z.pdf">Kim and Zilinsky (2023)</a> on the predictive power of demographics on vote choice and party affiliation over time, they find that “models trained on nothing more than demographic labels from public opinion surveys (1952–2020) predict only 63.9% of two-party vote choices and 63.4% of partisan IDs correctly out-of-sample—whether they be based on logistic regressions or tree-based machine learning models.” While they admit that social sorting through demographics appears to have occurred, these trends do not allow the use of demographics to clearly predict someone’s voting decisions. Additionally, of the about fifteen demographic variables they test, they find that knowing the party id of a person is more predictive than these together. In this section, I replicate these findings and determine if demographic variables alone are a useful predictor to implement in my election prediction model.</p>
+<p>The data from this analysis comes from the American National Election Studies (ANES), a long-running survey project that collects data on voter attitudes, behaviors, and demographics in the U.S., spanning every presidential election cycle since 1952. Unlike the U.S. Census, which focuses on counting the population and gathering general demographic information, ANES emphasizes understanding political opinions, electoral behavior, and voter psychology, offering insights into how and why people vote in particular ways.</p>
+<p>To set up this replication, where my two outcome variables are partisanship and vote choice, I have chosen to use the features age, gender, race, income, education, urbanicity, region, southern, employment, religion, homeownership, and marriage, each split into indicator factors such that the specific values are tested for their importance. The two models I implement to test these factors and their accuracy are logistic regression and random forest models.</p>
+<p>Beginning with the logistic regression’s ability to predict presidential vote choice, using 2016, below I train a model and then compare its in- and out-of-sample performance in the confusion matrices.</p>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-15">Table 1: </span>Logistic Regression Model Summary
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Logistic Regression Coefficients
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Estimate
+</th>
+<th style="text-align:right;">
+Std. Error
+</th>
+<th style="text-align:right;">
+z value
+</th>
+<th style="text-align:right;">
+Pr(&gt;|z|)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:left;">
+4.3584***
+</td>
+<td style="text-align:right;">
+0.4366803
+</td>
+<td style="text-align:right;">
+9.9807136
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age
+</td>
+<td style="text-align:left;">
+7e-04
+</td>
+<td style="text-align:right;">
+0.0028117
+</td>
+<td style="text-align:right;">
+0.2483989
+</td>
+<td style="text-align:right;">
+0.8038258
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gender
+</td>
+<td style="text-align:left;">
+-0.4295***
+</td>
+<td style="text-align:right;">
+0.0934585
+</td>
+<td style="text-align:right;">
+-4.5953379
+</td>
+<td style="text-align:right;">
+0.0000043
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+race
+</td>
+<td style="text-align:left;">
+-0.5482***
+</td>
+<td style="text-align:right;">
+0.0605982
+</td>
+<td style="text-align:right;">
+-9.0470969
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+educ
+</td>
+<td style="text-align:left;">
+-0.3398***
+</td>
+<td style="text-align:right;">
+0.0613322
+</td>
+<td style="text-align:right;">
+-5.5405495
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+income
+</td>
+<td style="text-align:left;">
+0.0494
+</td>
+<td style="text-align:right;">
+0.0468039
+</td>
+<td style="text-align:right;">
+1.0562135
+</td>
+<td style="text-align:right;">
+0.2908707
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+religion
+</td>
+<td style="text-align:left;">
+-0.2148***
+</td>
+<td style="text-align:right;">
+0.0421012
+</td>
+<td style="text-align:right;">
+-5.1023208
+</td>
+<td style="text-align:right;">
+0.0000003
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+attend_church
+</td>
+<td style="text-align:left;">
+-0.211***
+</td>
+<td style="text-align:right;">
+0.0331518
+</td>
+<td style="text-align:right;">
+-6.3644005
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+southern
+</td>
+<td style="text-align:left;">
+-0.4096***
+</td>
+<td style="text-align:right;">
+0.1051603
+</td>
+<td style="text-align:right;">
+-3.8950560
+</td>
+<td style="text-align:right;">
+0.0000982
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+work_status
+</td>
+<td style="text-align:left;">
+0.0955*
+</td>
+<td style="text-align:right;">
+0.0458378
+</td>
+<td style="text-align:right;">
+2.0838220
+</td>
+<td style="text-align:right;">
+0.0371764
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+homeowner
+</td>
+<td style="text-align:left;">
+-0.1766*
+</td>
+<td style="text-align:right;">
+0.0822755
+</td>
+<td style="text-align:right;">
+-2.1458777
+</td>
+<td style="text-align:right;">
+0.0318827
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+married
+</td>
+<td style="text-align:left;">
+-0.0716**
+</td>
+<td style="text-align:right;">
+0.0276917
+</td>
+<td style="text-align:right;">
+-2.5855402
+</td>
+<td style="text-align:right;">
+0.0097227
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-15">Table 1: </span>In-Sample Confusion Matrix
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;background-color: rgba(240, 173, 78, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(240, 173, 78, 255) !important;">
+Democrat
+</th>
+<th style="text-align:center;background-color: rgba(240, 173, 78, 255) !important;">
+Republican
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(240, 173, 78, 255) !important;">
+Democrat
+</td>
+<td style="text-align:center;">
+746
+</td>
+<td style="text-align:center;">
+336
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(240, 173, 78, 255) !important;">
+Republican
+</td>
+<td style="text-align:center;">
+346
+</td>
+<td style="text-align:center;">
+660
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-15">Table 1: </span>Out-of-Sample Confusion Matrix
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;background-color: rgba(91, 192, 222, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</td>
+<td style="text-align:center;">
+184
+</td>
+<td style="text-align:center;">
+80
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</td>
+<td style="text-align:center;">
+88
+</td>
+<td style="text-align:center;">
+169
+</td>
+</tr>
+</tbody>
+</table>
+<p>The logistic regression is not separated by factors due to errors with the data, but the code for this can be seen in the Github and I will attempt to pursue it at a later date. The accuracy results of this regression mirror that of Kim and Zilinsky, with the demographic variables explaining 67.34% of in sample values and 67.75% out of sample. This can also be viewed in the attached confusion matrices. Of the variables (unfactored) that appear to have a statistically significant impact on vote share, the ones that are at the 5% level of significance include southern, religion, race, education, and gender.</p>
+<p>I can also do a logistic regression for turnout, using NA values in the ANES presidential vote data as non-voters. Note again that this is for 2016, but could be done across years, as Kim and Zilinsky do for vote share and partisanship and get similar predictive power across all years, between 65-70%.</p>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-17">Table 2: </span>Logistic Regression Model Summary
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+logistic regression coefficients
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Estimate
+</th>
+<th style="text-align:right;">
+Std. Error
+</th>
+<th style="text-align:right;">
+z value
+</th>
+<th style="text-align:right;">
+Pr(&gt;|z|)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:left;">
+-1.6254***
+</td>
+<td style="text-align:right;">
+0.3008608
+</td>
+<td style="text-align:right;">
+-5.4024799
+</td>
+<td style="text-align:right;">
+0.0000001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age
+</td>
+<td style="text-align:left;">
+0.017***
+</td>
+<td style="text-align:right;">
+0.0020912
+</td>
+<td style="text-align:right;">
+8.1265607
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gender
+</td>
+<td style="text-align:left;">
+0.1682*
+</td>
+<td style="text-align:right;">
+0.0720222
+</td>
+<td style="text-align:right;">
+2.3347426
+</td>
+<td style="text-align:right;">
+0.0195569
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+race
+</td>
+<td style="text-align:left;">
+-0.1016**
+</td>
+<td style="text-align:right;">
+0.0331625
+</td>
+<td style="text-align:right;">
+-3.0622153
+</td>
+<td style="text-align:right;">
+0.0021971
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+educ
+</td>
+<td style="text-align:left;">
+0.3856***
+</td>
+<td style="text-align:right;">
+0.0460208
+</td>
+<td style="text-align:right;">
+8.3788245
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+income
+</td>
+<td style="text-align:left;">
+0.1478***
+</td>
+<td style="text-align:right;">
+0.0341365
+</td>
+<td style="text-align:right;">
+4.3287158
+</td>
+<td style="text-align:right;">
+0.0000150
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+religion
+</td>
+<td style="text-align:left;">
+-0.1026**
+</td>
+<td style="text-align:right;">
+0.0313615
+</td>
+<td style="text-align:right;">
+-3.2726991
+</td>
+<td style="text-align:right;">
+0.0010653
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+attend_church
+</td>
+<td style="text-align:left;">
+-0.032
+</td>
+<td style="text-align:right;">
+0.0260078
+</td>
+<td style="text-align:right;">
+-1.2303698
+</td>
+<td style="text-align:right;">
+0.2185587
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+southern
+</td>
+<td style="text-align:left;">
+0.0469
+</td>
+<td style="text-align:right;">
+0.0807981
+</td>
+<td style="text-align:right;">
+0.5809961
+</td>
+<td style="text-align:right;">
+0.5612431
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+work_status
+</td>
+<td style="text-align:left;">
+0.0361
+</td>
+<td style="text-align:right;">
+0.0343605
+</td>
+<td style="text-align:right;">
+1.0518147
+</td>
+<td style="text-align:right;">
+0.2928846
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+homeowner
+</td>
+<td style="text-align:left;">
+-0.0962.
+</td>
+<td style="text-align:right;">
+0.0513267
+</td>
+<td style="text-align:right;">
+-1.8736510
+</td>
+<td style="text-align:right;">
+0.0609785
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+married
+</td>
+<td style="text-align:left;">
+-0.0248
+</td>
+<td style="text-align:right;">
+0.0197024
+</td>
+<td style="text-align:right;">
+-1.2565859
+</td>
+<td style="text-align:right;">
+0.2089036
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-17">Table 2: </span>In-Sample Confusion Matrix
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;background-color: rgba(240, 173, 78, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(240, 173, 78, 255) !important;">
+Did Not Vote
+</th>
+<th style="text-align:center;background-color: rgba(240, 173, 78, 255) !important;">
+Voted
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(240, 173, 78, 255) !important;">
+Did Not Vote
+</td>
+<td style="text-align:center;">
+466
+</td>
+<td style="text-align:center;">
+295
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(240, 173, 78, 255) !important;">
+Voted
+</td>
+<td style="text-align:center;">
+850
+</td>
+<td style="text-align:center;">
+1805
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-17">Table 2: </span>Out-of-Sample Confusion Matrix
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;background-color: rgba(91, 192, 222, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Did Not Vote
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Voted
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Did Not Vote
+</td>
+<td style="text-align:center;">
+122
+</td>
+<td style="text-align:center;">
+76
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Voted
+</td>
+<td style="text-align:center;">
+223
+</td>
+<td style="text-align:center;">
+433
+</td>
+</tr>
+</tbody>
+</table>
+<p>Slightly different than with vote share, it appears that the most statistically significant unfactored predictors of turnout are income, age, and education, which are consistent with the literature. As the confusion matrices show, the in-sample accuracy is 66.48% and out of sample accuracy is 64.99%.</p>
+<p>I now transition to a random forest for presidential vote share and turnout, with similar set up to the logistic regressions above.</p>
 </div>
 <div id="understanding-turnout" class="section level3">
 <h3>Understanding Turnout</h3>

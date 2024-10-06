@@ -111,8 +111,7 @@ anes <- anes |>
          # 3-point ideology. 
          ideo = VCF0804 # 0, 9 = DK; 1 = Liberal; 2 = Moderate; 3 = Conservative
          ) |> 
-  select(year, pres_vote, age, gender, race, educ, income, religion, attend_church, southern, 
-         region, work_status, homeowner, married, pid7, pid3, ideo)
+  select(year, pres_vote, age, gender, race, educ, income, religion, attend_church, southern, work_status, homeowner, married, pid7, pid3, ideo)
 
 ```
 
@@ -357,7 +356,7 @@ ggplot(age_dist, aes(x = state, y = percentage, fill = sii_age_range)) +
   theme(axis.title.x = element_blank(),  
         axis.text.x = element_blank())
 ```
-The variation in age may also effect turnout or popular vote outcomes, especially when combined with other demographic variables. Age is consistently found to be a good predictor of turnout in logit regressions of historical data, as in [Matsusaka and Palida (1997)](https://www.jstor.org/stable/30024496). They also find education to be a good predictor. Looking later at Kim and Zelinsky (2023), I will explore how much of past turnout and popular vote outcomes these and other demographic variables can really explain. 
+The variation in age may also effect turnout or popular vote outcomes, especially when combined with other demographic variables. Age is consistently found to be a good predictor of turnout in logit regressions of historical data, as in [Matsusaka and Palida (1997)](https://www.jstor.org/stable/30024496). They also find education to be a good predictor. Looking later at [Kim and Zelinsky (2023)](https://link.springer.com/content/pdf/10.1007/s11109-022-09816-z.pdf), I will explore how much of past turnout and popular vote outcomes these and other demographic variables can really explain. 
 
 While looking at demographics alone can tell me about the makeup of each state, it is also important to understand how each group acts. Below, I plot the percent of people in each age x race category that voted in the 2020 general election. For many groups, it surprisingly low, while for others there is incredibly high turnout (though these groups are consistently very small). The height of each bar represents the percentage of people in that age and race category who voted in the 2020 general election.
 
@@ -543,177 +542,254 @@ ggplot(summary_az, aes(x = sii_age_range, y = sii_race, fill = voted_percentage)
 
 ```
 
-
-```{r, include = FALSE}
-####----------------------------------------------------------#
-#### Extra Chunk: Looking at Number of people at each education level counts
-####----------------------------------------------------------#
-
-# Function to summarize voting data without modifying original variables
-summarize_voting_data_by_education <- function(df) {
-  df %>%
-    mutate(voted_2020g = ifelse(is.na(svi_vh_2020g), 0, 1)) %>%
-    group_by(sii_education_level) %>%
-    summarise(voted_count = sum(voted_2020g, na.rm = TRUE), .groups = "drop")
-}
-
-# Summarize voting data for each state
-summary_wi_education <- summarize_voting_data_by_education(vf_wi)
-summary_pa_education <- summarize_voting_data_by_education(vf_pa)
-summary_nc_education <- summarize_voting_data_by_education(vf_nc)
-summary_nv_education <- summarize_voting_data_by_education(vf_nv)
-summary_mi_education <- summarize_voting_data_by_education(vf_mi)
-summary_ga_education <- summarize_voting_data_by_education(vf_ga)
-summary_az_education <- summarize_voting_data_by_education(vf_az)
-
-# Plotting for how many people of each education level voted in Wisconsin
-ggplot(summary_wi_education, aes(x = sii_education_level, y = voted_count)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  labs(title = "2020 General Election Voting by Education Level (Wisconsin)", 
-       x = "Education Level", 
-       y = "Votes Cast") +
-  theme_minimal()
-```
-
-```{r, include = FALSE}
-####----------------------------------------------------------#
-#### Extra Chunk: Looking at Number of people at each education level percents
-####----------------------------------------------------------#
-
-# Function to summarize voting data by education level
-summarize_voting_data_by_education <- function(df) {
-  df %>%
-    mutate(voted_2020g = ifelse(is.na(svi_vh_2020g), 0, 1)) %>%
-    group_by(sii_education_level) %>%
-    summarise(
-      voted_count = sum(voted_2020g, na.rm = TRUE),
-      total_count = n(),  # Total individuals in each education level
-      .groups = "drop"
-    ) %>%
-    mutate(vote_percentage = (voted_count / total_count) * 100)  # Calculate voting percentage
-}
-
-# Summarize voting data for each state
-summary_wi_education <- summarize_voting_data_by_education(vf_wi)
-summary_pa_education <- summarize_voting_data_by_education(vf_pa)
-summary_nc_education <- summarize_voting_data_by_education(vf_nc)
-summary_nv_education <- summarize_voting_data_by_education(vf_nv)
-summary_mi_education <- summarize_voting_data_by_education(vf_mi)
-summary_ga_education <- summarize_voting_data_by_education(vf_ga)
-summary_az_education <- summarize_voting_data_by_education(vf_az)
-
-# Plotting for percentage of people of each education level who voted in Wisconsin
-ggplot(summary_wi_education, aes(x = sii_education_level, y = vote_percentage)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  labs(title = "2020 General Election Voting by Education Level (Wisconsin)", 
-       x = "Education Level", 
-       y = "Percentage of Votes Cast") +
-  theme_minimal()
-```
-
-```{r, include = FALSE}
-####----------------------------------------------------------#
-#### Extra Chunk: Looking at Number of people at each education level
-####----------------------------------------------------------#
-
-# Function to summarize education data
-summarize_education_data <- function(df) {
-  df %>%
-    group_by(sii_education_level) %>%
-    summarise(
-      total_count = n(),
-      voted_count = sum(ifelse(svi_vh_2020g %in% c("NA"), 0, 1), na.rm = TRUE),
-      .groups = "drop"
-    )
-}
-
-# Summarize education data for each state
-summary_wi_education <- summarize_education_data(vf_wi)
-summary_pa_education <- summarize_education_data(vf_pa)
-summary_nc_education <- summarize_education_data(vf_nc)
-summary_nv_education <- summarize_education_data(vf_nv)
-summary_mi_education <- summarize_education_data(vf_mi)
-summary_ga_education <- summarize_education_data(vf_ga)
-summary_az_education <- summarize_education_data(vf_az)
-
-# Wisconsin summary
-print(summary_wi_education)
-```
-
-```{r, include = FALSE}
-####----------------------------------------------------------#
-#### Extra Chunk: 
-####----------------------------------------------------------#
-
-# Add state names to each dataset
-vf_wi <- vf_wi %>% mutate(state = "WI")
-vf_pa <- vf_pa %>% mutate(state = "PA")
-vf_nc <- vf_nc %>% mutate(state = "NC")
-vf_nv <- vf_nv %>% mutate(state = "NV")
-vf_mi <- vf_mi %>% mutate(state = "MI")
-vf_ga <- vf_ga %>% mutate(state = "GA")
-vf_az <- vf_az %>% mutate(state = "AZ")
-
-# Combine all datasets into one
-voter_data <- bind_rows(vf_wi, vf_pa, vf_nc, vf_nv, vf_mi, vf_ga, vf_az)
-
-# age across states
-ggplot(voter_data, aes(x = sii_age_range, fill = state)) +
-  geom_bar(position = "dodge", alpha = 0.7) +
-  labs(title = "Age Range Distribution by State", x = "Age Range", y = "Count") +
-  facet_wrap(~state) +
-  theme_minimal()
-
-# gender across states
-ggplot(voter_data, aes(x = sii_gender, fill = state)) +
-  geom_bar(position = "dodge", alpha = 0.7) +
-  labs(title = "Gender Distribution by State", x = "Gender", y = "Count") +
-  facet_wrap(~state) +
-  theme_minimal()
-
-# race across states
-ggplot(voter_data, aes(x = sii_race, fill = state)) +
-  geom_bar(position = "dodge", alpha = 0.7) +
-  labs(title = "Race Distribution by State", x = "Race", y = "Count") +
-  facet_wrap(~state) +
-  theme_minimal()
-
-# party registration across states
-ggplot(voter_data, aes(x = svi_party_registration, fill = state)) +
-  geom_bar(position = "dodge", alpha = 0.7) +
-  labs(title = "Party Registration by State", x = "Party Registration", y = "Count") +
-  facet_wrap(~state) +
-  theme_minimal()
-
-# education across states
-ggplot(voter_data, aes(x = sii_education_level, fill = state)) +
-  geom_bar(position = "dodge", alpha = 0.7) +
-  labs(title = "Education Level by State", x = "Education Level", y = "Count") +
-  facet_wrap(~state) +
-  theme_minimal()
-
-# homeownership across states
-ggplot(voter_data, aes(x = sii_homeowner, fill = state)) +
-  geom_bar(position = "dodge", alpha = 0.7) +
-  labs(title = "Homeownership by State", x = "Homeowner", y = "Count") +
-  facet_wrap(~state) +
-  theme_minimal()
-
-# urbanicity across states
-ggplot(voter_data, aes(x = sii_urbanicity, fill = state)) +
-  geom_bar(position = "dodge", alpha = 0.7) +
-  labs(title = "Urbanicity by State", x = "Population Density", y = "Count") +
-  facet_wrap(~state) +
-  theme_minimal()
-```
-
 Overall, these demographic explorations provide the context necessary as I move into exploring whether they are good to include in my predictive model.
 
 
 ### Demographics and Prediction
-- kim and zelinsky replication, plots
-- lit review
-- will I use them 
+In [Kim and Zilinsky (2023)](https://link.springer.com/content/pdf/10.1007/s11109-022-09816-z.pdf) on the predictive power of demographics on vote choice and party affiliation over time, they find that “models trained on nothing more than demographic labels from public opinion surveys (1952–2020) predict only 63.9% of two-party vote choices and 63.4% of partisan IDs correctly out-of-sample—whether they be based on logistic regressions or tree-based machine learning models.” While they admit that social sorting through demographics appears to have occurred, these trends do not allow the use of demographics to clearly predict someone's voting decisions. Additionally, of the about fifteen demographic variables they test, they find that knowing the party id of a person is more predictive than these together. In this section, I replicate these findings and determine if demographic variables alone are a useful predictor to implement in my election prediction model. 
+
+The data from this analysis comes from the American National Election Studies (ANES), a long-running survey project that collects data on voter attitudes, behaviors, and demographics in the U.S., spanning every presidential election cycle since 1952. Unlike the U.S. Census, which focuses on counting the population and gathering general demographic information, ANES emphasizes understanding political opinions, electoral behavior, and voter psychology, offering insights into how and why people vote in particular ways.
+
+To set up this replication, where my two outcome variables are partisanship and vote choice, I have chosen to use the features age, gender, race, income, education, urbanicity, region, southern, employment, religion, homeownership, and marriage, each split into indicator factors such that the specific values are tested for their importance. The two models I implement to test these factors and their accuracy are logistic regression and random forest models.
+
+
+```{r}
+####----------------------------------------------------------#
+#### Prepare pres vote data for logistic regrssion and random forest
+####----------------------------------------------------------#
+
+# How well do demographics predict vote choice? 
+anes_year <- anes[anes$year == 2016,] |> 
+  select(-c(year, pid7, pid3, ideo)) |>
+  mutate(
+    pres_vote = factor(pres_vote, levels = c(1, 2), labels = c("Democrat", "Republican"))
+   # , age = cut(age, 
+   #            breaks = c(-Inf, 18, 24, 35, 44, 54, 64, Inf), 
+   #            labels = c("Under 18", "18-24", "25-35", "35-44", "45-54", "55-64", "65+"),
+   #            right = TRUE),
+   #  gender = factor(gender, levels = c(1, 2, 3), labels = c("Male", "Female", "Other")),
+   #  race = factor(race, levels = c(1, 2, 3, 4), labels = c("White", "Black", "Hispanic", "Other")),
+   #  educ = factor(educ, levels = c(1, 2, 3, 4), labels = c("Less than high school", "High school", "Some college", "College+")),
+   #  income = factor(income, levels = c(1, 2, 3, 4, 5), labels = c("0-16 percentile", "17-33 percentile", "34-67 percentile", "68-95 percentile", "96-100 percentile")),
+   #  religion = factor(religion, levels = c(0, 1, 2, 3, 4), labels = c("DK", "Protestant", "Catholic", "Jewish", "Other")),
+   #  attend_church = factor(attend_church, levels = c(1, 2, 3, 4, 5, 6), labels = c("Every week", "Almost every week", "Once or twice a month", "A few times a year", "Never", "No preference")),
+   #  work_status = factor(work_status, levels = c(1, 2, 4, 5, 6, 7, 8),
+   #                       labels = c("Working Now", 
+   #                                  "Temporarily Laid Off", 
+   #                                  "Unemployed", 
+   #                                  "Retired", 
+   #                                  "Permanently Disabled", 
+   #                                  "Homemaker", 
+   #                                  "Student")),
+   #  southern = factor(southern),
+   #  homeowner = factor(homeowner),
+   #  married = factor(married)
+  ) |> 
+  filter(!is.na(pres_vote)) |>
+  clean_names()
+
+n_features <- length(setdiff(names(anes_year), "pres_vote"))
+
+set.seed(02138)
+train.ind <- createDataPartition(anes_year$pres_vote, p = 0.8, list = FALSE)
+
+anes_train <- anes_year[train.ind,]
+anes_test <- anes_year[-train.ind,]
+
+```
+
+Beginning with the logistic regression's ability to predict presidential vote choice, using 2016, below I train a model and then compare its in- and out-of-sample performance in the confusion matrices. 
+
+```{r}
+####----------------------------------------------------------#
+#### Logistic Regression for pres vote
+####----------------------------------------------------------#
+
+# logistic regression
+logit_fit <- glm(pres_vote ~ ., family = "binomial", data = anes_train)
+
+# logistic regression summary
+logit_summary <- summary(logit_fit)
+
+# convert coefficients
+logit_coef <- as.data.frame(logit_summary$coefficients)
+
+# rename columns for kable
+colnames(logit_coef) <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
+
+# round the coeff estimate
+logit_coef$Estimate <- round(logit_coef$Estimate, 4)
+
+# add significance stars manually based on p-values and concatenate to estimate
+logit_coef$Estimate <- ifelse(logit_coef$`Pr(>|z|)` < 0.001, paste0(logit_coef$Estimate, "***"), 
+                       ifelse(logit_coef$`Pr(>|z|)` < 0.01, paste0(logit_coef$Estimate, "**"), 
+                       ifelse(logit_coef$`Pr(>|z|)` < 0.05, paste0(logit_coef$Estimate, "*"), 
+                       ifelse(logit_coef$`Pr(>|z|)` < 0.1, paste0(logit_coef$Estimate, "."), 
+                                                      logit_coef$Estimate))))
+
+# create a kable table for logistic regression output
+logit_coef_table <- logit_coef %>%
+  kable("html", caption = "Logistic Regression Model Summary") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  add_header_above(c(" " = 1, "Logistic Regression Coefficients" = 4))
+
+logit_coef_table
+
+# in-sample confusion matrix
+logit.is <- factor(ifelse(predict(logit_fit, type = "response") > 0.5, 2, 1), 
+                   levels = c(1, 2), labels = c("Democrat", "Republican"))
+
+cm.rf.logit.is <- confusionMatrix(logit.is, anes_train$pres_vote)
+
+# in-sample confusion matrix styling
+in_sample_cm_table <- cm.rf.logit.is$table %>%
+  kable("html", caption = "In-Sample Confusion Matrix", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#f0ad4e") %>%
+  column_spec(1, background = "#f0ad4e", bold = T, width = "3cm")
+
+# in-sample accuracy, commented to not print
+#in_sample_accuracy <- sum(diag(cm.rf.logit.is$table)) / sum(cm.rf.logit.is$table)
+#cat("In-Sample Accuracy:", round(in_sample_accuracy * 100, 2), "%\n")
+
+in_sample_cm_table
+
+# out-of-sample confusion matrix
+logit_pred <- factor(ifelse(predict(logit_fit, anes_test, type = "response") > 0.5, 2, 1), 
+                     levels = c(1, 2), labels = c("Democrat", "Republican"))
+
+cm.rf.logit.oos <- confusionMatrix(logit_pred, anes_test$pres_vote)
+
+# out-of-sample confusion matrix styling
+out_sample_cm_table <- cm.rf.logit.oos$table %>%
+  kable("html", caption = "Out-of-Sample Confusion Matrix", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm")
+
+# out-of-sample accuracy, commented to not print
+#out_sample_accuracy <- sum(diag(cm.rf.logit.oos$table)) / sum(cm.rf.logit.oos$table)
+#cat("Out-of-Sample Accuracy:", round(out_sample_accuracy * 100, 2), "%\n")
+
+out_sample_cm_table
+
+```
+
+The logistic regression is not separated by factors due to errors with the data, but the code for this can be seen in the Github and I will attempt to pursue it at a later date. The accuracy results of this regression mirror that of Kim and Zilinsky, with the demographic variables explaining 67.34% of in sample values and 67.75% out of sample. This can also be viewed in the attached confusion matrices. Of the variables (unfactored) that appear to have a statistically significant impact on vote share, the ones that are at the 5% level of significance include southern, religion, race, education, and gender.  
+
+I can also do a logistic regression for turnout, using NA values in the ANES presidential vote data as non-voters. Note again that this is for 2016, but could be done across years, as Kim and Zilinsky do for vote share and partisanship and get similar predictive power across all years, between 65-70%.
+
+```{r}
+####----------------------------------------------------------#
+#### Prepare turnout data for logistic regression and random forest
+####----------------------------------------------------------#
+
+# turnout data cleaning
+anes_year_turnout <- anes[anes$year == 2016,] |> 
+  mutate(turnout = factor(ifelse(is.na(pres_vote), 0, 1), 
+                          levels = c(0, 1), 
+                          labels = c("Did Not Vote", "Voted"))) |> 
+  select(-c(year, pid7, pid3, ideo, pres_vote)) |> 
+  clean_names()
+
+n_features <- length(setdiff(names(anes_year_turnout), "turnout"))
+
+set.seed(02138)
+train.ind.turnout <- sample(1:nrow(anes_year_turnout), size = 0.8 * nrow(anes_year_turnout))
+
+# Split the data into training and test sets
+anes_train_turnout <- anes_year_turnout[train.ind.turnout, ]
+anes_test_turnout <- anes_year_turnout[-train.ind.turnout, ]
+
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Logistic regression for turnout
+####----------------------------------------------------------#
+# logistic regression
+logit_fit <- glm(turnout ~ ., family = "binomial", data = anes_train_turnout)
+
+# logistic regression summary
+logit_summary <- summary(logit_fit)
+
+# convert coefficients
+logit_coef <- as.data.frame(logit_summary$coefficients)
+
+# rename columns for kable
+colnames(logit_coef) <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
+
+# round the coeff estimate
+logit_coef$Estimate <- round(logit_coef$Estimate, 4)
+
+# add significance stars manually based on p-values and concatenate to estimate
+logit_coef$Estimate <- ifelse(logit_coef$`Pr(>|z|)` < 0.001, paste0(logit_coef$Estimate, "***"), 
+                       ifelse(logit_coef$`Pr(>|z|)` < 0.01, paste0(logit_coef$Estimate, "**"), 
+                       ifelse(logit_coef$`Pr(>|z|)` < 0.05, paste0(logit_coef$Estimate, "*"), 
+                       ifelse(logit_coef$`Pr(>|z|)` < 0.1, paste0(logit_coef$Estimate, "."), 
+                                                      logit_coef$Estimate))))
+
+# create a kable table for logistic regression output
+logit_coef_table <- logit_coef %>%
+  kable("html", caption = "Logistic Regression Model Summary") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  add_header_above(c(" " = 1, "logistic regression coefficients" = 4))
+
+logit_coef_table
+
+# in-sample confusion matrix
+logit.is <- factor(ifelse(predict(logit_fit, type = "response") > 0.5, 1, 0), 
+                   levels = c(0, 1), labels = c("Did Not Vote", "Voted"))
+
+cm.rf.logit.is <- confusionMatrix(logit.is, anes_train_turnout$turnout)
+
+# in-sample confusion matrix styling
+in_sample_cm_table <- cm.rf.logit.is$table %>%
+  kable("html", caption = "In-Sample Confusion Matrix", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#f0ad4e") %>%
+  column_spec(1, background = "#f0ad4e", bold = T, width = "3cm")
+
+# in-sample accuracy, commnented to not print
+#in_sample_accuracy <- sum(diag(cm.rf.logit.is$table)) / sum(cm.rf.logit.is$table)
+#cat("In-Sample Accuracy:", round(in_sample_accuracy * 100, 2), "%\n")
+
+in_sample_cm_table
+
+# out-of-sample confusion matrix
+logit_pred <- factor(ifelse(predict(logit_fit, anes_test_turnout, type = "response") > 0.5, 1, 0), 
+                   levels = c(0, 1), labels = c("Did Not Vote", "Voted"))
+
+cm.rf.logit.oos <- confusionMatrix(logit_pred, anes_test_turnout$turnout)
+
+# out-of-sample confusion matrix styling
+out_sample_cm_table <- cm.rf.logit.oos$table %>%
+  kable("html", caption = "Out-of-Sample Confusion Matrix", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm")
+
+# out-of-sample accuracy, commented to not print
+#out_sample_accuracy <- sum(diag(cm.rf.logit.oos$table)) / sum(cm.rf.logit.oos$table)
+#cat("Out-of-Sample Accuracy:", round(out_sample_accuracy * 100, 2), "%\n")
+
+out_sample_cm_table
+
+
+```
+
+Slightly different than with vote share, it appears that the most statistically significant unfactored predictors of turnout are income, age, and education, which are consistent with the literature. As the confusion matrices show, the in-sample accuracy is 66.48% and out of sample accuracy is 64.99%.
+
+I now transition to a random forest for presidential vote share and turnout, with similar set up to the logistic regressions above.
+
+```{r}
+
+```
+
 
 ### Understanding Turnout
 - turnout overtime, plots
