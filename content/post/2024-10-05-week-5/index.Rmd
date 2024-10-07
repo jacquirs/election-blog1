@@ -9,13 +9,13 @@ tags: []
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+set.seed(02138)
 ```
 
 ```{r}
 ####----------------------------------------------------------#
 #### Get Libraries 
 ####----------------------------------------------------------#
-setwd("C:/Users/Jacqui Schlesinger/Documents/election-blog1/")
 library(car)
 library(caret)
 library(CVXR)
@@ -32,6 +32,10 @@ library(RColorBrewer)
 library(sf)
 library(tidyverse)
 library(viridis)
+library(dplyr)
+library(caret)
+library(ranger)
+library(janitor)
 
 ```
 
@@ -69,7 +73,9 @@ d_pollav_state <- d_state_polls |>
   rename(latest_pollav = poll_support) |>
   select(-c(weeks_left, days_left, poll_date, candidate, before_convention)) |>
   pivot_wider(names_from = party, values_from = c(latest_pollav, mean_pollav))
-                             
+           
+d_econ <- read_csv("C:/Users/Jacqui Schlesinger/Documents/election-blog1/fred_econ.csv") |> 
+  filter(quarter == 2) # if you run this code please change to location of data
 ```
 
 ```{r}
@@ -784,18 +790,1034 @@ out_sample_cm_table
 
 Slightly different than with vote share, it appears that the most statistically significant unfactored predictors of turnout are income, age, and education, which are consistent with the literature. As the confusion matrices show, the in-sample accuracy is 66.48% and out of sample accuracy is 64.99%.
 
-I now transition to a random forest for presidential vote share and turnout, with similar set up to the logistic regressions above.
+I now transition to a random forest for presidential vote share and turnout, with similar set up to the logistic regressions above. The positive here is the democratic vote share, and I factored each variable such that individual levels can have an impact correctly due to the categorical nature of the data. 
 
 ```{r}
+####----------------------------------------------------------#
+#### Random forest for vote share
+####----------------------------------------------------------#
+anes <- anes %>%
+  mutate(age = case_when(
+    age >= 18 & age <= 24 ~ "18-24",
+    age >= 25 & age <= 34 ~ "25-34",
+    age >= 35 & age <= 44 ~ "35-44",
+    age >= 45 & age <= 54 ~ "45-54",
+    age >= 55 & age <= 64 ~ "55-64",
+    age >= 65 ~ "65+",
+    is.na(age) ~ "Unknown"
+  )) 
 
+# prepare the dataset
+anes_year <- anes[anes$year == 2016,] |> 
+  select(-c(year, pid7, pid3, ideo)) |>
+  mutate(
+    pres_vote = factor(pres_vote, levels = c(1, 2), labels = c("Democrat", "Republican")),
+    age = factor(age),                      
+    gender = factor(gender),                
+    race = factor(race),                    
+    educ = factor(educ),                    
+    income = factor(income),                
+    religion = factor(religion),            
+    attend_church = factor(attend_church),  
+    southern = factor(southern),            
+    work_status = factor(work_status),      
+    homeowner = factor(homeowner),          
+    married = factor(married)               
+  ) |> 
+  filter(!is.na(pres_vote)) |>
+  filter(!is.na(age)) |>
+  clean_names()
+
+# number of features
+n_features <- length(setdiff(names(anes_year), "pres_vote"))
+
+# set seed for reproducibility
+set.seed(02138)
+
+# create train-test split
+train.ind <- createDataPartition(anes_year$pres_vote, p = 0.8, list = FALSE)
+anes_train <- anes_year[train.ind,]
+anes_test <- anes_year[-train.ind,]
+
+# fit random forest model with importance calculation
+rf_fit <- ranger(pres_vote ~ ., 
+                 mtry = floor(n_features/3), 
+                 respect.unordered.factors = "order", 
+                 seed = 02138,
+                 classification = TRUE,
+                 data = anes_train,
+                 importance = "impurity")
+
+# in-sample accuracy
+cm.rf.is <- confusionMatrix(rf_fit$predictions, anes_train$pres_vote)
+
+# in-sample confusion matrix
+in_sample_cm_table <- cm.rf.is$table %>%
+  kable("html", caption = "In-Sample Confusion Matrix", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#f0ad4e") %>%
+  column_spec(1, background = "#f0ad4e", bold = T, width = "3cm")
+
+# out-of-sample accuracy
+rf_pred <- predict(rf_fit, data = anes_test)
+cm.rf.oos <- confusionMatrix(rf_pred$predictions, anes_test$pres_vote)
+
+# out-of-sample confusion matrix
+out_sample_cm_table <- cm.rf.oos$table %>%
+  kable("html", caption = "Out-of-Sample Confusion Matrix", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm")
+
+# feature importance
+importance_values <- rf_fit$variable.importance
+
+# create importance_df from importance_values
+importance_df <- data.frame(importance = importance_values)
+importance_df$feature <- rownames(importance_df)
+
+# order importance_df
+importance_df <- importance_df[order(importance_df$importance, decreasing = TRUE),]
+
+# plot feature importance
+ggplot(importance_df, aes(x = reorder(feature, importance), y = importance)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Feature Importance in Random Forest, 2016 Popular Vote Share",
+       x = "Features",
+       y = "Importance (impurity)") +
+  barplot_theme
+
+
+```
+In this random forest, I split the variables into their factors for proper analysis, leading to an in-sample accuracy of 71.65% and out-of-sample accuracy of 70.25%. The confusion matrices for these two cases are shown below. 
+
+```{r}
+# plot confusion matrices from last block
+in_sample_cm_table
+
+out_sample_cm_table
 ```
 
 
-### Understanding Turnout
-- turnout overtime, plots
-- how to get 2024 turnout 
+Based on the feature importance analysis (impurity) from the random forest model, age emerged as the most significant factor in predicting voting behavior, followed by race, church attendance, religion, and income. These features had a high influence on whether individuals voted Democrat or Republican, indicating that demographics and social factors played a crucial role in determining voter preference. Gender, southern residence, and homeowner status, while still contributing, had much lower importance values, suggesting that they were less impactful in the model's overall predictions. The findings underscore the importance of understanding voter demographics and personal attributes in political analysis, but the accuracy from splitting the variables by factors was not greatly improved overall.
+
+I can also perform one-hot encoding to view the individual contributions of the levels factored from each variable. A graph of the 25 most important factors but impurity is shown below. 
+
+```{r}
+####----------------------------------------------------------#
+#### Random forest pre vote by indicator
+####----------------------------------------------------------#
+
+# separate the outcome variable before one-hot encoding
+pres_vote <- anes_year$pres_vote
+
+# one-hot encode the categorical variables (excluding the outcome)
+anes_one_hot <- dummyVars(" ~ .", data = anes_year[, setdiff(names(anes_year), "pres_vote")])
+anes_encoded <- data.frame(predict(anes_one_hot, newdata = anes_year))
+
+# add the target variable back
+anes_encoded$pres_vote <- pres_vote
+
+# number of features after one-hot encoding
+n_features <- length(setdiff(names(anes_encoded), "pres_vote"))
+
+# train-test split
+set.seed(02138)
+train.ind <- createDataPartition(anes_encoded$pres_vote, p = 0.8, list = FALSE)
+anes_train <- anes_encoded[train.ind,]
+anes_test <- anes_encoded[-train.ind,]
+
+# fit a new random forest model with one-hot encoded data
+rf_fit_one_hot <- ranger(pres_vote ~ ., 
+                         mtry = floor(n_features/3), 
+                         respect.unordered.factors = "order", 
+                         seed = 02138,
+                         classification = TRUE,
+                         data = anes_train,
+                         importance = "impurity")
+
+# get feature importance values
+importance_values_one_hot <- rf_fit_one_hot$variable.importance
+
+# create a data frame from importance values
+importance_df_one_hot <- data.frame(importance = importance_values_one_hot)
+importance_df_one_hot$feature <- rownames(importance_df_one_hot)
+
+# order the importance data frame and select the top 25 features
+importance_df_top_25 <- importance_df_one_hot[order(importance_df_one_hot$importance, decreasing = TRUE),][1:25,]
+
+# rename features for plotting using your specified names
+importance_df_top_25 <- importance_df_top_25 %>%
+  mutate(feature = case_when(
+    feature == "race.1" ~ "Race: White",
+    feature == "race.2" ~ "Race: Black",
+    feature == "educ.4" ~ "Education: College+",
+    feature == "religion.1" ~ "Religion: Protestant",
+    feature == "attend_church.1" ~ "Attend Church: Every week",
+    feature == "attend_church.5" ~ "Attend Church: Never",
+    feature == "religion.4" ~ "Religion: Other",
+    feature == "income.3" ~ "Income: 34-67 percentile",
+    feature == "gender.1" ~ "Gender: Male",
+    feature == "southern.2" ~ "Southern: Yes",
+    feature == "married.1" ~ "Marital Status: Married",
+    feature == "income.4" ~ "Income: 68-95 percentile",
+    feature == "southern.1" ~ "Southern: No",
+    feature == "gender.2" ~ "Gender: Female",
+    feature == "work_status.1" ~ "Work Status: Working Now",
+    feature == "religion.2" ~ "Religion: Catholic",
+    feature == "educ.2" ~ "Education: High school",
+    feature == "educ.3" ~ "Education: Some college",
+    feature == "homeowner.1" ~ "Homeowner: Yes",
+    feature == "homeowner.2" ~ "Homeowner: No",
+    feature == "married.2" ~ "Marital Status: Widowed",
+    feature == "married.3" ~ "Marital Status: Divorced",
+    feature == "work_status.3" ~ "Work Status: Unemployed",
+    feature == "attend_church.4" ~ "Attend Church: A few times a year",
+    feature == "income.2" ~ "Income: 17-33 percentile",
+    feature == "age.18.24" ~ "Age: 18-24",
+    feature == "age.25.34" ~ "Age: 25-34",
+    feature == "age.35.44" ~ "Age: 35-44",
+    feature == "age.45.54" ~ "Age: 45-54",
+    feature == "age.55.64" ~ "Age: 55-64",
+    feature == "age.65." ~ "Age: 65+",
+    feature == "age.Unknown" ~ "Age: Unknown",
+    TRUE ~ feature  # keep the original if no match
+  ))
+
+# plot the top 25 features by importance with renamed labels
+ggplot(importance_df_top_25, aes(x = reorder(feature, importance), y = importance)) +
+  geom_bar(aes(fill = importance), stat = "identity") +
+  coord_flip() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Top 25 Indicator Feature Importance in Random Forest, 2016 Pop Vote Share",
+       x = "Features",
+       y = "Importance (impurity)") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 10),
+    legend.position = "none" 
+  )
+
+```
+
+This graph gives us insight into which groups were most important at determining vote choice. The better a node is at splitting the data correctly, the more important it is, as measured by impurity. Because the above only looks at 2016, I thought it would also be important to see how much this changes for 2012 and 2020. 
+
+```{r}
+####----------------------------------------------------------#
+#### Random forest for vote share across multiple years
+####----------------------------------------------------------#
+
+# Prepare the dataset for 2012, 2016, and 2020
+years <- c(2012, 2016, 2020)
+importance_combined_factors <- data.frame()
+importance_combined_one_hot <- data.frame()
+
+for (year in years) {
+  # Prepare the dataset
+  anes_year <- anes[anes$year == year,] |> 
+    select(-c(year, pid7, pid3, ideo)) |>
+    mutate(
+      pres_vote = factor(pres_vote, levels = c(1, 2), labels = c("Democrat", "Republican")),
+      age = factor(age),                      
+      gender = factor(gender),                
+      race = factor(race),                    
+      educ = factor(educ),                    
+      income = factor(income),                
+      religion = factor(religion),            
+      attend_church = factor(attend_church),  
+      southern = factor(southern),            
+      work_status = factor(work_status),      
+      homeowner = factor(homeowner),          
+      married = factor(married)               
+    ) |> 
+    filter(!is.na(pres_vote)) |>
+    filter(!is.na(age)) |>
+    clean_names()
+  
+  # Number of features
+  n_features <- length(setdiff(names(anes_year), "pres_vote"))
+  
+  # Set seed for reproducibility
+  set.seed(02138)
+  
+  # Create train-test split
+  train.ind <- createDataPartition(anes_year$pres_vote, p = 0.8, list = FALSE)
+  anes_train <- anes_year[train.ind,]
+  anes_test <- anes_year[-train.ind,]
+  
+  # Fit random forest model with importance calculation for factorized features
+  rf_fit <- ranger(pres_vote ~ ., 
+                   mtry = floor(n_features/3), 
+                   respect.unordered.factors = "order", 
+                   seed = 02138,
+                   classification = TRUE,
+                   data = anes_train,
+                   importance = "impurity")
+  
+  # Feature importance for factorized features
+  importance_values <- rf_fit$variable.importance
+  importance_df <- data.frame(importance = importance_values)
+  importance_df$feature <- rownames(importance_df)
+  importance_df <- importance_df[order(importance_df$importance, decreasing = TRUE),]
+  
+  # Add year information for combined factorized importance
+  importance_df$Year <- as.factor(year)
+  importance_combined_factors <- rbind(importance_combined_factors, importance_df[1:25,])
+  
+  # One-hot encoding
+  pres_vote <- anes_year$pres_vote
+  anes_one_hot <- dummyVars(" ~ .", data = anes_year[, setdiff(names(anes_year), "pres_vote")])
+  anes_encoded <- data.frame(predict(anes_one_hot, newdata = anes_year))
+  anes_encoded$pres_vote <- pres_vote
+  
+  # Train-test split for one-hot encoded data
+  n_features_one_hot <- length(setdiff(names(anes_encoded), "pres_vote"))
+  train.ind_one_hot <- createDataPartition(anes_encoded$pres_vote, p = 0.8, list = FALSE)
+  anes_train_one_hot <- anes_encoded[train.ind_one_hot,]
+  anes_test_one_hot <- anes_encoded[-train.ind_one_hot,]
+  
+  # Fit a new random forest model with one-hot encoded data
+  rf_fit_one_hot <- ranger(pres_vote ~ ., 
+                           mtry = floor(n_features_one_hot/3), 
+                           respect.unordered.factors = "order", 
+                           seed = 02138,
+                           classification = TRUE,
+                           data = anes_train_one_hot,
+                           importance = "impurity")
+  
+  # Feature importance values for one-hot encoded features
+  importance_values_one_hot <- rf_fit_one_hot$variable.importance
+  importance_df_one_hot <- data.frame(importance = importance_values_one_hot)
+  importance_df_one_hot$feature <- rownames(importance_df_one_hot)
+  
+  # Add year information for combined one-hot importance
+  importance_df_one_hot$Year <- as.factor(year)
+  importance_combined_one_hot <- rbind(importance_combined_one_hot, importance_df_one_hot[order(importance_df_one_hot$importance, decreasing = TRUE)[1:25], ])
+}
+
+# Remove rows with NAs
+importance_combined_factors <- na.omit(importance_combined_factors)
+
+# Plot the factorized feature importance
+ggplot(importance_combined_factors, aes(x = reorder(feature, importance), y = importance, fill = factor(Year))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  coord_flip() +
+  scale_fill_manual(values = c("2012" = "lightblue", "2016" = "orange", "2020" = "lightgreen"), name = NULL) +
+  labs(title = "Feature Importance in Random Forest",
+       x = "Features",
+       y = "Importance (impurity)") +
+  barplot_theme +
+  theme(
+    plot.title = element_text(size = 14),
+    legend.title = element_text(size = 10),
+    legend.position = "bottom"
+  )
+
+# Define a function to rename features
+rename_features <- function(df) {
+  df %>%
+    mutate(feature = case_when(
+      feature == "race.1" ~ "Race: White",
+      feature == "race.2" ~ "Race: Black",
+      feature == "race.3" ~ "Race: Hispanic",
+      feature == "race.4" ~ "Race: Other",
+      feature == "educ.0" ~ "Education: DK",
+      feature == "educ.1" ~ "Education: Less than High School",
+      feature == "educ.2" ~ "Education: High School",
+      feature == "educ.3" ~ "Education: Some College",
+      feature == "educ.4" ~ "Education: College+",
+      feature == "income.1" ~ "Income: 0-16 percentile",
+      feature == "income.2" ~ "Income: 17-33 percentile",
+      feature == "income.3" ~ "Income: 34-67 percentile",
+      feature == "income.4" ~ "Income: 68-95 percentile",
+      feature == "income.5" ~ "Income: 96-100 percentile",
+      feature == "religion.0" ~ "Religion: DK",
+      feature == "religion.1" ~ "Religion: Protestant",
+      feature == "religion.2" ~ "Religion: Catholic",
+      feature == "religion.3" ~ "Religion: Jewish",
+      feature == "religion.4" ~ "Religion: Other",
+      feature == "attend_church.1" ~ "Attend Church: Every week",
+      feature == "attend_church.2" ~ "Attend Church: Almost every week",
+      feature == "attend_church.3" ~ "Attend Church: Once or twice a month",
+      feature == "attend_church.4" ~ "Attend Church: A few times a year",
+      feature == "attend_church.5" ~ "Attend Church: Never",
+      feature == "southern.1" ~ "Southern: No",
+      feature == "southern.2" ~ "Southern: Yes",
+      feature == "work_status.1" ~ "Work Status: Working Now",
+      feature == "work_status.2" ~ "Work Status: Not Working",
+      feature == "homeowner.1" ~ "Homeowner: Yes",
+      feature == "homeowner.2" ~ "Homeowner: No",
+      feature == "married.1" ~ "Marital Status: Married",
+      feature == "married.2" ~ "Marital Status: Widowed",
+      feature == "married.3" ~ "Marital Status: Divorced",
+      feature == "work_status.3" ~ "Work Status: Unemployed",
+      feature == "gender.1" ~ "Gender: Male",
+      feature == "gender.2" ~ "Gender: Female",
+      feature == "age.18.24" ~ "Age: 18-24",
+      feature == "age.25.34" ~ "Age: 25-34",
+      feature == "age.35.44" ~ "Age: 35-44",
+      feature == "age.45.54" ~ "Age: 45-54",
+      feature == "age.55.64" ~ "Age: 55-64",
+      feature == "age.65." ~ "Age: 65+",
+      feature == "age.Unknown" ~ "Age: Unknown",
+      TRUE ~ feature  # keep the original if no match
+    ))
+}
+
+# Separate plots for one-hot encoded feature importance for each year
+for (year in years) {
+  # Filter the one-hot encoded importance data for the current year
+  importance_year <- importance_combined_one_hot %>% 
+    filter(Year == year) %>% 
+    rename_features()  # Apply the renaming function
+  
+  # Select the top 25 features by importance
+  importance_year_top_25 <- importance_year %>%
+    top_n(25, importance)
+
+  # Create a separate plot for the current year
+  p <- ggplot(importance_year_top_25, aes(x = reorder(feature, importance), y = importance, fill = importance)) +
+    geom_bar(stat = "identity") +
+    coord_flip() +
+    scale_fill_gradient(low = "lightblue", high = "darkblue") +
+    labs(title = paste("Top 25 Indicator Feature Importance in Random Forest (", year, ")", sep = ""),
+         x = "Features",
+         y = "Importance (impurity)") +
+    barplot_theme +
+    theme(
+      plot.title = element_text(size = 10),
+      legend.position = "none" 
+    )
+  
+  # Print the plot
+  print(p)
+}
+
+
+```
+
+The general feature importance is mostly consistent across years. It does appear that the top 25 most important features are somewhat different, at least in order, over the three most recent elections, further pointing to demographic data as difficult to use in terms of accuracy of prediction. For this reason, I will not be using demographics to directly calculate vote share in my model, though as discussed in the next section it may be helpful for determining 2024 turnout. The full interpretations of these graphs and their important will be more fully explored in my presentation for this week.
+
+Before moving on to my model for the week, I turn to the random forest model of turnout, as I did with presidential vote share. As I discuss below, turnout is hard to measure across years due to no significant 2024 demographic data and other questions on how turnout chnages each year, but for now I look at 2012-2020 to understand the factors that impact it. My turnout model in my simulation will be simple, but these insights can be drawn on for the future to make a more significant turnout model.
+
+```{r}
+####----------------------------------------------------------#
+#### Random forest for turnout
+####----------------------------------------------------------#
+
+# Prepare the dataset
+anes_year_turnout_rf <- anes[anes$year == 2016,] |> 
+  mutate(turnout = factor(ifelse(is.na(pres_vote), 0, 1), levels = c(0, 1), labels = c("Did Not Vote", "Voted")),
+          age = factor(age),  
+          gender = factor(gender),                
+          race = factor(race),                    
+          educ = factor(educ),                    
+          income = factor(income),                
+          religion = factor(religion),            
+          attend_church = factor(attend_church),  
+          southern = factor(southern),            
+          work_status = factor(work_status),      
+          homeowner = factor(homeowner),          
+          married = factor(married)
+        ) |> 
+  select(-c(year, pid7, pid3, ideo, pres_vote)) |> 
+  filter(!is.na(turnout)) %>%
+  filter(!is.na(age)) %>%
+  clean_names()
+
+n_features <- length(setdiff(names(anes_year_turnout_rf), "turnout"))
+
+set.seed(02138)
+train.ind.turnout.rf <- sample(1:nrow(anes_year_turnout_rf), size = 0.8 * nrow(anes_year_turnout_rf))
+
+# Split the data into training and test sets
+anes_train_turnout_rf <- anes_year_turnout_rf[train.ind.turnout.rf, ]
+anes_test_turnout_rf <- anes_year_turnout_rf[-train.ind.turnout.rf, ]
+
+# Fit random forest model with importance calculation
+rf_fit_turnout <- ranger(turnout ~ ., 
+                         mtry = floor(n_features/3), 
+                         respect.unordered.factors = "order", 
+                         seed = 02138,
+                         classification = TRUE,
+                         data = anes_train_turnout_rf,
+                         importance = "impurity")
+
+# In-sample accuracy
+cm.rf.is.turnout <- confusionMatrix(rf_fit_turnout$predictions, anes_train_turnout_rf$turnout)
+
+# In-sample confusion matrix
+in_sample_cm_table_turnout <- cm.rf.is.turnout$table %>%
+  kable("html", caption = "In-Sample Confusion Matrix for Turnout", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#f0ad4e") %>%
+  column_spec(1, background = "#f0ad4e", bold = T, width = "3cm")
+
+# Out-of-sample accuracy
+rf_pred_turnout <- predict(rf_fit_turnout, data = anes_test_turnout_rf)
+cm.rf.oos.turnout <- confusionMatrix(rf_pred_turnout$predictions, anes_test_turnout_rf$turnout)
+
+# Out-of-sample confusion matrix
+out_sample_cm_table_turnout <- cm.rf.oos.turnout$table %>%
+  kable("html", caption = "Out-of-Sample Confusion Matrix for Turnout", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm")
+
+# Feature importance
+importance_values_turnout <- rf_fit_turnout$variable.importance
+
+# Create importance_df from importance_values
+importance_df_turnout <- data.frame(importance = importance_values_turnout)
+importance_df_turnout$feature <- rownames(importance_df_turnout)
+
+# Order importance_df
+importance_df_turnout <- importance_df_turnout[order(importance_df_turnout$importance, decreasing = TRUE),]
+
+# Plot feature importance
+ggplot(importance_df_turnout, aes(x = reorder(feature, importance), y = importance)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Feature Importance in Random Forest for Turnout",
+       x = "Features",
+       y = "Importance (impurity)") +
+  barplot_theme
+```
+
+The random forest model for turnout in 2016 shows that age, income, and church attendance are the most important predictors of voter turnout. Variables like gender, southern residence, and homeownership have less predictive power in comparison to the top features. Remember, in a random forest, impurity measures how mixed or "impure" the data is at a given node, with lower impurity indicating more homogeneity; feature importance is determined by how much each variable reduces impurity, meaning the most important features are those that most effectively split the data into pure or homogeneous groups.
+
+Looking at the confusion matrices below, I see an accuracy of demographic variables alone in sample of 64.11% and out of sample of 62.41%, performing worse than tha logistic regression and having less predictive power on this than vote share. Note that did not vote is the positive class below. 
+
+```{r}
+in_sample_cm_table_turnout
+
+out_sample_cm_table_turnout
+```
+
+I can also split across features as indicators of each level of a variable. For 2016, the top 25 are seen below.
+
+```{r}
+####----------------------------------------------------------#
+#### Random forest for turnout by indicator variable
+####----------------------------------------------------------#
+
+# Separate the outcome variable before one-hot encoding
+turnout <- anes_year_turnout_rf$turnout
+
+# One-hot encode the categorical variables (excluding the outcome)
+anes_one_hot_turnout <- dummyVars(" ~ .", data = anes_year_turnout_rf[, setdiff(names(anes_year_turnout_rf), "turnout")])
+anes_encoded_turnout <- data.frame(predict(anes_one_hot_turnout, newdata = anes_year_turnout_rf))
+
+# Add the target variable back
+anes_encoded_turnout$turnout <- turnout
+
+# Number of features after one-hot encoding
+n_features_turnout <- length(setdiff(names(anes_encoded_turnout), "turnout"))
+
+# Train-test split
+set.seed(02138)
+train.ind_turnout <- createDataPartition(anes_encoded_turnout$turnout, p = 0.8, list = FALSE)
+anes_train_turnout <- anes_encoded_turnout[train.ind_turnout, ]
+anes_test_turnout <- anes_encoded_turnout[-train.ind_turnout, ]
+
+# Fit a new random forest model with one-hot encoded data
+rf_fit_one_hot_turnout <- ranger(turnout ~ ., 
+                                  mtry = floor(n_features_turnout / 3), 
+                                  respect.unordered.factors = "order", 
+                                  seed = 02138,
+                                  classification = TRUE,
+                                  data = anes_train_turnout,
+                                  importance = "impurity")
+
+# Get feature importance values
+importance_values_one_hot_turnout <- rf_fit_one_hot_turnout$variable.importance
+
+# Create a data frame from importance values
+importance_df_one_hot_turnout <- data.frame(importance = importance_values_one_hot_turnout)
+importance_df_one_hot_turnout$feature <- rownames(importance_df_one_hot_turnout)
+
+# Order the importance data frame and select the top 25 features
+importance_df_top_25_turnout <- importance_df_one_hot_turnout[order(importance_df_one_hot_turnout$importance, decreasing = TRUE),][1:25, ]
+
+# Rename features for plotting using your specified names
+importance_df_top_25_turnout <- importance_df_top_25_turnout %>%
+  mutate(feature = case_when(
+      feature == "race.1" ~ "Race: White",
+      feature == "race.2" ~ "Race: Black",
+      feature == "race.3" ~ "Race: Hispanic",
+      feature == "race.4" ~ "Race: Other",
+      feature == "educ.0" ~ "Education: DK",
+      feature == "educ.1" ~ "Education: Less than High School",
+      feature == "educ.2" ~ "Education: High School",
+      feature == "educ.3" ~ "Education: Some College",
+      feature == "educ.4" ~ "Education: College+",
+      feature == "income.1" ~ "Income: 0-16 percentile",
+      feature == "income.2" ~ "Income: 17-33 percentile",
+      feature == "income.3" ~ "Income: 34-67 percentile",
+      feature == "income.4" ~ "Income: 68-95 percentile",
+      feature == "income.5" ~ "Income: 96-100 percentile",
+      feature == "religion.0" ~ "Religion: DK",
+      feature == "religion.1" ~ "Religion: Protestant",
+      feature == "religion.2" ~ "Religion: Catholic",
+      feature == "religion.3" ~ "Religion: Jewish",
+      feature == "religion.4" ~ "Religion: Other",
+      feature == "attend_church.1" ~ "Attend Church: Every week",
+      feature == "attend_church.2" ~ "Attend Church: Almost every week",
+      feature == "attend_church.3" ~ "Attend Church: Once or twice a month",
+      feature == "attend_church.4" ~ "Attend Church: A few times a year",
+      feature == "attend_church.5" ~ "Attend Church: Never",
+      feature == "southern.1" ~ "Southern: No",
+      feature == "southern.2" ~ "Southern: Yes",
+      feature == "work_status.1" ~ "Work Status: Working Now",
+      feature == "work_status.2" ~ "Work Status: Not Working",
+      feature == "homeowner.1" ~ "Homeowner: Yes",
+      feature == "homeowner.2" ~ "Homeowner: No",
+      feature == "married.1" ~ "Marital Status: Married",
+      feature == "married.2" ~ "Marital Status: Widowed",
+      feature == "married.3" ~ "Marital Status: Divorced",
+      feature == "work_status.3" ~ "Work Status: Unemployed",
+      feature == "gender.1" ~ "Gender: Male",
+      feature == "gender.2" ~ "Gender: Female",
+      feature == "age.18.24" ~ "Age: 18-24",
+      feature == "age.25.34" ~ "Age: 25-34",
+      feature == "age.35.44" ~ "Age: 35-44",
+      feature == "age.45.54" ~ "Age: 45-54",
+      feature == "age.55.64" ~ "Age: 55-64",
+      feature == "age.65." ~ "Age: 65+",
+      feature == "age.Unknown" ~ "Age: Unknown",
+      TRUE ~ feature  # keep the original if no match
+    ))
+
+# Plot the top 25 features by importance with renamed labels
+ggplot(importance_df_top_25_turnout, aes(x = reorder(feature, importance), y = importance)) +
+  geom_bar(aes(fill = importance), stat = "identity") +
+  coord_flip() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Top 25 Indicator Feature Importance in Random Forest for Turnout, 2016",
+       x = "Features",
+       y = "Importance (impurity)") +
+  barplot_theme +
+  theme(
+    plot.title = element_text(size = 10),
+    legend.position = "none" 
+  )
+
+```
+
+This graph gives us insight into which groups were most important at determining turnout, but not this is not causal. Because the above only looks at 2016, I thought it would also be important to see how much this changes for 2012 and 2020. 
+
+```{r}
+####----------------------------------------------------------#
+#### Random forest for vote share across multiple years
+####----------------------------------------------------------#
+
+# Prepare the dataset for 2012, 2016, and 2020
+years <- c(2012, 2016, 2020)
+importance_combined_factors <- data.frame()
+importance_combined_one_hot <- data.frame()
+
+for (year in years) {
+  # Prepare the dataset
+  anes_year <- anes[anes$year == year,] |> 
+    select(-c(year, pid7, pid3, ideo)) |>
+    mutate(
+      pres_vote = factor(pres_vote, levels = c(1, 2), labels = c("Democrat", "Republican")),
+      age = factor(age),                      
+      gender = factor(gender),                
+      race = factor(race),                    
+      educ = factor(educ),                    
+      income = factor(income),                
+      religion = factor(religion),            
+      attend_church = factor(attend_church),  
+      southern = factor(southern),            
+      work_status = factor(work_status),      
+      homeowner = factor(homeowner),          
+      married = factor(married)               
+    ) |> 
+    filter(!is.na(pres_vote)) |>
+    filter(!is.na(age)) %>%
+    clean_names()
+  
+  # Number of features
+  n_features <- length(setdiff(names(anes_year), "pres_vote"))
+  
+  # Set seed for reproducibility
+  set.seed(02138)
+  
+  # Create train-test split
+  train.ind <- createDataPartition(anes_year$pres_vote, p = 0.8, list = FALSE)
+  anes_train <- anes_year[train.ind,]
+  anes_test <- anes_year[-train.ind,]
+  
+  # Fit random forest model with importance calculation for factorized features
+  rf_fit <- ranger(pres_vote ~ ., 
+                   mtry = floor(n_features/3), 
+                   respect.unordered.factors = "order", 
+                   seed = 02138,
+                   classification = TRUE,
+                   data = anes_train,
+                   importance = "impurity")
+  
+  # Feature importance for factorized features
+  importance_values <- rf_fit$variable.importance
+  importance_df <- data.frame(importance = importance_values)
+  importance_df$feature <- rownames(importance_df)
+  importance_df <- importance_df[order(importance_df$importance, decreasing = TRUE),]
+  
+  # Add year information for combined factorized importance
+  importance_df$Year <- as.factor(year)
+  importance_combined_factors <- rbind(importance_combined_factors, importance_df[1:25,])
+  
+  # One-hot encoding
+  pres_vote <- anes_year$pres_vote
+  anes_one_hot <- dummyVars(" ~ .", data = anes_year[, setdiff(names(anes_year), "pres_vote")])
+  anes_encoded <- data.frame(predict(anes_one_hot, newdata = anes_year))
+  anes_encoded$pres_vote <- pres_vote
+  
+  # Train-test split for one-hot encoded data
+  n_features_one_hot <- length(setdiff(names(anes_encoded), "pres_vote"))
+  train.ind_one_hot <- createDataPartition(anes_encoded$pres_vote, p = 0.8, list = FALSE)
+  anes_train_one_hot <- anes_encoded[train.ind_one_hot,]
+  anes_test_one_hot <- anes_encoded[-train.ind_one_hot,]
+  
+  # Fit a new random forest model with one-hot encoded data
+  rf_fit_one_hot <- ranger(pres_vote ~ ., 
+                           mtry = floor(n_features_one_hot/3), 
+                           respect.unordered.factors = "order", 
+                           seed = 02138,
+                           classification = TRUE,
+                           data = anes_train_one_hot,
+                           importance = "impurity")
+  
+  # Feature importance values for one-hot encoded features
+  importance_values_one_hot <- rf_fit_one_hot$variable.importance
+  importance_df_one_hot <- data.frame(importance = importance_values_one_hot)
+  importance_df_one_hot$feature <- rownames(importance_df_one_hot)
+  
+  # Add year information for combined one-hot importance
+  importance_df_one_hot$Year <- as.factor(year)
+  importance_combined_one_hot <- rbind(importance_combined_one_hot, importance_df_one_hot[order(importance_df_one_hot$importance, decreasing = TRUE)[1:25], ])
+}
+
+# Remove rows with NAs
+importance_combined_factors <- na.omit(importance_combined_factors)
+
+# Plot the factorized feature importance
+ggplot(importance_combined_factors, aes(x = reorder(feature, importance), y = importance, fill = factor(Year))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  coord_flip() +
+  scale_fill_manual(values = c("2012" = "lightblue", "2016" = "orange", "2020" = "lightgreen"), name = NULL) +
+  labs(title = "Feature Importance in Random Forest",
+       x = "Features",
+       y = "Importance (impurity)") +
+  barplot_theme +
+  theme(
+    plot.title = element_text(size = 14),
+    legend.title = element_text(size = 10),
+    legend.position = "bottom"
+  )
+
+# Define a function to rename features
+rename_features <- function(df) {
+  df %>%
+    mutate(feature = case_when(
+      feature == "race.1" ~ "Race: White",
+      feature == "race.2" ~ "Race: Black",
+      feature == "race.3" ~ "Race: Hispanic",
+      feature == "race.4" ~ "Race: Other",
+      feature == "educ.0" ~ "Education: DK",
+      feature == "educ.1" ~ "Education: Less than High School",
+      feature == "educ.2" ~ "Education: High School",
+      feature == "educ.3" ~ "Education: Some College",
+      feature == "educ.4" ~ "Education: College+",
+      feature == "income.1" ~ "Income: 0-16 percentile",
+      feature == "income.2" ~ "Income: 17-33 percentile",
+      feature == "income.3" ~ "Income: 34-67 percentile",
+      feature == "income.4" ~ "Income: 68-95 percentile",
+      feature == "income.5" ~ "Income: 96-100 percentile",
+      feature == "religion.0" ~ "Religion: DK",
+      feature == "religion.1" ~ "Religion: Protestant",
+      feature == "religion.2" ~ "Religion: Catholic",
+      feature == "religion.3" ~ "Religion: Jewish",
+      feature == "religion.4" ~ "Religion: Other",
+      feature == "attend_church.1" ~ "Attend Church: Every week",
+      feature == "attend_church.2" ~ "Attend Church: Almost every week",
+      feature == "attend_church.3" ~ "Attend Church: Once or twice a month",
+      feature == "attend_church.4" ~ "Attend Church: A few times a year",
+      feature == "attend_church.5" ~ "Attend Church: Never",
+      feature == "southern.1" ~ "Southern: No",
+      feature == "southern.2" ~ "Southern: Yes",
+      feature == "work_status.1" ~ "Work Status: Working Now",
+      feature == "work_status.2" ~ "Work Status: Not Working",
+      feature == "homeowner.1" ~ "Homeowner: Yes",
+      feature == "homeowner.2" ~ "Homeowner: No",
+      feature == "married.1" ~ "Marital Status: Married",
+      feature == "married.2" ~ "Marital Status: Widowed",
+      feature == "married.3" ~ "Marital Status: Divorced",
+      feature == "work_status.3" ~ "Work Status: Unemployed",
+      feature == "gender.1" ~ "Gender: Male",
+      feature == "gender.2" ~ "Gender: Female",
+      feature == "age.18.24" ~ "Age: 18-24",
+      feature == "age.25.34" ~ "Age: 25-34",
+      feature == "age.35.44" ~ "Age: 35-44",
+      feature == "age.45.54" ~ "Age: 45-54",
+      feature == "age.55.64" ~ "Age: 55-64",
+      feature == "age.65." ~ "Age: 65+",
+      feature == "age.Unknown" ~ "Age: Unknown",
+      TRUE ~ feature  # keep the original if no match
+    ))
+}
+
+# Separate plots for one-hot encoded feature importance for each year
+for (year in years) {
+  # Filter the one-hot encoded importance data for the current year
+  importance_year <- importance_combined_one_hot %>% 
+    filter(Year == year) %>% 
+    rename_features()  # Apply the renaming function
+  
+  # Select the top 25 features by importance
+  importance_year_top_25 <- importance_year %>%
+    top_n(25, importance)
+
+  # Create a separate plot for the current year
+  p <- ggplot(importance_year_top_25, aes(x = reorder(feature, importance), y = importance, fill = importance)) +
+    geom_bar(stat = "identity") +
+    coord_flip() +
+    scale_fill_gradient(low = "lightblue", high = "darkblue") +
+    labs(title = paste("Top 25 Indicator Feature Importance in Random Forest (", year, ")", sep = ""),
+         x = "Features",
+         y = "Importance (impurity)") +
+    barplot_theme +
+    theme(
+      plot.title = element_text(size = 10),
+      legend.position = "none" 
+    )
+  
+  # Print the plot
+  print(p)
+}
+
+```
+
+The general feature importance is somewhat consistent across years. It does appear that the top 25 most important features are somewhat different, at least in order, over the three most recent elections, further pointing to demographic data as difficult to use in terms of accuracy of prediction. Demographics can somewhat help predict turnout, but it does not seem strong enough to warrant strong inclusion in my model. I may include demographics as a predictor of turnout in a future iteration, but as discussed below my model this week uses historical weights. 
 
 ### Simulating the Outcome
-- how the method works
-- what I have included in my model
-- do the simulations, give histogram for seven states 
+Simulation is a powerful statistical technique used to model complex systems by generating random samples that represent real-world phenomena. In the context of voting behavior, simulations can help us predict election outcomes by running models that utilize a normal distribution. Prominent organizations like FiveThirtyEight (538) employ these techniques to enhance their election predictions. By simulating, we incorporate uncertainties to better understand potential electoral outcomes.
+
+Calculating voter turnout is inherently challenging due to the myriad of factors that influence voter participation, as seen above. In this simulation, I must address the issue of estimating turnout for 2024, given that the dataset lacks specific demographic information for that year. I also don't know exactly who will turnout out for this election. 
+
+To deal with this, we have several options: estimate state-level demographics from voter files, interpolate Census demographics using a statistical model, or simulate plausible values for turnout based on historical averages or advanced modeling techniques. For this analysis and simplicity, I chose to simulate turnout values by drawing from historical averages, recognizing that a demographic-based method may yield only around 70% accuracy, as demonstrated in earlier sections. 
+
+I present simulated predictions for only the seven states of interest.
+
+```{r}
+####----------------------------------------------------------#
+#### Simulation data prep
+####----------------------------------------------------------#
+
+# Merge data
+d <- d_pollav_state %>%
+  left_join(d_state_popvote, by = c("year", "state")) %>%
+  left_join(d_popvote %>% filter(party == "democrat"), by = "year") %>%
+  left_join(d_demos, by = c("year", "state")) %>%
+  left_join(d_state_turnout, by = c("year", "state")) %>%
+  left_join(d_econ, by = "year") %>% 
+  filter(year >= 1980) %>%
+  ungroup()
+
+# Sequester states for which we have polling data for 2024 
+states.2024 <- unique(d$state[d$year == 2024])
+states.2024 <- states.2024[-which(states.2024 == "Nebraska Cd 2")]
+
+# Subset and split data
+d <- d %>%
+  filter(state %in% states.2024)
+
+d_train <- d %>%
+  filter(year < 2024)
+d_test <- d %>%
+  filter(year == 2024)
+```
+
+```{r}
+# Example pooled model with turnout and demographics
+simp.vars <- c("D_pv2p_lag1", "D_pv2p_lag2", "latest_pollav_DEM", "mean_pollav_DEM",
+               "R_pv2p_lag1", "R_pv2p_lag2", "latest_pollav_REP", "mean_pollav_REP",
+               "vep_turnout", "GDP_growth_quarterly", "RDPI_growth_quarterly")
+
+mod_lm_dem_simp <- lm(D_pv2p ~ D_pv2p_lag1 + D_pv2p_lag2 + latest_pollav_DEM + mean_pollav_DEM + vep_turnout + GDP_growth_quarterly + RDPI_growth_quarterly,
+                      data = d_train)
+mod_lm_rep_simp <- lm(R_pv2p ~ R_pv2p_lag1 + R_pv2p_lag2 + latest_pollav_REP + mean_pollav_REP + vep_turnout + GDP_growth_quarterly + RDPI_growth_quarterly,
+                      data = d_train)
+
+# Add back in lagged vote share for 2024
+t <- d %>%
+  filter(year >= 2016) %>%
+  arrange(year) %>%
+  group_by(state) %>%
+  mutate(
+    D_pv2p_lag1 = lag(D_pv2p, 1),
+    R_pv2p_lag1 = lag(R_pv2p, 1),
+    D_pv2p_lag2 = lag(D_pv2p, 2),
+    R_pv2p_lag2 = lag(R_pv2p, 2)) %>%
+  filter(year == 2024) %>%
+  select(state, year, D_pv2p, R_pv2p, D_pv2p_lag1, R_pv2p_lag1, D_pv2p_lag2, R_pv2p_lag2)
+
+# Subset testing data to only relevant variables for our simple model
+d_test_simp <- d_test %>%
+  select(-c(R_pv2p, R_pv2p_lag1, R_pv2p_lag2, 
+            D_pv2p, D_pv2p_lag1, D_pv2p_lag2)) %>%
+  left_join(t, by = c("state", "year")) %>%
+  select(state, year, all_of(simp.vars))
+
+```
+
+```{r}
+# Get average state-level turnout across 2020, 2016, 2012
+d_turnout_avg <- d_train %>%
+  filter(year %in% c(2020, 2016, 2012)) %>%
+  filter(state %in% unique(d_test_simp$state)) %>%
+  group_by(state) %>%
+  summarize(vep_turnout = mean(vep_turnout, na.rm = TRUE))
+
+```
+
+```{r}
+# Make predictions with simple average turnout
+d_test_simp <- d_test_simp %>%
+  left_join(d_turnout_avg, by = "state") %>%
+  select(-vep_turnout.x) %>%
+  rename(vep_turnout = vep_turnout.y)
+
+simp_pred_dem <- predict(mod_lm_dem_simp, d_test_simp)
+simp_pred_rep <- predict(mod_lm_rep_simp, d_test_simp)
+```
+
+```{r}
+# Now let's simulate this with varying levels of turnout and get both confidence intervals on our predictions
+# and approximate win percentages for each state
+m <- 1e4 # Number of simulations
+pred.mat <- data.frame(state = rep(d_test_simp$state, m),
+                       year = rep(2024, m * length(d_test_simp$state)),
+                       vep_turnout = rep(d_turnout_avg$vep_turnout, m),
+                       simp_pred_dem = rep(simp_pred_dem, m),
+                       simp_pred_rep = rep(simp_pred_rep, m))
+
+j <- 1
+for (i in 1:m) {
+  vep_turnout <- sapply(d_turnout_avg$vep_turnout, function(mu) {
+    rnorm(1, mean = mu, sd = 0.05) # Simulate turnout from Gaussian centered on state average with 5% SD
+  })
+
+  d_test_samp <- d_test_simp
+  d_test_samp$vep_turnout <- vep_turnout
+
+  simp_pred_dem <- predict(mod_lm_dem_simp, d_test_samp)
+  simp_pred_rep <- predict(mod_lm_rep_simp, d_test_samp)
+
+  pred.mat$simp_pred_dem[j:(i * length(states.2024))] <- simp_pred_dem
+  pred.mat$simp_pred_rep[j:(i * length(states.2024))] <- simp_pred_rep
+  j <- j + length(states.2024) # Hack for filling out matrix
+}
+
+```
+
+```{r}
+# Calculate confidence intervals for predictions
+summary_results <- pred.mat %>%
+  group_by(state) %>%
+  summarize(
+    mean_dem = mean(simp_pred_dem),
+    mean_rep = mean(simp_pred_rep),
+    sd_dem = sd(simp_pred_dem),
+    sd_rep = sd(simp_pred_rep),
+    lower_dem = mean_dem - 1.96 * sd_dem,
+    upper_dem = mean_dem + 1.96 * sd_dem,
+    lower_rep = mean_rep - 1.96 * sd_rep,
+    upper_rep = mean_rep + 1.96 * sd_rep
+  )
+
+```
+
+```{r}
+# Focus on specific states of interest
+key_states <- c("Wisconsin", "Pennsylvania", "North Carolina", 
+                "Nevada", "Michigan", "Georgia", "Arizona")
+
+final_results <- summary_results %>%
+  filter(state %in% key_states) %>%
+  select(state, mean_dem, lower_dem, upper_dem, mean_rep, lower_rep, upper_rep)
+
+# Create a styled table with hover effects
+final_results %>%
+  kable("html", caption = "2024 Election Simulation Results for Key States") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  row_spec(0, background = "#f2f2f2", bold = TRUE) %>%
+  add_header_above(c(" " = 1, "Democratic Vote Share" = 3, "Republican Vote Share" = 3), 
+                   bold = TRUE, background = "#f2f2f2") %>% 
+  column_spec(1, bold = TRUE)
+
+```
+
+In this analysis, I simulated potential election outcomes for 2024 across all states but focused on specific battleground states for detailed results. The simple model utilized historical voting data and polling averages to predict vote shares for both Democratic and Republican candidates. Key variables in the model include D_pv2p_lag1 and D_pv2p_lag2, which capture the lagged Democratic vote shares from the previous two elections, indicating historical voting behavior. latest_pollav_DEM and mean_pollav_DEM reflect the most recent and average polling data for Democrats, showcasing current voter sentiment. Additionally, vep_turnout estimates eligible voter turnout, which is crucial for electoral outcomes, while economic factors like GDP_growth_quarterly and RDPI_growth_quarterly assess the overall economic environment and represent the economic fundamentals carried through from past weeks. This model is a continuation the two variables I have chosen to pursue as useful in my predictions: economic fundamentals and polling data. The simulations were carried out by varying turnout estimates drawn from historical averages, enabling us to incorporate uncertainty in turnout predictions.
+
+In the simulation results, I see that the predicted vote shares for Democratic and Republican candidates exceed 100%. This occurs because the model calculates each party's vote share independently, reflecting distinct voter preferences and turnout estimates. The predictions are also not all statistically significantly different, and within that margin of error the winner is not predicted, so for this week's prediction I will pick the one with the higher mean value as the winner if they are within each other's prediction interval, giving:
+
+Arizona: R
+Georgia: D
+Michigan: D
+Nevada: D
+North Carolina: R
+Pennsylvania: D
+Wisconsin: D
+
+Note that Michigan, Pennsylvania, Wisconsin, and Nevada were statistically significantly different, while others are still indeterminable by the simulations. Below I plot the distribution of values for each in the simulations.
+
+```{r}
+# Reshape predictions into long format
+pred_long <- pred.mat %>%
+  pivot_longer(cols = c(simp_pred_dem, simp_pred_rep), 
+               names_to = "party", 
+               values_to = "vote_share")
+
+# Filter for the seven states of interest
+states_of_interest <- c("Wisconsin", "Pennsylvania", "North Carolina", "Nevada", "Michigan", "Georgia", "Arizona")
+
+pred_long_filtered <- pred_long %>%
+  filter(state %in% states_of_interest)
+
+# Plot histograms for the seven states
+ggplot(pred_long_filtered, aes(x = vote_share, fill = party)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 40) +
+  scale_fill_manual(values = c("simp_pred_dem" = "blue", "simp_pred_rep" = "red"),
+                    labels = c("Democratic Vote Share", "Republican Vote Share")) +
+  facet_wrap(~ state) +
+  labs(title = "Simulation Outcomes for Key States, 2024 General",
+       x = "Vote Share",
+       y = "Frequency",
+       fill = "Party") +
+  barplot_theme +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8))
+
+```
+
+It appears that Democratic vote share is more clustered, while Republican is more distributed with a larger standard deviation. As a result of all of this, I can now make my new prediction, which is different by a state (Arizona to Republican) from my prediction from last week.
+
+**Current Forecast: Harris 292 - Trump 246**
+
+
+### Data Sources
+- Popular Vote Data, national and by state, 1948–2020
+- Electoral College Distribution, national, 1948–2024
+- Demographics Data, by state
+- Primary Turnout Data, national and by state, 1789–2020
+- Polling Data, National & State, 1968–2024
+- FRED Economic Data, national, 1927-2024
+- ANES Data, national
+- Voter File Data, by state
