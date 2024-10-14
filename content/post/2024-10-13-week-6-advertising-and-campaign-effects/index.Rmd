@@ -1,0 +1,610 @@
+---
+title: 'Week 6: Advertising and Campaign Effects'
+author: Jacqui Schlesinger
+date: '2024-10-13'
+slug: week-6-advertising-and-campaign-effects
+categories: []
+tags: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+set.seed(02138)
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Get Libraries 
+####----------------------------------------------------------#
+
+library(car)
+library(caret)
+library(cowplot)
+library(curl)
+library(CVXR)
+library(foreign)
+library(geofacet)
+library(glmnet)
+library(haven)
+library(janitor)
+library(kableExtra)
+library(maps)
+library(mlr3)
+library(randomForest)
+library(ranger)
+library(RColorBrewer)
+library(rstan)
+library(scales)
+library(sf)
+library(shinystan)
+library(tidyverse)
+library(viridis)
+library(plotly)
+
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Read, merge, and process data.
+####----------------------------------------------------------#
+
+# Read popular vote datasets. 
+d_popvote <- read_csv("popvote_1948_2020.csv")
+d_state_popvote <- read_csv("state_popvote_1948_2020.csv")
+
+# Read elector distribution dataset. 
+d_ec <- read_csv("corrected_ec_1948_2024.csv")
+
+# Read ads datasets. 
+ad_campaigns <- read_csv("ad_campaigns_2000-2012.csv")
+ad_creative <- read_csv("ad_creative_2000-2012.csv")
+ads_2020 <- read_csv("ads_2020.csv")
+facebook_ads_2020 <- read_csv("facebook_ads_2020.csv")
+facebook_ads_biden_2020 <- read_csv("facebook_ads_biden_2020.csv")
+campaign_spending <- read_csv("FEC_contributions_by_state_2008_2024.csv")
+
+# Read polling data. 
+d_polls <- read_csv("national_polls_1968-2024.csv")
+d_state_polls <- read_csv("state_polls_1968-2024.csv")
+
+# Read turnout data. 
+d_turnout <- read_csv("state_turnout_1980_2022.csv")
+
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Custom Theme
+####----------------------------------------------------------#
+
+barplot_theme <- theme_bw() + 
+  theme(
+    # Axis text and labels
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    
+    # Legend position and text
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 10),
+    
+    # Title
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    
+    panel.border = element_rect(color = "black"),
+    
+    # Grid lines
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_line(color = "grey95"),
+    
+    # Background color
+    plot.background = element_rect(fill = "white", color = NA)
+  )
+
+maps_theme <- theme_bw() + 
+    theme(panel.border = element_blank(),     
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          plot.title = element_text(size = 12),
+          strip.text = element_text(size = 9),
+          legend.position = "right",
+          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 9))
+```
+
+
+This week, I shift my lens through which I evaluate the presidential election away from fundamentals to explore how campaign effects could be useful in on refining my model. Starting with the Air War, the advertising arm of the campaign effort, I use descriptive statistics to explore trends in spending across states, media markets, and digital platforms. I also dive into FEC funding data. Finally, I discuss literature and implications of campaign effects for my forecasting effort. Consistent with my decision to focus on select states from last week, I will be sure to note specific trends in **Wisconsin, Pennsylvania, North Carolina, Nevada, Michigan, Georgia, and Arizona**. 
+
+### Descriptive Statistics on Campaign Ads Over Time
+Thanks to the Wesleyan Media Project, data on the ads run by each campaign 2000-2012 and 2020 are available to understand the content, geographic impact, and spending of campaigns on TV ads, and Facebook ads in 2020. In campaigns that consistently spend hundreds of millions of dollars on advertising, understanding where they are targeting and at what scale may be helpful to understand if their actions have any impact on the outcome of the election. The actual usefulness of measures of advertising volume and spending will be further explore below, but it is worth noting that up until now fundamentals including polling and economic forces-- which campaigns cannot control-- have been doing well in their in-sample predictions of past elections without the inclusion of any campaign factors. 
+
+Diving into the data from Wesleyan Media Project, we see that the various datasets include helpful indications of how each campaign is implementing their ads. In the first dataset with basic advertising information 2000-2012, information including the air date, party, sponsor/ candidate, state, creator, number of markets and stations where it played, total cost, and indicator for it occurring before or after the primary are included. Another set for the same years includes the main issue of each ad, whether it was personal or policy focused, and what its tone was. 
+
+Different, higher level information is also available for 2020, focusing on how many ads each candidate aired between certain dates in each state, as well as the total amount of money spent in that state, which is unfortunately not broken out by candidate. When I evaluate this dataset, I will have to use airing as a proxy for money spent, which within each state seems to be a moderately strong assumption by correlation. Data for Facebook ads in 2020 are also available. 
+
+As I work through descriptive analyses with these data, I will point out potential issues and inconsistencies that would make more granular measures of the effect of different issues or types of ads difficult, but in this case the data are not available to make predictions on this anyways. The only data which I can carry forward to 2024 that is being added to the analysis today is FEC spending data, which will be evaluated in the next section.
+
+Beginning with the data on the characteristics of these ads, I look at the distribution of tones since 2000 and how it has changed. 
+
+```{r}
+
+# summarize tone data as a percent of total ads per year
+ad_summary <- ad_campaigns |>
+  left_join(ad_creative) |>
+  filter(!is.na(ad_tone)) |>
+  group_by(cycle, party) |>
+  mutate(tot_n = n()) |>
+  ungroup() |>
+  group_by(cycle, party, ad_tone) |>
+  summarise(pct = n() * 100 / first(tot_n))
+
+# create plot of tone split by dem and rep for each year
+tone_for_plotly <- ggplot(ad_summary, aes(x = cycle, y = pct, fill = ad_tone, group = party, text = paste("Tone:", ad_tone, "<br>Percentage:", round(pct, 2)))) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(2000, 2012, 4)) +
+  ggtitle("Campaign Ads Aired By Tone") +
+  scale_fill_manual(values = c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"), name = "Tone") +
+  xlab("Election Cycle") + 
+  ylab("Percentage of Ads Aired (%)") +
+  facet_wrap(~ party) + 
+  theme(axis.title = element_text(size = 20),
+        axis.text = element_text(size = 15),
+        strip.text.x = element_text(size = 20)) +
+  barplot_theme
+
+# Convert to plotly for interactivity
+tone_plotly <- ggplotly(tone_for_plotly, tooltip = "text")
+
+# Display the interactive plot
+tone_plotly
+
+
+```
+
+Note that from 2000 to 2012, there have only been four presidential elections, so judging the trend of which tone of ad is becoming most popular will be fraught. However, the differences between the parties may hold interesting insights. While the exact percentage of each type of ad varies between parties within a year, the increase of decrease in popular of a tone appear to be consistent between parties across years. This is not the case with the "promote" tone advertisements from 2008 to 2012, as Democrats nearly doubled the number of ads of this type between those cycles while Republicans cut their amount. The Democrats had also had a very small amount of ads promoting the candidate in this way in 2008, but Republicans still see a decrease in this tone between each election cycle, in 2012 in favor of a nearly 61% share of attack ads, the largest share of attack ads above. 
+
+As another caveat to any trends above, these data may reflect the climate of each election rather than any long term terms. Additionally, these are hand coded with only one value per ad, and the thresholds between categories may not be consistently applied across all viewers. These potential misunderstanding between hand coders of ads could lead to issues in interpretation here and in later sections as well, especially when it comes to encoding a single issue that each ad takes on. 
+
+Now, I plot the purpose of each advertisement across years. 
+
+```{r}
+# purpose of ads data with 2016 manually added
+ad_summary <- ad_campaigns |>
+  left_join(ad_creative) |>
+  filter(!is.na(ad_purpose)) |>
+  group_by(cycle, party) |> mutate(tot_n=n()) |> ungroup() |>
+  group_by(cycle, party, ad_purpose) |> summarise(pct=n()*100/first(tot_n)) |>
+  bind_rows( ##2016 raw data not public yet! This was entered manually
+    data.frame(cycle = 2016, ad_purpose = "both", party = "democrat", pct = 21),
+    data.frame(cycle = 2016, ad_purpose = "personal", party = "democrat", pct = 67),
+    data.frame(cycle = 2016, ad_purpose = "policy", party = "democrat", pct = 12),
+    data.frame(cycle = 2016, ad_purpose = "both", party = "republican", pct = 18),
+    data.frame(cycle = 2016, ad_purpose = "personal", party = "republican", pct = 11),
+    data.frame(cycle = 2016, ad_purpose = "policy", party = "republican", pct = 71),
+  )
+
+purpose_for_plotly <- ggplot(ad_summary, aes(x = cycle, y = pct, fill = ad_purpose, group = party, text = paste("Purpose:", ad_purpose, "<br>Percentage:", round(pct, 2)))) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(2000, 2016, 4)) +
+  ggtitle("Campaign Ads Aired By Purpose") +
+  scale_fill_manual(values = c("#F0AD4E", "#D9534F", "#5BC0DE", "#9467BD", "#FFBB78"), name = "Ad Purpose") +
+  xlab("Election Cycle") + 
+  ylab("Percentage of Ads Aired (%)") +
+  theme(axis.title = element_text(size=20),
+        axis.text = element_text(size=15),
+        strip.text.x = element_text(size = 20)) +
+  facet_wrap(~ party) + 
+  barplot_theme
+
+purpose_plotly <- ggplotly(purpose_for_plotly, tooltip = "text")
+
+purpose_plotly
+```
+
+Once again, it is hard to draw any exact trends off of so few election years, but it is common for policy ads to dominate the airwaves. It appears that the outlier in the above trend is 2016 for the democrats, when the number of personal ads was extremely high compared to any other year. This may be due to the opponnent, Donald Trump, and could have been both positive and negative ads. Because 2016 data was manually entered, I cannot directly explore this.
+
+```{r}
+# get top five issues
+top_issues <- ad_campaigns |> 
+  left_join(ad_creative) |>
+  filter(!grepl("None|Other", ad_issue)) |>
+  mutate(ad_issue = tolower(ad_issue)) |>
+  group_by(cycle, ad_issue) |> 
+  summarise(n=n()) |> 
+  top_n(5, n)
+
+# create ggplot for top 5 each cycle
+plist <- lapply(c(2000,2004,2008,2012), function(c) {
+  top_issues |> 
+    filter(cycle == c) |> 
+    ggplot(aes(x = reorder(ad_issue, n), y = n)) +
+    geom_bar(stat = "identity") + 
+    coord_flip() + 
+    theme_bw() +
+    xlab("") + 
+    ylab("Number of Ads Aired") + 
+    ggtitle(paste("Top 5 Ad\nIssues in",c)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+})
+
+cowplot::plot_grid(plotlist = plist, nrow = 2, ncol = 2, align = "hv")
+
+```
+
+These ad categories are often quite counter intuitive, with healthcare, healthcare (not prescription drugs), and prescription drugs all existing, but unclear as to how they were distinguished. Similar issues are apparent in other areas, and not consistent in categorization across years. While it is interesting to see above which areas and issues were most important, it will not be used in my model specifically. 
+
+I will look more specifically at all issues in ads split by party below. I then use my best judgement to group each issue into a much more broad category to understand if there are any higher level patterns in issue engagement for each party. I start with 2000 below.
+
+```{r}
+# sort data to get issues by party
+party_issues2000 <- ad_campaigns |>
+  filter(cycle == 2000) |>
+  left_join(ad_creative) |>
+  filter(ad_issue != "None") |>
+  group_by(ad_issue) |> 
+  mutate(tot_n = n()) |> 
+  ungroup() |>
+  group_by(ad_issue, party) |> 
+  summarise(p_n = n() * 100 / first(tot_n), .groups = 'drop') |> 
+  ungroup() |>
+  group_by(ad_issue) |> 
+  mutate(Dp_n = ifelse(first(party) == "democrat", first(p_n), 0))
+
+# plot issues but party
+issues_2000 <- ggplot(party_issues2000, aes(x = reorder(ad_issue, Dp_n), y = p_n, fill = party, text = paste("Issue:", ad_issue, "<br>Percent:", round(p_n, 1), "%"))) + 
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("blue", "red")) +
+  ggtitle("Ads by Issue and Party, 2000") +
+  ylab("Percent of Ads on Topic") + 
+  xlab("Issue") + 
+  coord_flip() + 
+  barplot_theme +
+  theme(axis.text.y = element_text(size = 7))
+
+issues_2000_plotly <- ggplotly(issues_2000, tooltip = "text")
+
+issues_2000_plotly
+
+
+```
+
+While this may be informative on which specific issues a campaign may favor, I have grouped these issues below into broader categories to see if the patterns are still very different by topic for each party
+
+```{r}
+# make the categories tighter
+party_issues2000 <- ad_campaigns |>
+  filter(cycle == 2000) |>
+  left_join(ad_creative) |>
+  filter(ad_issue != "None") |>
+  mutate(ad_issue = tolower(ad_issue),
+         ad_category = case_when(
+           ad_issue %in% c("political record", "clinton", "background", "honesty/integrity", "ideology", "special interests", "government ethics", "campaign finance reform", "bush") ~ "Political",
+           ad_issue %in% c("medicare", "health care", "prescription drugs", "women’s health") ~ "Health Care",
+           ad_issue %in% c("social security", "welfare", "poverty", "deficit/ surplus/ budget/ debt") ~ "Social Safety Nets",
+           ad_issue %in% c("education", "education/schools") ~ "Education",
+           ad_issue %in% c("environment", "global warming", "energy", "environment (generic reference)") ~ "Environment",
+           ad_issue %in% c("gun control", "homosexuality", "crime", "moral values", "civil rights/race relations") ~ "Social Issues",
+           ad_issue %in% c("defense", "veterans", "foreign policy", "terrorism", "military (generic reference)", "nuclear proliferation") ~ "Defense & Foreign Policy",
+           ad_issue %in% c("employment/jobs", "trade/nafta", "farming", "corporate fraud / enron", "economic disparity/income inequality", "taxes", "government spending", "minimum wage") ~ "Economy & Employment",
+           ad_issue %in% c("international trade/globalization/nafta", "foreign aid", "trade") ~ "International Trade",
+           ad_issue %in% c("child care", "childcar") ~ "Child Care",
+           ad_issue %in% c("drugs", "narcotics/illegal drugs", "tobacco") ~ "Substance Use",
+           ad_issue %in% c("terrorism", "terror/terrorism/terrorist") ~ "Terrorism",
+           ad_issue %in% c("housing", "housing/sub-prime mortgages") ~ "Housing",
+           ad_issue %in% c("local issues", "localpolicy") ~ "Local Issues",
+           ad_issue %in% c("afghanistan", "iran", "iraq/war in iraq") ~ "Middle Eastern Conflicts",
+           TRUE ~ "Other"  # Catch-all for any remaining issues
+         )) |>
+  group_by(ad_category) |> 
+  mutate(tot_n = n()) |> 
+  ungroup() |>
+  group_by(ad_category, party) |> 
+  summarise(p_n = n() * 100 / first(tot_n), .groups = 'drop') |> 
+  ungroup() |>
+  group_by(ad_category) |> 
+  mutate(Dp_n = ifelse(first(party) == "democrat", first(p_n), 0))
+
+# plot issues tighter
+issues_2000 <- ggplot(party_issues2000, 
+                      aes(x = reorder(ad_category, Dp_n), 
+                          y = p_n, 
+                          fill = party, 
+                          text = paste("Issue:", ad_category, "<br>Percent:", round(p_n, 1), "%"))) + 
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("blue", "red")) +
+  ggtitle("Ads by Issue Category and Party, 2000") +
+  ylab("Percent of Ads on Topic") + 
+  xlab("Issue Category") + 
+  coord_flip() + 
+  barplot_theme + 
+  theme(axis.text.y = element_text(size = 7))
+
+issues_2000_plotly <- ggplotly(issues_2000, tooltip = "text")
+
+issues_2000_plotly
+
+
+```
+
+This plot allows me to see that even aggregating up into categories of issues, the different issues that the parties choose to advertise on remains. While these issues may vary slightly from their party affliations today, they do not seem all too different. 
+
+I will also look at this aggregation of issues for the years 2000-2012. 
+
+```{r}
+# function for category sorting for each year and issues
+process_party_issues <- function(year) {
+  ad_campaigns |>
+    filter(cycle == year) |>
+    left_join(ad_creative) |>
+    filter(ad_issue != "None") |>
+    mutate(ad_issue = tolower(ad_issue),
+           ad_category = case_when(
+             ad_issue %in% c("political record", "clinton", "background", "honesty/integrity", "ideology", "special interests", "government ethics", "campaign finance reform", "bush") ~ "Political",
+             ad_issue %in% c("medicare", "health care", "prescription drugs", "women’s health") ~ "Health Care",
+             ad_issue %in% c("social security", "welfare", "poverty", "deficit/ surplus/ budget/ debt") ~ "Social Safety Nets",
+             ad_issue %in% c("education", "education/schools") ~ "Education",
+             ad_issue %in% c("environment", "global warming", "energy", "environment (generic reference)") ~ "Environment",
+             ad_issue %in% c("gun control", "homosexuality", "crime", "moral values", "civil rights/race relations") ~ "Social Issues",
+             ad_issue %in% c("defense", "veterans", "foreign policy", "terrorism", "military (generic reference)", "nuclear proliferation") ~ "Defense & Foreign Policy",
+             ad_issue %in% c("employment/jobs", "trade/nafta", "farming", "corporate fraud / enron", "economic disparity/income inequality", "taxes", "government spending", "minimum wage") ~ "Economy & Employment",
+             ad_issue %in% c("international trade/globalization/nafta", "foreign aid", "trade") ~ "International Trade",
+             ad_issue %in% c("child care", "childcar") ~ "Child Care",
+             ad_issue %in% c("drugs", "narcotics/illegal drugs", "tobacco") ~ "Substance Use",
+             ad_issue %in% c("terrorism", "terror/terrorism/terrorist") ~ "Terrorism",
+             ad_issue %in% c("housing", "housing/sub-prime mortgages") ~ "Housing",
+             ad_issue %in% c("local issues", "localpolicy") ~ "Local Issues",
+             ad_issue %in% c("afghanistan", "iran", "iraq/war in iraq") ~ "Middle Eastern Conflicts",
+             TRUE ~ "Other"  # Catch-all for any remaining issues
+           )) |>
+    group_by(ad_category) |> 
+    mutate(tot_n = n()) |> 
+    ungroup() |>
+    group_by(ad_category, party) |> 
+    summarise(p_n = n() * 100 / first(tot_n), .groups = 'drop') |> 
+    ungroup() |>
+    group_by(ad_category) |> 
+    mutate(Dp_n = ifelse(first(party) == "democrat", first(p_n), 0))
+}
+
+# Process data for each year
+party_issues2000 <- process_party_issues(2000)
+party_issues2004 <- process_party_issues(2004)
+party_issues2008 <- process_party_issues(2008)
+party_issues2012 <- process_party_issues(2012)
+
+# Function to create the plot for a given year
+create_plot <- function(data, year) {
+  ggplot(data, 
+         aes(x = reorder(ad_category, Dp_n), 
+             y = p_n, 
+             fill = party, 
+             text = paste("Issue:", ad_category, "<br>Percent:", round(p_n, 1), "%"))) + 
+    geom_bar(stat = "identity", show.legend = FALSE) +
+    scale_fill_manual(values = c("blue", "red")) +
+    ylab("Percent of Ads on Topic") + 
+    xlab("Issue Category") + 
+    coord_flip() + 
+    barplot_theme +
+    theme(axis.text.y = element_text(size = 6)) 
+}
+
+# plots for each year with function
+plot2000 <- create_plot(party_issues2000, 2000)
+plot2004 <- create_plot(party_issues2004, 2004)
+plot2008 <- create_plot(party_issues2008, 2008)
+plot2012 <- create_plot(party_issues2012, 2012)
+
+# plotly objects
+plotly2000 <- ggplotly(plot2000, tooltip = "text")
+plotly2004 <- ggplotly(plot2004, tooltip = "text")
+plotly2008 <- ggplotly(plot2008, tooltip = "text")
+plotly2012 <- ggplotly(plot2012, tooltip = "text")
+
+# veritcal combination of plots
+combined_allyears <- subplot(plotly2000, plotly2004, plotly2008, plotly2012, nrows = 4, shareX = TRUE) %>%
+  layout(title = "Ads by Issue Category and Party (2000, 2004, 2008, 2012)")%>%
+  layout(showlegend = FALSE)
+
+combined_allyears
+
+```
+
+It is interesting to see how many issues democrats dominated on in 2004, whereas most other years each party has an issue or two on which they have the sole focus. With these larger categories, I can see how issues like child care remain strong democratic issues while Middle East conflicts has shifted. This can be observed across many of the issues above as party attitudes and platforms change.
+
+These descriptive statistics have allowed us to see that campaigns as a whole change quite a bit in their focus and tactics over time. It is worth noting, however, the while the underlying tactics may not be useful for prediction, the gross volume of ads could be, which is data we have.
+
+
+### FEC Contributions by state
+```{r}
+# 2008 spending data pre
+contribution_2008 <- campaign_spending %>%
+  filter(election_year == 2008) %>%
+  group_by(contribution_state, party) %>%
+  summarise(total_contribution = sum(contribution_receipt_amount, na.rm = TRUE)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = party, values_from = total_contribution, values_fill = 0) %>%
+  mutate(democrat_republican_diff = `Democrat` - `Republican`)
+
+# get state map
+states_map <- map_data("state")
+
+# handle two-letter state abbreviations to state names
+state_abbr_to_name <- data.frame(
+  contribution_state = state.abb,
+  state_name = tolower(state.name)
+)
+
+# merge state names into the contribution data
+contribution_2008 <- contribution_2008 %>%
+  left_join(state_abbr_to_name, by = "contribution_state")
+
+# merge state map data
+map_data_2008 <- states_map %>%
+  left_join(contribution_2008, by = c("region" = "state_name"))
+
+# create map
+ggplot(map_data_2008, aes(x = long, y = lat, group = group, fill = democrat_republican_diff)) +
+  geom_polygon(color = "black") +
+  scale_fill_gradient2(low = "red", mid = "white", high = "blue", 
+                       midpoint = 0, limits = c(-90000000, 90000000), name = "Democrat - Republican Contributions") +
+  labs(title = "Contribution Differences (Democrat - Republican), 2008",
+       x = NULL, y = NULL) +
+  maps_theme +
+  theme(axis.text = element_blank(), axis.ticks = element_blank())
+
+```
+
+Because some Democratic states have such large contributions to the campaign, it makes it difficult to tell what the contributions are in other states. Looking only at my states of interest, this becomes more clear. 
+```{r}
+# prepare the data for 2008
+contribution_2008 <- campaign_spending %>%
+  filter(election_year == 2008) %>%
+  group_by(contribution_state, party) %>%
+  summarise(total_contribution = sum(contribution_receipt_amount, na.rm = TRUE)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = party, values_from = total_contribution, values_fill = 0) %>%
+  mutate(democrat_republican_diff = `Democrat` - `Republican`)
+
+# get state map data
+states_map <- map_data("state")
+
+# handle two-letter state abbreviations to state names
+state_abbr_to_name <- data.frame(
+  contribution_state = state.abb,
+  state_name = tolower(state.name)
+)
+
+# merge state names into the contribution data for 2008
+contribution_2008 <- contribution_2008 %>%
+  left_join(state_abbr_to_name, by = "contribution_state")
+
+# merge with state map data
+map_data_2008 <- states_map %>%
+  left_join(contribution_2008, by = c("region" = "state_name"))
+
+# filter for the specified states
+selected_states <- c("wisconsin", "pennsylvania", "north carolina", 
+                     "nevada", "michigan", "georgia", "arizona")
+
+# filter the map data to only include the selected states
+map_data_selected <- map_data_2008 %>%
+  filter(region %in% selected_states)
+
+# create the filled map for contributions
+ggplot(map_data_selected, aes(x = long, y = lat, group = group, fill = democrat_republican_diff)) +
+  geom_polygon(color = "black") +
+  scale_fill_gradient2(low = "red", mid = "white", high = "blue", 
+                       midpoint = 0, name = "Democrat - Republican Contributions", 
+                       na.value = "grey") +
+  labs(title = "Contribution Differences in Key States (Democrat - Republican), 2008",
+       x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank())
+
+```
+
+I can also look at this specified state map for 2012, 2016, 2020, and even 2024.
+
+```{r}
+# prepare data 
+create_contribution_map <- function(year) {
+  # Prepare the data for the specified year
+  contribution_data <- campaign_spending %>%
+    filter(election_year == year) %>%
+    group_by(contribution_state, party) %>%
+    summarise(total_contribution = sum(contribution_receipt_amount, na.rm = TRUE)) %>%
+    ungroup() %>%
+    pivot_wider(names_from = party, values_from = total_contribution, values_fill = 0) %>%
+    mutate(democrat_republican_diff = `Democrat` - `Republican`)
+  
+  # state map data
+  states_map <- map_data("state")
+
+  # two-letter state abbreviations to state names
+  state_abbr_to_name <- data.frame(
+    contribution_state = state.abb,
+    state_name = tolower(state.name)
+  )
+  
+  # state names into the contribution data
+  contribution_data <- contribution_data %>%
+    left_join(state_abbr_to_name, by = "contribution_state")
+  
+  # merge state map data
+  map_data_year <- states_map %>%
+    left_join(contribution_data, by = c("region" = "state_name"))
+  
+  # only wanted states
+  selected_states <- c("wisconsin", "pennsylvania", "north carolina", 
+                       "nevada", "michigan", "georgia", "arizona")
+  
+  # map data to only selected states
+  map_data_selected <- map_data_year %>%
+    filter(region %in% selected_states)
+
+  # map for contributions
+  gg_map <- ggplot(map_data_selected, aes(x = long, y = lat, group = group, fill = democrat_republican_diff, text = paste("Difference: $", democrat_republican_diff, "\nState", contribution_state))) +
+    geom_polygon(color = "black") +
+    scale_fill_gradient2(low = "red", mid = "white", high = "blue", 
+                         midpoint = 0, name = "Democrat - Republican Contributions", 
+                         na.value = "grey") +
+    labs(title = paste("Contribution Differences in Key States (Democrat - Republican),", year),
+         x = NULL, y = NULL) +
+    theme_minimal() +
+    theme(axis.text = element_blank(), axis.ticks = element_blank())
+
+  return(gg_map)
+}
+
+# ggplot maps by year
+map_2012 <- create_contribution_map(2012)
+map_2016 <- create_contribution_map(2016)
+map_2020 <- create_contribution_map(2020)
+map_2024 <- create_contribution_map(2024)
+
+# plotly conversion
+interactive_map_2012 <- ggplotly(map_2012, tooltip = "text")
+interactive_map_2016 <- ggplotly(map_2016, tooltip = "text")
+interactive_map_2020 <- ggplotly(map_2020, tooltip = "text")
+interactive_map_2024 <- ggplotly(map_2024, tooltip = "text")
+
+interactive_map_2012
+interactive_map_2016
+interactive_map_2020
+interactive_map_2024
+
+```
+
+The 2024 spending map does not look dominated by either party as past years' spending maps have been. Additionally, the amount of outspending appears to even out across the two parties, whereas in years like 2016 the axes and spending differences are very skewed towards the Democrats. Though this is just descriptive exploration, I wonder how contributions and funding could be used in my model on a state level, and have therefore considered adding it to see how it impacts in sample fit. I could also test its predictive ability alone. Note that this is not the same as advertising spend, a value I do not have access to for 2024. 
+
+
+### Campaign Effects Versus Fundamentals
+Campaign advertising, or the "air war," is central to modern campaign strategies, potentially significantly shaping voter turnout and voting decisions. Historically, the effectiveness of campaign advertising has been debated. Memorable ads, such as Lyndon B. Johnson's 1964 daisy ad and George H.W. Bush's Willie Horton ad, showcase the powerful impact of emotional messaging. 
+
+To attack the impact of advertising, I focus on volume because if the volume won't matter, then the content won't matter. This provides color to the descriptive analysis above as fading in comparison to the actual numbers of ads pushed out and spending done on it. 
+
+Campaigns spend hundreds of millions of dollars on advertising for TV alone, pointing to it having a significant impact on voter decisions. It is the largest single line item for most campaigns, having both a persuasion and a mobilization effect. Go assess the durability of campaign ads, [Hill, Lo, Vavreck, and Zaller (2013)](https://escholarship.org/uc/item/6g9321sd) undertook panel studies that showed that advertisement effects do exist but fade away after a short lifespan of hours or days. This was also seen in [Gerber, Gimpel, Green, and Shaw's 2011 experiment](https://www-cambridge-org.ezp-prod1.hul.harvard.edu/core/journals/american-political-science-review/article/how-large-and-longlasting-are-the-persuasive-effects-of-televised-campaign-ads-results-from-a-randomized-field-experiment/DA29FE8A5581C772006A1DEBB21CFC4C) with the Rick Perry campaign for governor of Texas, where advertisements could actually be randomized. 
+
+[Huber and Arceneaux (2007)](https://onlinelibrary-wiley-com.ezp-prod1.hul.harvard.edu/doi/full/10.1111/j.1540-5907.2007.00291.x) have also studied the effect of campaign ads using a natural experiment of the NH/ MA media market. As New Hampshire is an important state to win while Massachusetts is not, comparing the voting patterns of MA residents who see campaign ads versus those who don't isolates the effect of the commercials, as no other campaigning takes place in Massachusetts. They saw large persuasive effects on voters, indicting that campaign commercials cumulatively do have an effect on voter decisions and those hundreds of millions may not be a waste.
+
+Though I would be interested in including advertising directly in my model, I do not currently have the data to do so for 2024. 
+
+
+### Prediction
+Due to space constraints, I will be sticking with my prediction from last week. However, in the next week's prediction, I plan to add in contributions as reported by the FEC as a variable to see if it increases the in sample fit of my model. If it does, it will be included in the simulations of the outcome. I will also be using MCMC next week to compare my model to a Bayesian model with the same variables of average poll value, most recent poll results, economic fundamentals, and now contributions. With no difference to report for my prediction, I hold at 
+
+**Current Forecast: Harris 292 - Trump 246**
+
+
+### Data Sources
+- Popular Vote Data, national and by state, 1948–2020
+- Electoral College Distribution, national, 1948–2024
+- Turnout Data, national and by state, 1980–2022
+- Polling Data, national and by State, 1968–2024
+- Wesleyan Media Project, campaign ads and creative ads, 2000-2012
+- Wesleyan Media Project, ads and facebook ads, 2020
+- FEC Campaign Spending, 2008-2024

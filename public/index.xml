@@ -6,8 +6,15 @@
     <description>Recent content in Home on A minimal Hugo website</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 05 Oct 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 13 Oct 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://example.org/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Week 6: Advertising and Campaign Effects</title>
+      <link>https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/</link>
+      <pubDate>Sun, 13 Oct 2024 00:00:00 +0000</pubDate>
+      <guid>https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/</guid>
+      <description>&lt;link href=&#34;https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/index_files/htmltools-fill/fill.css&#34; rel=&#34;stylesheet&#34; /&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/index_files/htmlwidgets/htmlwidgets.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/index_files/plotly-binding/plotly.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/index_files/typedarray/typedarray.min.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/index_files/jquery/jquery.min.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;link href=&#34;https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/index_files/crosstalk/css/crosstalk.min.css&#34; rel=&#34;stylesheet&#34; /&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/index_files/crosstalk/js/crosstalk.min.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;link href=&#34;https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/index_files/plotly-htmlwidgets-css/plotly-htmlwidgets.css&#34; rel=&#34;stylesheet&#34; /&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/index_files/plotly-main/plotly-latest.min.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;&lt;p&gt;This week, I shift my lens through which I evaluate the presidential election away from fundamentals to explore how campaign effects could be useful in on refining my model. Starting with the Air War, the advertising arm of the campaign effort, I use descriptive statistics to explore trends in spending across states, media markets, and digital platforms. I also dive into FEC funding data. Finally, I discuss literature and implications of campaign effects for my forecasting effort. Consistent with my decision to focus on select states from last week, I will be sure to note specific trends in &lt;strong&gt;Wisconsin, Pennsylvania, North Carolina, Nevada, Michigan, Georgia, and Arizona&lt;/strong&gt;.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Week 5: Demographics, Turnout, and the First Stage of Our Final Prediction</title>
       <link>https://example.org/post/2024/10/05/week-5/</link>
