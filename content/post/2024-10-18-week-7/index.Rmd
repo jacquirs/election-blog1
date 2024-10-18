@@ -1,0 +1,114 @@
+---
+title: 'Week 7: Fine Tuning The Model'
+author: Jacqui Schlesinger
+date: '2024-10-18'
+slug: week-7
+categories: []
+tags: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Load Libraries
+####----------------------------------------------------------#
+
+library(geofacet)
+library(ggpubr)
+library(ggthemes)
+library(haven)
+library(kableExtra)
+library(maps)
+library(mgcv)
+library(mgcViz)
+library(RColorBrewer)
+library(scales)
+library(sf)
+library(spData)
+library(stargazer)
+library(tidygeocoder)
+library(tidyverse)
+library(tigris)
+library(tmap)
+library(tmaptools)
+library(viridis)
+library(ggplot2)
+library(plotly)
+library(ggrepel)
+library(car)
+library(purrr)
+library(broom)
+library(knitr)
+library(dplyr)
+library(tidyr)
+
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Read data
+####----------------------------------------------------------#
+
+# Read popular vote datasets
+d_popvote <- read_csv("popvote_1948_2020.csv")
+
+d_state_popvote <- read_csv("state_popvote_1948_2020.csv")
+d_state_popvote[d_state_popvote$state == "District of Columbia",]$state <- "District Of Columbia"
+
+# Read elector distribution dataset 
+d_ec <- read_csv("corrected_ec_1948_2024.csv")
+
+# Read national polling data
+d_polls <- read_csv("national_polls_1968-2024.csv")
+
+# Read state  polling data
+d_state_polls <- read_csv("state_polls_1968-2024.csv")
+
+# Read state turnout
+d_state_turnout <- read_csv("state_turnout_1980_2022.csv")
+
+# Read county turnout 
+d_county_turnout <- read_csv("county_turnout.csv")
+
+# Read state-level demographics
+d_state_demog <- read_csv("demographics.csv")
+
+# Read county demographics
+d_county_demog <- read_csv("county_demographics.csv")
+
+```
+
+Today marks 17 days until election day. As such, this week's post will focus on bringing together all of the work I have done so far in determining predictors and building and forecast for the 2024 presidential election outcome. Beginning with a review of my past models, I will update them based on new polling data and use additional model evaluation techniques to understand their current performance. Following this, I explain decisions for choosing certain predictors, ensembling methods, and create a new probability-based turnout prediction rather than a simple weighted average of past turnout. Finally, I try a new model, using binomial simulations to compare to my chosen modeling technique. By the end of this post, I will have determined my base model for the next two weeks to fine tune as I attempt to predict the outcome of the election. 
+
+### Review of Past Forecasting Models
+- go through each week, the results, and how they were calculated
+- which one I like the best, want to build on
+- given current data (updated polling) have they changed
+- new model evaluation techniques
+
+### Important Predictors to Include
+- which ones I chose to use, which I didn't
+- what is going to be in this week's model
+- no ground game because of data difficulties and limited marginal effect it appears, may be important to consider for turnout model below
+
+### Pooled, Unpooled, and Ensembling Notes
+- how I will approach this in my model
+
+### Adjusting Turnout Predictions
+- visualize trends in turnout using our data
+- hard to predict turnout due to the lasting shock of COVID-19 and mail-in voting
+- How do the FiveThirtyEight and Economist forecasts deal with this unpredictability
+- Build probabilistic models to simulate fluctuations in turnout. (Rather than fixing each state’s maximum number of Binomial draws to VEP, draw a random number from a distribution constructed using VEP and your guess on the effect of vote-by-mail and other factors.) 
+
+### Binomial Simulations Model
+- trying a new model this week
+
+### Notes of Bayesian Approaches
+Although I initially planned to compare my model with a Bayesian approach using MCMC, I decided not to proceed with Bayesian methods for now. Bayesian models are useful because they allow for incorporating prior information and uncertainty into predictions, making them valuable for updating forecasts as new data becomes available. However, while some professional election forecasters use these models effectively, in my case, more complex approaches have not shown significant improvements over traditional OLS or time-for-change models. Given this, and the added complexity, I'm hesitant to explore them further at this stage.
+
+
+### This Week's Updated Model: XXX
+- do a new model and simulations of the Outcome
