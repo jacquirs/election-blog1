@@ -284,7 +284,7 @@ kable_new <- kable(final_predictions_new[, c("Party", "Prediction")],
   pack_rows("Polls More", 1, 2) %>%
   pack_rows("Fundamentals More", 3, 4) %>%
   pack_rows("Unweighted", 5, 6) %>%
-  add_header_above(c("Original Week 3 Ensemble Model Predictions" = 2)) %>%
+  add_header_above(c("Updated Week 3 Ensemble Model Predictions" = 2)) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
 kable_prev
@@ -1347,11 +1347,17 @@ In the Michigan outcomes, the median simulated outcome was a Democrat popular vo
 Using the above binomial models and new turnout modeling using a weighted average of the prediction of the voter eligible population from a general additive model and OLS regression, three states have flipped from my past models. I now have the results:
 
 Wisconsin: D
+
 Pennsylvania: D
+
 North Carolina: R
+
 Nevada: R
+
 Georgia: R
+
 Arizona: R
+
 Michigan: D
 
 This leads to a predicted electoral college outcome of _Harris 270 - Trump 268_.
