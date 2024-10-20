@@ -6,8 +6,15 @@
     <description>Recent content in Home on A minimal Hugo website</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 13 Oct 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 18 Oct 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://example.org/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Week 7: Fine Tuning The Model</title>
+      <link>https://example.org/post/2024/10/18/week-7/</link>
+      <pubDate>Fri, 18 Oct 2024 00:00:00 +0000</pubDate>
+      <guid>https://example.org/post/2024/10/18/week-7/</guid>
+      <description>&lt;script src=&#34;https://example.org/post/2024/10/18/week-7/index_files/kePrint/kePrint.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;link href=&#34;https://example.org/post/2024/10/18/week-7/index_files/lightable/lightable.css&#34; rel=&#34;stylesheet&#34; /&gt;&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;&lt;p&gt;Today marks 17 days until election day. As such, this week’s post will focus on bringing together all of the work I have done so far in determining predictors and building and forecast for the 2024 presidential election outcome. Beginning with a review of my past models, I will update them based on new polling data and use additional model evaluation techniques to understand their current performance. Following this, I explain decisions for choosing certain predictors, ensembling methods, and create a new probability-based turnout prediction rather than a simple weighted average of past turnout. Finally, I try a new model, using binomial simulations to compare to my chosen modeling technique. By the end of this post, I will have determined my base model for the next two weeks to fine tune as I attempt to predict the outcome of the election.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Week 6: Advertising and Campaign Effects</title>
       <link>https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/</link>

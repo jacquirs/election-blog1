@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Week 7: Fine Tuning The Model | A minimal Hugo website</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+    
+  </head>
+
+  <body>
+    <nav>
+    <ul class="menu">
+      
+      <li><a href="/">Home</a></li>
+      
+      <li><a href="/about/">About</a></li>
+      
+      <li><a href="/categories/">Categories</a></li>
+      
+      <li><a href="/tags/">Tags</a></li>
+      
+      <li><a href="/index.xml">Subscribe</a></li>
+      
+    </ul>
+    <hr/>
+    </nav>
+
+<div class="article-meta">
+<h1><span class="title">Week 7: Fine Tuning The Model</span></h1>
+<h2 class="author">Jacqui Schlesinger</h2>
+<h2 class="date">2024/10/18</h2>
+</div>
+
+<main>
+
+<script src="https://example.org/post/2024/10/18/week-7/index_files/kePrint/kePrint.js"></script>
+<link href="https://example.org/post/2024/10/18/week-7/index_files/lightable/lightable.css" rel="stylesheet" />
+
+
+<p>Today marks 17 days until election day. As such, this week’s post will focus on bringing together all of the work I have done so far in determining predictors and building and forecast for the 2024 presidential election outcome. Beginning with a review of my past models, I will update them based on new polling data and use additional model evaluation techniques to understand their current performance. Following this, I explain decisions for choosing certain predictors, ensembling methods, and create a new probability-based turnout prediction rather than a simple weighted average of past turnout. Finally, I try a new model, using binomial simulations to compare to my chosen modeling technique. By the end of this post, I will have determined my base model for the next two weeks to fine tune as I attempt to predict the outcome of the election.</p>
+<div id="review-of-past-forecasting-models" class="section level3">
+<h3>Review of Past Forecasting Models</h3>
+<p>In this section, I review the forecasting models developed throughout weeks 1 to 6. Each model was built with a unique combination of variables and assumptions, leading to varying results. By walking through the results and calculations from each week, I reflect on which model performed best and why. I also update the models with the newest polling data and introduce new evaluation techniques.</p>
+<p>Because these models were made up to six weeks ago, the polling inputs have changed, particularly in those that use most recent polling data and average poll numbers. The models that I can update with new polling data include XXXXX. This helps determine if my eventual preferred model still holds up or if adjustments are necessary to account for new information.</p>
+<p>Below are the results from each week’s model, as well as those that have been updated with new polling.</p>
+<p><strong>Week 1:</strong> This week used a simplified Norpoth model to make a prediction based on a weighted average of the election results from 2016 and 2020 by state. The predictive model can be defined as <span class="math inline">\(vote_{2024} = 0.75vote_{2020} + 0.25vote_{2016}\)</span>. This forecast resulted in <em>Harris 276 - Trump 262</em>.</p>
+<p><strong>Week 2:</strong> This week focused on economic variables and linear regressions. Evaluating a variety of economic fundamentals as predictors of two way popular vote, I found Q2 GDP growth in the election year to be the best predictor by on R sqaured, RMSE, and a variety of other linear model evaluations as compared to other economic variables. This forecast focused on two way popular vote, leading to a result of <em>Harris 51.585% - Trump 48.415%</em>.</p>
+<p><strong>Week 3:</strong> The main two models developed this week were ensembled elastic net regression models that weighed fundamentals more closer to the election and weighed polling more closer to the election. The final forecast for this week was an unweighted average between the two, leading to <em>Harris 51.0645% - Trump 50.1031%</em>. Updated with new polling data, I can compare the original and new predictions based on this method</p>
+<table>
+<tr>
+<td>&lt;table class="table table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+&lt;tr&gt;&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;Original Week 3 Ensemble Model Predictions&lt;/div&gt;&lt;/th&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;font-weight: bold;color: white !important;background-color: rgba(0, 114, 178, 255) !important;"&gt; Party &lt;/th&gt;
+   &lt;th style="text-align:right;font-weight: bold;color: white !important;background-color: rgba(0, 114, 178, 255) !important;"&gt; Prediction &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr grouplength="2"&gt;&lt;td colspan="2" style="border-bottom: 1px solid;"&gt;&lt;strong&gt;Polls More&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;
+   &lt;td style="text-align:left;color: black !important;padding-left: 2em;" indentlevel="1"&gt; Harris &lt;/td&gt;
+   &lt;td style="text-align:right;color: black !important;"&gt; 51.71210 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: black !important;padding-left: 2em;" indentlevel="1"&gt; Trump &lt;/td&gt;
+   &lt;td style="text-align:right;color: black !important;"&gt; 50.22182 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr grouplength="2"&gt;&lt;td colspan="2" style="border-bottom: 1px solid;"&gt;&lt;strong&gt;Fundamentals More&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;
+   &lt;td style="text-align:left;color: black !important;padding-left: 2em;" indentlevel="1"&gt; Harris &lt;/td&gt;
+   &lt;td style="text-align:right;color: black !important;"&gt; 51.31497 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: black !important;padding-left: 2em;" indentlevel="1"&gt; Trump &lt;/td&gt;
+   &lt;td style="text-align:right;color: black !important;"&gt; 50.00100 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr grouplength="2"&gt;&lt;td colspan="2" style="border-bottom: 1px solid;"&gt;&lt;strong&gt;Unweighted&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;
+   &lt;td style="text-align:left;padding-left: 2em;" indentlevel="1"&gt; Harris &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 51.06450 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;padding-left: 2em;" indentlevel="1"&gt; Trump &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 50.10310 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;</td>
+<td>&lt;table class="table table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+&lt;tr&gt;&lt;th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2"&gt;&lt;div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; "&gt;Original Week 3 Ensemble Model Predictions&lt;/div&gt;&lt;/th&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;font-weight: bold;color: white !important;background-color: rgba(0, 114, 178, 255) !important;"&gt; Party &lt;/th&gt;
+   &lt;th style="text-align:right;font-weight: bold;color: white !important;background-color: rgba(0, 114, 178, 255) !important;"&gt; Prediction &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr grouplength="2"&gt;&lt;td colspan="2" style="border-bottom: 1px solid;"&gt;&lt;strong&gt;Polls More&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;
+   &lt;td style="text-align:left;color: black !important;padding-left: 2em;" indentlevel="1"&gt; Harris &lt;/td&gt;
+   &lt;td style="text-align:right;color: black !important;"&gt; 52.61113 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: black !important;padding-left: 2em;" indentlevel="1"&gt; Trump &lt;/td&gt;
+   &lt;td style="text-align:right;color: black !important;"&gt; 50.77154 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr grouplength="2"&gt;&lt;td colspan="2" style="border-bottom: 1px solid;"&gt;&lt;strong&gt;Fundamentals More&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;
+   &lt;td style="text-align:left;color: black !important;padding-left: 2em;" indentlevel="1"&gt; Harris &lt;/td&gt;
+   &lt;td style="text-align:right;color: black !important;"&gt; 51.65896 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;color: black !important;padding-left: 2em;" indentlevel="1"&gt; Trump &lt;/td&gt;
+   &lt;td style="text-align:right;color: black !important;"&gt; 48.59975 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr grouplength="2"&gt;&lt;td colspan="2" style="border-bottom: 1px solid;"&gt;&lt;strong&gt;Unweighted&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;
+   &lt;td style="text-align:left;padding-left: 2em;" indentlevel="1"&gt; Harris &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 52.13505 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;padding-left: 2em;" indentlevel="1"&gt; Trump &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 49.68565 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;</td>
+</tr>
+</table>
+<p><strong>Week 4:</strong> During this week, I began to narrow my work only down to the seven critical states: Arizona, Georgia, Michigan, Nevada, North Carolina, Pennsylvania, and Wisconsin. The model used was a super-learning model, leading to <em>Harris 303 - Trump 235</em>. The predictors used were polling, economic fundamentals, and lagged vote share of 2016 and 2020 in a pooled model. The updated model with new data is shown below.</p>
+<table class="table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;font-weight: bold;background-color: rgba(255, 255, 224, 255) !important;">
+State
+</th>
+<th style="text-align:left;font-weight: bold;background-color: rgba(255, 255, 224, 255) !important;">
+D Pop Vote Prediction
+</th>
+<th style="text-align:left;font-weight: bold;background-color: rgba(255, 255, 224, 255) !important;">
+Winner
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;background-color: lightgreen !important;">
+Wisconsin
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+52.065
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Virginia
+</td>
+<td style="text-align:left;">
+54.521
+</td>
+<td style="text-align:left;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Texas
+</td>
+<td style="text-align:left;">
+49.048
+</td>
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;background-color: lightgreen !important;">
+Pennsylvania
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+50.554
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ohio
+</td>
+<td style="text-align:left;">
+46.844
+</td>
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;background-color: lightgreen !important;">
+North Carolina
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+49.729
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+New York
+</td>
+<td style="text-align:left;">
+61.434
+</td>
+<td style="text-align:left;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+New Mexico
+</td>
+<td style="text-align:left;">
+54.052
+</td>
+<td style="text-align:left;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+New Hampshire
+</td>
+<td style="text-align:left;">
+53.658
+</td>
+<td style="text-align:left;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;background-color: lightgreen !important;">
+Nevada
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+50.794
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nebraska
+</td>
+<td style="text-align:left;">
+42.888
+</td>
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Montana
+</td>
+<td style="text-align:left;">
+46.077
+</td>
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Missouri
+</td>
+<td style="text-align:left;">
+44.025
+</td>
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Minnesota
+</td>
+<td style="text-align:left;">
+51.82
+</td>
+<td style="text-align:left;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;background-color: lightgreen !important;">
+Michigan
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+51.049
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Maryland
+</td>
+<td style="text-align:left;">
+62.501
+</td>
+<td style="text-align:left;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;background-color: lightgreen !important;">
+Georgia
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+49.958
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Florida
+</td>
+<td style="text-align:left;">
+49.987
+</td>
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+California
+</td>
+<td style="text-align:left;">
+62.177
+</td>
+<td style="text-align:left;">
+D
+</td>
+</tr>
+<tr>
+<td style="text-align:left;background-color: lightgreen !important;">
+Arizona
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+50.159
+</td>
+<td style="text-align:left;background-color: lightgreen !important;">
+D
+</td>
+</tr>
+</tbody>
+</table>
+<p>These results are different from the previous week as they have Georgia going to the Republicans, leading to an updated prediction of <em>Harris 287 - Trump 251</em>.</p>
+<p><strong>Week 5:</strong> In week 5, I used a linear regression model with the predictors lagged popular vote, latest poll average, mean poll average, a weighted average of turnout, GDP quarterly growth, and RDPI quarterly growth. The results of two separate models led to predictions that added to above 100% for the combined vote share of the two parties, which I handled by comparing the two. My goal in this case was to get at solely electoral college, but updated this with a binomial model will be explored below. This was once again a pooled model. The results led to an outcome of <em>Harris 292 - Trump 246</em> in the original simulations. Running new simulations, I get the below results</p>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Table 1: </span>2024 Election Upated Simulation Results for Key States
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; font-weight: bold; padding-right: 4px; padding-left: 4px; background-color: rgba(242, 242, 242, 255) !important;" colspan="3">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Democratic Vote Share
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; font-weight: bold; padding-right: 4px; padding-left: 4px; background-color: rgba(242, 242, 242, 255) !important;" colspan="3">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Republican Vote Share
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;font-weight: bold;background-color: rgba(242, 242, 242, 255) !important;">
+state
+</th>
+<th style="text-align:right;font-weight: bold;background-color: rgba(242, 242, 242, 255) !important;">
+mean_dem
+</th>
+<th style="text-align:right;font-weight: bold;background-color: rgba(242, 242, 242, 255) !important;">
+lower_dem
+</th>
+<th style="text-align:right;font-weight: bold;background-color: rgba(242, 242, 242, 255) !important;">
+upper_dem
+</th>
+<th style="text-align:right;font-weight: bold;background-color: rgba(242, 242, 242, 255) !important;">
+mean_rep
+</th>
+<th style="text-align:right;font-weight: bold;background-color: rgba(242, 242, 242, 255) !important;">
+lower_rep
+</th>
+<th style="text-align:right;font-weight: bold;background-color: rgba(242, 242, 242, 255) !important;">
+upper_rep
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+Arizona
+</td>
+<td style="text-align:right;">
+52.33565
+</td>
+<td style="text-align:right;">
+51.93738
+</td>
+<td style="text-align:right;">
+52.73393
+</td>
+<td style="text-align:right;">
+53.07533
+</td>
+<td style="text-align:right;">
+52.24587
+</td>
+<td style="text-align:right;">
+53.90480
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+Georgia
+</td>
+<td style="text-align:right;">
+53.01701
+</td>
+<td style="text-align:right;">
+52.61740
+</td>
+<td style="text-align:right;">
+53.41663
+</td>
+<td style="text-align:right;">
+52.94809
+</td>
+<td style="text-align:right;">
+52.11582
+</td>
+<td style="text-align:right;">
+53.78035
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+Michigan
+</td>
+<td style="text-align:right;">
+53.52168
+</td>
+<td style="text-align:right;">
+53.12446
+</td>
+<td style="text-align:right;">
+53.91890
+</td>
+<td style="text-align:right;">
+50.83952
+</td>
+<td style="text-align:right;">
+50.01225
+</td>
+<td style="text-align:right;">
+51.66679
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+Nevada
+</td>
+<td style="text-align:right;">
+52.95462
+</td>
+<td style="text-align:right;">
+52.55830
+</td>
+<td style="text-align:right;">
+53.35095
+</td>
+<td style="text-align:right;">
+51.64988
+</td>
+<td style="text-align:right;">
+50.82447
+</td>
+<td style="text-align:right;">
+52.47530
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+North Carolina
+</td>
+<td style="text-align:right;">
+52.65412
+</td>
+<td style="text-align:right;">
+52.25402
+</td>
+<td style="text-align:right;">
+53.05422
+</td>
+<td style="text-align:right;">
+52.81871
+</td>
+<td style="text-align:right;">
+51.98545
+</td>
+<td style="text-align:right;">
+53.65197
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+Pennsylvania
+</td>
+<td style="text-align:right;">
+53.37834
+</td>
+<td style="text-align:right;">
+52.97970
+</td>
+<td style="text-align:right;">
+53.77698
+</td>
+<td style="text-align:right;">
+51.35816
+</td>
+<td style="text-align:right;">
+50.52793
+</td>
+<td style="text-align:right;">
+52.18839
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+Wisconsin
+</td>
+<td style="text-align:right;">
+53.40013
+</td>
+<td style="text-align:right;">
+52.99990
+</td>
+<td style="text-align:right;">
+53.80035
+</td>
+<td style="text-align:right;">
+50.99817
+</td>
+<td style="text-align:right;">
+50.16464
+</td>
+<td style="text-align:right;">
+51.83171
+</td>
+</tr>
+</tbody>
+</table>
+<p><img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>From these outcomes, I can see that the states with popular vote values predicted outside of the prediction interval to go for one party or the other are Michigan, Nevada, Pennsylvania, and Wisconsin, all for the democrats. For states within the margin of the prediction interval, I have Arizona (R), Georgia (D), and North Carolina (R). This does not differ from my original week 5 prediction by any state, but the margin has gotten larger in favor of Republicans in Arizona, smaller for democrats in Georgia, Michigan, Nevada, Pennsylvania, and Wisconsin, smaller for Republicans in North Carolina, based solely on comparing the mean predicted vote shares from the simulations.</p>
+<p><strong>Week 6:</strong> This week maintained the same prediction from last week, but urged inclusion of FEC contributions data in future models to see if it improves fit. The prediction remained <em>Harris 292 - Trump 246</em>.</p>
+<p>As next steps for the following weeks, there are additional new model evaluation techniques in addition to those used in past posts to consider. Looking forward, I will improve predictive accuracy and model robustness as a result of these. These techniques provide insight into how to help guide the direction of future refinements and eventual model choice.</p>
+</div>
+<div id="important-predictors-to-include" class="section level3">
+<h3>Important Predictors to Include</h3>
+<p>In developing my election prediction model, I’ve decided to include economic fundamentals and polling data, both of which have consistently proven effective in past models. Moving forward, I plan to experiment with FEC data to see if it improves the each models’ fit. Another factor I may add is incumbency interaction effects, similar to what’s been used in super learning models. However, I’ve chosen to exclude certain variables like demographics, air war data (campaign ads), and ground war data (in-person campaigning) based on recent explorations showing limited predictive power in the persuasion space. Ground game data, in particular, has been difficult to gather, and according to <a href="https://www-cambridge-org.ezp-prod1.hul.harvard.edu/core/journals/american-political-science-review/article/party-activists-as-campaign-advertisers-the-ground-campaign-as-a-principalagent-problem/6117E8EF4C72A046ABFE6A8FDEDEA95E">Enos and Hersch (2015)</a> and meta studies, the effect of on-the-ground strategies on persuasion is essentially zero. Their research found that campaign contacts may not have an effect potentially because persuasive messages don’t have longevity. This exclusion also aligns with meta-analyses showing that individual targeting does little to alter voter preferences.</p>
+<p>However, I am adding ground game data in a separate turnout prediction model, as studies like <a href="https://www-cambridge-org.ezp-prod1.hul.harvard.edu/core/journals/political-science-research-and-methods/article/aggregate-effects-of-largescale-campaigns-on-voter-turnout/20C500B0DE62227873FD24CB3555F779">Enos and Fowler (2016)</a> suggest that ground efforts can increase turnout by as much as 6-7% in heavily targeted areas. For this reason, while I’m excluding ground game from my main model, I recognize its importance for predicting turnout, especially in combination with air war data from the final week of the campaign.</p>
+<p>Additional decisions I have made include focusing my predictions on state-level outcomes in the seven swing states, which will then be aggregated to predict the overall Electoral College result. My model will use data from elections after 1964 rather than starting with 1952 or even pre-World War II. Given the changing landscape of election laws, I see this as a way to account for legal consistency is that has changed the electorate over time in the data I have.</p>
+</div>
+<div id="pooled-unpooled-and-ensembling-notes" class="section level3">
+<h3>Pooled, Unpooled, and Ensembling Notes</h3>
+<p>In my election prediction model, I plan to use pooled models, which combine data from multiple states and treat them as part of a single system, applying the same coefficients across all states to make predictions. This allows the model to capture correlations across states, meaning if we have more certainty about the result in one state, it can help improve predictions for others. Pooled models are especially useful because they rely on less data from individual states by “drawing strength” from states with more data, leading to more reliable predictions, even in data-sparse regions. Professional election forecasters often use these correlations to update one state’s prediction based on another’s outcome, enhancing the model’s adaptability as new information becomes available. There are also more advanced ways of pooling states together using techniques like clustering, which could improve the model’s ability to group similar states. I will consider these in future weeks.</p>
+<p>Additionally, pooling offers the flexibility to combine pooled and unpooled models, or multiple pooled models, through ensembling, which blends different modeling approaches to capture their respective strengths. This allows the model to balance the benefits of pooled predictions with the more state-specific insights from unpooled models. By using appropriate checks on model performance, ensembling helps create a more accurate and balanced prediction by drawing from multiple perspectives. This combination of pooling and ensembling makes for a powerful approach that can improve the overall robustness of the election forecast. Both emsebling and pooled models were used in the models described in the previous sections descrbining my work from past weeks.</p>
+</div>
+<div id="adjusting-turnout-predictions" class="section level3">
+<h3>Adjusting Turnout Predictions</h3>
+<p>In the future, I plan to implement a more refined model to better predict voter turnout, addressing the lingering challenges caused by the unpredictability of COVID-19 and the widespread adoption of mail-in voting. These factors have created lasting shocks to turnout patterns that make forecasting difficult, and it’s clear from watching forecasts like FiveThirtyEight and The Economist that this unpredictability needs special handling. My approach will be to build probabilistic models that simulate fluctuations in turnout rather than using a fixed, static number for each state’s voter pool. For example, instead of setting each state’s maximum number of Binomial draws to the Voting Eligible Population (VEP) as I will do in the binomial simulations model below, I’ll draw a random number from a distribution based on VEP, while factoring in expected effects from vote-by-mail, early voting, and other dynamics. Additionally, this model will incorporate key variables such as demographics, ground game data, and air war data, all of which can have strong turnout effects. This approach will allow the model to adapt more flexibly to changes in voter behavior and the varying effectiveness of campaign strategies across states.</p>
+</div>
+<div id="binomial-simulations-model" class="section level3">
+<h3>Binomial Simulations Model</h3>
+<p>My new model for this week will be binomial simulations. Whereas the linear regression model simulations may have values that do not add to 100%, this type of model addresses that.</p>
+<p><strong>Pennsylvania</strong></p>
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-10-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Pennsylvania 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-14.33
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+-3.56
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+7.31
+</td>
+</tr>
+</tbody>
+</table>
+<p>Interpreting the simulated distributions, the blue density curve represents the distribution of simulated vote shares for Democrats. Since the peak of the blue curve is shifted more to the right than the red curve for the Republicans, that suggests that the Democratic vote share is predicted to be higher in more simulations. The fact that the curves are equally wide and tall implies that both parties face similar levels of uncertainty or variability in their predicted vote shares, but the model slightly favors Democrats in terms of likely outcomes. There is substantial overlap between the blue and red curves, meaning the model predicts a close race with both parties having a significant chance of securing similar vote shares. Note that this curve is only for the popular vote share outcome in Pennsylvania.</p>
+<p>In the Pennsylvania outcomes, the median simulated outome was a Democrat popular vote share of 51.75% and Republican of 48.25%</p>
+<p>I will now look at the results for each of the rest of the swing states:</p>
+<p><strong>Wisconsin</strong>
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<pre><code>##   50% 
+## 52.07</code></pre>
+<pre><code>##   50% 
+## 47.93</code></pre>
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Wisconsin 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-16.52
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+-4.15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+8.50
+</td>
+</tr>
+</tbody>
+</table>
+<p>The distributions above look similar to those for Pennsylvania, though they are slightly wider and therefore the outcome has a larger standard deviation. The median margin is also slightly bigger, but once again there is no clear winner with a 95% prediction interval. In the Wisconsin outcomes, the median simulated outcome was a Democrat popular vote share of 52.14% and Republican of 47.86%</p>
+<strong>North Carolina</strong>
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-12-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+North Carolina 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-8.44
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+6.40
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+20.62
+</td>
+</tr>
+</tbody>
+</table>
+<p>In North Carolina, the Republicans do better in more simulations that Democrats. The distributions are again slightly wider and therefore the outcome has a larger standard deviation. The median margin is also bigger, this time in favor of the Republicans, and again there is no clear winner with a 95% prediction interval. In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share of 46.61% and Republican of 53.39%</p>
+<strong>Nevada</strong>
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-13-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Nevada 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-7.52
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+3.86
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+17.83
+</td>
+</tr>
+</tbody>
+</table>
+<p>Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share of 47.93% and Republican of 52.07%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Nevada has flipped Republican in this case, but within the margin of error.</p>
+<strong>Georgia</strong>
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-14-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Georgia 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-6.22
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+4.51
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+14.23
+</td>
+</tr>
+</tbody>
+</table>
+<p>Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the Georgia outcomes, the median simulated outcome was a Democrat popular vote share of 47.73% and Republican of 52.27%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Georgia has flipped Republican in this case, but within the margin of error.</p>
+<strong>Arizona</strong>
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-15-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Arizona 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-7.70
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+6.03
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+19.37
+</td>
+</tr>
+</tbody>
+</table>
+<p>In the Arizona outcomes, the median simulated outcome was a Democrat popular vote share of 47.05% and Republican of 52.95%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Arizona has flipped Republican in this case, but within the margin of error.</p>
+<strong>Michigan</strong>
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-16-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Michigan 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-16.36
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+-2.67
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+11.96
+</td>
+</tr>
+</tbody>
+</table>
+<p>In the Michigan outcomes, the median simulated outcome was a Democrat popular vote share of 51.4% and Republican of 48.6%. This remains for the Democrats, within the margin of error.</p>
+<p>Using the above binomial models and new turnout modeling using a weighted average of the prediction of the voter eligible population from a general additive model and OLS regression, three states have flipped from my past models. I now have the results:</p>
+<p>Wisconsin: D
+Pennsylvania: D
+North Carolina: R
+Nevada: R
+Georgia: R
+Arizona: R
+Michigan: D</p>
+<p>This leads to a predicted electoral college outcome of <em>Harris 270 - Trump 268</em>.</p>
+</div>
+<div id="notes-of-bayesian-approaches" class="section level3">
+<h3>Notes of Bayesian Approaches</h3>
+<p>Although I initially planned to compare my model with a Bayesian approach using MCMC, I decided not to proceed with Bayesian methods for now. Bayesian models are useful because they allow for incorporating prior information and uncertainty into predictions, making them valuable for updating forecasts as new data becomes available. However, while some professional election forecasters use these models effectively, in my case, more complex approaches have not shown significant improvements over traditional OLS or time-for-change models. Given this, and the added complexity, I’m hesitant to explore them further at this stage.</p>
+</div>
+<div id="this-weeks-prediction" class="section level3">
+<h3>This Week’s Prediction</h3>
+<p>This week, I ran out of time to add FEC contributions data into each model and then evaluate their fit, so this will be including in next week’s model choice post. For now, we have a large number of models, many of which agree on most states’ outcomes. As a result, I have chosen this week to take the two past week’s updated electoral college vote models, which result in <em>Harris 287 - Trump 251</em> and <em>Harris 292 - Trump 246</em>, and the binomial simulations model, which gave <em>Harris 270 - Trump 268</em>, and average them (not possible in real electoral vote numbers) to get</p>
+<p><strong>Current Forecast: Harris 282 - Trump 256</strong></p>
+</div>
+<div id="data-sources" class="section level3">
+<h3>Data Sources</h3>
+<ul>
+<li>Popular Vote Data, national and by state, 1948–2020</li>
+<li>Electoral College Distribution, national, 1948–2024</li>
+<li>Turnout Data, national and by state, 1980–2022</li>
+<li>Polling Data, national and by State, 1968–2024</li>
+<li>FRED Economic Data, quarter 2</li>
+<li>Demographics, by state and county</li>
+</ul>
+</div>
+
+</main>
+
+  <footer>
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<script src="//cdn.jsdelivr.net/combine/npm/katex/dist/katex.min.js,npm/katex/dist/contrib/auto-render.min.js,npm/@xiee/utils/js/render-katex.js" defer></script>
+
+<script src="//cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.min.js" defer></script>
+
+  
+  <hr/>
+  © <a href="https://yihui.org">Yihui Xie</a> 2017 &ndash; 2024 | <a href="https://github.com/yihui">Github</a> | <a href="https://twitter.com/xieyihui">Twitter</a>
+  
+  </footer>
+  </body>
+</html>
+

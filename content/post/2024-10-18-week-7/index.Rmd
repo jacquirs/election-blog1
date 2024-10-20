@@ -9,6 +9,7 @@ tags: []
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+set.seed(02138)
 ```
 
 ```{r}
@@ -44,16 +45,27 @@ library(broom)
 library(knitr)
 library(dplyr)
 library(tidyr)
+library(car)
+library(caret)
+library(CVXR)
+library(glmnet)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(plotly)
+library(lubridate)
 
 ```
 
-```{r}
+```{r, include = FALSE}
 ####----------------------------------------------------------#
 #### Read data
 ####----------------------------------------------------------#
 
 # Read popular vote datasets
 d_popvote <- read_csv("popvote_1948_2020.csv")
+d_popvote$party[d_popvote$party == "democrat"] <- "DEM"
+d_popvote$party[d_popvote$party == "republican"] <- "REP"
 
 d_state_popvote <- read_csv("state_popvote_1948_2020.csv")
 d_state_popvote[d_state_popvote$state == "District of Columbia",]$state <- "District Of Columbia"
@@ -64,9 +76,9 @@ d_ec <- read_csv("corrected_ec_1948_2024.csv")
 # Read national polling data
 d_polls <- read_csv("national_polls_1968-2024.csv")
 
-# Read state  polling data
+# Read state polling data
 d_state_polls <- read_csv("state_polls_1968-2024.csv")
-
+d_state_polls
 # Read state turnout
 d_state_turnout <- read_csv("state_turnout_1980_2022.csv")
 
@@ -79,36 +91,1284 @@ d_state_demog <- read_csv("demographics.csv")
 # Read county demographics
 d_county_demog <- read_csv("county_demographics.csv")
 
+# read economic data
+d_econ <- read_csv("fred_econ.csv") |> 
+  filter(quarter == 2)
+
 ```
+
+```{r}
+barplot_theme <- theme_bw() + 
+  theme(
+    # Axis text and labels
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    
+    # Legend position and text
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 10),
+    
+    # Title
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    
+    panel.border = element_rect(color = "black"),
+    
+    # Grid lines
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_line(color = "grey95"),
+    
+    # Background color
+    plot.background = element_rect(fill = "white", color = NA)
+  )
+```
+
 
 Today marks 17 days until election day. As such, this week's post will focus on bringing together all of the work I have done so far in determining predictors and building and forecast for the 2024 presidential election outcome. Beginning with a review of my past models, I will update them based on new polling data and use additional model evaluation techniques to understand their current performance. Following this, I explain decisions for choosing certain predictors, ensembling methods, and create a new probability-based turnout prediction rather than a simple weighted average of past turnout. Finally, I try a new model, using binomial simulations to compare to my chosen modeling technique. By the end of this post, I will have determined my base model for the next two weeks to fine tune as I attempt to predict the outcome of the election. 
 
 ### Review of Past Forecasting Models
-- go through each week, the results, and how they were calculated
-- which one I like the best, want to build on
-- given current data (updated polling) have they changed
-- new model evaluation techniques
+In this section, I review the forecasting models developed throughout weeks 1 to 6. Each model was built with a unique combination of variables and assumptions, leading to varying results. By walking through the results and calculations from each week, I reflect on which model performed best and why. I also update the models with the newest polling data and introduce new evaluation techniques. 
+
+Because these models were made up to six weeks ago, the polling inputs have changed, particularly in those that use most recent polling data and average poll numbers. The models that I can update with new polling data include XXXXX. This helps determine if my eventual preferred model still holds up or if adjustments are necessary to account for new information.
+
+Below are the results from each week's model, as well as those that have been updated with new polling. 
+
+**Week 1:** This week used a simplified Norpoth model to make a prediction based on a weighted average of the election results from 2016 and 2020 by state. The predictive model can be defined as $vote_{2024} = 0.75vote_{2020} + 0.25vote_{2016}$. This forecast resulted in _Harris 276 - Trump 262_.
+
+**Week 2:** This week focused on economic variables and linear regressions. Evaluating a variety of economic fundamentals as predictors of two way popular vote, I found Q2 GDP growth in the election year to be the best predictor by on R sqaured, RMSE, and a variety of other linear model evaluations as compared to other economic variables. This forecast focused on two way popular vote, leading to a result of _Harris 51.585% - Trump 48.415%_.
+
+```{r}
+####----------------------------------------------------------#
+#### Week 3 Model with New Polling Data
+####----------------------------------------------------------#
+
+# Create dataset of polling average by week until the election
+d_poll_weeks <- d_polls |> 
+  group_by(year, party, weeks_left) |>
+  summarize(mean_poll_week = mean(poll_support)) |> 
+  filter(weeks_left <= 30) |> 
+  pivot_wider(names_from = weeks_left, values_from = mean_poll_week) |> 
+  left_join(d_popvote, by = c("year", "party"))
+
+# Split into training and testing data based on inclusion or exclusion of 2024. 
+d_poll_weeks_train <- d_poll_weeks |> 
+  filter(year <= 2020)
+d_poll_weeks_test <- d_poll_weeks |> 
+  filter(year == 2024)
+
+colnames(d_poll_weeks)[3:33] <- paste0("poll_weeks_left_", 0:30)
+colnames(d_poll_weeks_train)[3:33] <- paste0("poll_weeks_left_", 0:30)
+colnames(d_poll_weeks_test)[3:33] <- paste0("poll_weeks_left_", 0:30)
+
+# Separate data into X and Y for training
+x.train <- d_poll_weeks_train |>
+  ungroup() |> 
+  select(all_of(paste0("poll_weeks_left_", 3:30))) |> 
+  as.matrix()
+y.train <- d_poll_weeks_train$pv2p
+x.test <- d_poll_weeks_test |>
+  ungroup() |> 
+  select(all_of(paste0("poll_weeks_left_", 3:30))) |> 
+  as.matrix()
+
+# Predict 2024 national pv2p share using elastic-net with polls only 
+enet.poll <- cv.glmnet(x = x.train, y = y.train, alpha = 0.5)
+lambda.min.enet.poll <- enet.poll$lambda.min
+polls.pred <- predict(enet.poll, s = lambda.min.enet.poll, newx = x.test)
+
+# Combine datasets and create vote lags. 
+d_combined_super <- d_econ |> 
+  left_join(d_poll_weeks, by = "year") |> 
+  filter(year %in% c(unique(d_popvote$year), 2024)) |> 
+  group_by(party) |> 
+  mutate(pv2p_lag1 = lag(pv2p, 1), 
+         pv2p_lag2 = lag(pv2p, 2)) |> 
+  ungroup() |> 
+  mutate(gdp_growth_x_incumbent = GDP_growth_quarterly * incumbent, 
+         rdpi_growth_quarterly = RDPI_growth_quarterly * incumbent,
+         cpi_x_incumbent = CPI * incumbent,
+         unemployment_x_incumbent = unemployment * incumbent,
+         sp500_x_incumbent = sp500_close * incumbent) # Generate interaction effects.
+
+# Create fundamentals-only dataset and split into training and test sets
+d_fund <- d_combined_super |> 
+  select("year", "pv2p", "GDP", "GDP_growth_quarterly", "RDPI", "RDPI_growth_quarterly", "CPI", "unemployment", "sp500_close",
+         "incumbent", "gdp_growth_x_incumbent", "rdpi_growth_quarterly", "cpi_x_incumbent", "unemployment_x_incumbent", "sp500_x_incumbent", 
+         "pv2p_lag1", "pv2p_lag2") 
+
+x.train.fund <- d_fund |> 
+  filter(year <= 2020) |>
+  select(-c(year, pv2p)) |> 
+  slice(-c(1:9)) |> 
+  as.matrix()
+y.train.fund <- d_fund |> 
+  filter(year <= 2020) |> 
+  select(pv2p) |> 
+  slice(-c(1:9)) |> 
+  as.matrix()
+x.test.fund <- d_fund |> 
+  filter(year == 2024) |> 
+  select(-c(year, pv2p)) |> 
+  as.matrix()
+
+# Predict 2024 national pv2p share using elastic-net with economic vars 
+enet.fund <- cv.glmnet(x = x.train.fund, y = y.train.fund, intercept = FALSE, alpha = 0.5)
+lambda.min.enet.fund <- enet.fund$lambda.min
+fund.pred <- predict(enet.fund, s = lambda.min.enet.fund, newx = x.test.fund)
+
+# Define election day
+election_day_2024 <- "2024-11-05"
+today <- "2024-10-18"
+days_left <- as.numeric(as.Date(election_day_2024) - as.Date(today))
+
+
+# Ensemble 1: Predict based on unweighted (or equally weighted) ensemble model between polls and fundamentals models. 
+unweighted.ensemble.pred <- (polls.pred + fund.pred)/2
+
+# Ensemble 2: Weight based on polls mattering closer to November
+poll_model_weight <- 1- (1/sqrt(days_left))
+fund_model_weight <- 1/sqrt(days_left)
+
+ensemble.2.pred <- polls.pred * poll_model_weight + fund.pred * fund_model_weight
+
+# Ensemble 3. Weight based on fundamentals mattering closer to November
+poll_model_weight <- 1/sqrt(days_left)
+fund_model_weight <- 1-(1/sqrt(days_left))
+
+ensemble.3.pred <- polls.pred * poll_model_weight + fund.pred * fund_model_weight
+
+```
+
+**Week 3:** The main two models developed this week were ensembled elastic net regression models that weighed fundamentals more closer to the election and weighed polling more closer to the election. The final forecast for this week was an unweighted average between the two, leading to _Harris 51.0645% - Trump 50.1031%_. Updated with new polling data, I can compare the original and new predictions based on this method
+
+```{r}
+####----------------------------------------------------------#
+#### Week 3 Side by Side
+####----------------------------------------------------------#
+
+# PREVIOUS CALCULATION
+# Sample data for ensemble predictions
+final_predictions_prev <- data.frame(
+  Party = c("Harris", "Trump", "Harris", "Trump", "Harris", "Trump"),
+  Prediction = c(51.71210, 50.22182, 51.31497, 50.00100, 51.0645, 50.1031)
+)
+
+# Create previous data kable
+kable_prev <- kable(final_predictions_prev[, c("Party", "Prediction")], 
+                         col.names = c("Party", "Prediction")) %>%
+  kable_styling(full_width = F) %>%
+  row_spec(0, bold = TRUE, background = "#0072B2", color = "white") %>%
+  row_spec(1:4, color = "black") %>%
+  pack_rows("Polls More", 1, 2) %>%
+  pack_rows("Fundamentals More", 3, 4) %>%
+  pack_rows("Unweighted", 5, 6) %>%
+  add_header_above(c("Original Week 3 Ensemble Model Predictions" = 2)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+# UPDATED CALCULATION
+# Combine predictions into a dataframe
+final_predictions_new <- data.frame(
+  Party = c("Harris", "Trump", "Harris", "Trump", "Harris", "Trump"),
+  Prediction = c(ensemble.2.pred[1], ensemble.2.pred[2],
+                 ensemble.3.pred[1], ensemble.3.pred[2],
+                 unweighted.ensemble.pred[1], unweighted.ensemble.pred[2])
+)
+
+# Create new data kable
+kable_new <- kable(final_predictions_new[, c("Party", "Prediction")], 
+                         col.names = c("Party", "Prediction")) %>%
+  kable_styling(full_width = F) %>%
+  row_spec(0, bold = TRUE, background = "#0072B2", color = "white") %>%
+  row_spec(1:4, color = "black") %>%
+  pack_rows("Polls More", 1, 2) %>%
+  pack_rows("Fundamentals More", 3, 4) %>%
+  pack_rows("Unweighted", 5, 6) %>%
+  add_header_above(c("Original Week 3 Ensemble Model Predictions" = 2)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+# Render tables side by side using HTML tags
+htmltools::tagList(
+  htmltools::tags$table(
+    htmltools::tags$tr(
+      htmltools::tags$td(kable_prev),
+      htmltools::tags$td(kable_new)
+    )
+  )
+)
+
+```
+
+**Week 4:** During this week, I began to narrow my work only down to the seven critical states: Arizona, Georgia, Michigan, Nevada, North Carolina, Pennsylvania, and Wisconsin. The model used was a super-learning model, leading to _Harris 303 - Trump 235_. The predictors used were polling, economic fundamentals, and lagged vote share of 2016 and 2020 in a pooled model. The updated model with new data is shown below.
+
+```{r}
+####----------------------------------------------------------#
+#### Super learning at the state level for swing states
+####----------------------------------------------------------#
+
+# Split poll data into training and testing data based on inclusion or exclusion of 2024. 
+d_poll_weeks_train_inc <- d_poll_weeks |> 
+  filter(incumbent & year <= 2020)
+d_poll_weeks_test_inc <- d_poll_weeks |> 
+  filter(incumbent & year == 2024)
+
+# Sequester data for combined model.
+d_combo_inc <- d_combined_super |> 
+  filter(incumbent) |> 
+  select("year", "pv2p", "GDP", "GDP_growth_quarterly", "RDPI", "RDPI_growth_quarterly", "CPI", "unemployment", "sp500_close",
+         "rdpi_growth_quarterly", "pv2p_lag1", "pv2p_lag2", all_of(paste0("poll_weeks_left_", 3:30))) 
+
+x.train.combined <- d_combo_inc |> 
+  filter(year <= 2020) |> 
+  select(-c(year, pv2p)) |> 
+  slice(-1) |> 
+  as.matrix()
+y.train.combined <- d_combo_inc |>
+  filter(year <= 2020) |> 
+  select(pv2p) |> 
+  slice(-1) |> 
+  as.matrix()
+x.test.combined <- d_combo_inc |>
+  filter(year == 2024) |> 
+  select(-c(year, pv2p)) |> 
+  drop_na() |> 
+  as.matrix()
+  
+
+# Get set of states where we have polling data for 2024 according to 538 poll averages.
+states_2024 <- d_state_polls$state[d_state_polls$year == 2024] |> unique()
+
+d_state_vote_wide <- d_state_popvote |> 
+  select(state, year, R_pv2p, D_pv2p, R_pv2p_lag1, R_pv2p_lag2, D_pv2p_lag1, D_pv2p_lag2) |>
+  mutate(margin = D_pv2p - R_pv2p, 
+         winner = ifelse(D_pv2p > R_pv2p, "D", "R"))
+d_state_vote_wide[d_state_vote_wide$state == "District Of Columbia",]$state <- "District of Columbia"
+
+# Predicting for Democratic incumbents.
+# Simplifications and assumptions: 
+  # Assuming Harris can be treated as incumbent for 2024 (could test either)
+  # Getting weights from testing models on 2020 (could do different years)
+  # Pooled models (could run state-specific models)
+  # Using LOO-CV on 2020 (could do K-fold CV)
+  # Using average poll support across all 30 weeks until election (could do weekly support, various imputation methods)
+d_state_combo <- d_state_polls |> 
+  filter((state %in% states_2024)) |> 
+  group_by(year, state, party) |>
+  mutate(mean_pollav = mean(poll_support)) |>
+  top_n(1, poll_date) |> 
+  rename(latest_pollav = poll_support) |> 
+  ungroup() |> 
+  left_join(d_popvote |> select(-pv, -pv2p), by = c("year", "party")) |> 
+  filter(party == "DEM") |> 
+  left_join(d_state_vote_wide, by = c("year", "state")) 
+
+# Model 1. Polling averages only. 
+mod_1 <- lm(D_pv2p ~ latest_pollav + mean_pollav, 
+            data = subset(d_state_combo, year < 2020))
+
+# Model 2. Lagged vote model. 
+mod_2 <- lm(D_pv2p ~ D_pv2p_lag1 + D_pv2p_lag2, 
+            data = subset(d_state_combo, year < 2020))
+
+# Model 3. Combined models. 
+mod_3 <- lm(D_pv2p ~ incumbent + latest_pollav + mean_pollav + D_pv2p_lag1 + D_pv2p_lag2, 
+            data = subset(d_state_combo, year < 2020))
+
+# Predictions from each model. 
+pred_1 <- as.numeric(predict(mod_1, newdata = subset(d_state_combo, year == 2020)))
+pred_2 <- as.numeric(predict(mod_2, newdata = subset(d_state_combo, year == 2020)))
+pred_3 <- as.numeric(predict(mod_3, newdata = subset(d_state_combo, year == 2020)))
+
+# Get weights to build super learner. 
+d_weight <- data.frame("truth" = d_state_combo$D_pv2p[d_state_combo$year == 2020],
+                       "polls" = pred_1,
+                       "lag_vote" = pred_2,
+                       "combo" = pred_3)
+
+# Constrained optimization for ensemble mod weights. 
+mod_ensemble <- lm(truth ~ polls + lag_vote + combo, 
+                   data = d_weight)
+
+# Get weights and estimated weighted ensemble via constrained regression. make sum to one
+c <- 3 # number of models
+predictions <- cbind(pred_1, pred_2, pred_3)
+y.test <- d_weight$truth
+w <- lm(y.test ~ predictions-1)
+beta <- Variable(c)
+objective <- Minimize(sum_squares(y.test - predictions %*% beta))
+prob <- Problem(objective)
+constraints(prob) <- list(beta >= 0, beta <= 1)
+solution_prob <- solve(prob)
+weights <- solution_prob$getValue(beta)
+
+# Predict using previous model output.
+ensemble_pred <- cbind("state" = subset(d_state_combo, year == 2020)$state,
+                       "pred" = round(as.numeric(t(weights) %*% t(predictions)), 3)) |> 
+  as.data.frame()
+
+ensemble_pred <- ensemble_pred |> 
+  mutate(winner = ifelse(pred > 50, "D", "R"))
+
+# states to highlight
+highlight_states <- c("Arizona", "Georgia", "Michigan", "Nevada", "North Carolina", 
+                      "Pennsylvania", "Wisconsin")
+
+# create kable
+kable(ensemble_pred, col.names = c("State", "D Pop Vote Prediction", "Winner")) |>
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = F
+  ) |>
+  row_spec(0, bold = TRUE, background = "#FFFFE0") |>
+  row_spec(which(ensemble_pred$state %in% highlight_states), 
+           background = "lightgreen") 
+```
+
+These results are different from the previous week as they have Georgia going to the Republicans, leading to an updated prediction of _Harris 287 - Trump 251_.
+
+
+**Week 5:** In week 5, I used a linear regression model with the predictors lagged popular vote, latest poll average, mean poll average, a weighted average of turnout, GDP quarterly growth, and RDPI quarterly growth. The results of two separate models led to predictions that added to above 100% for the combined vote share of the two parties, which I handled by comparing the two. My goal in this case was to get at solely electoral college, but updated this with a binomial model will be explored below. This was once again a pooled model. The results led to an outcome of _Harris 292 - Trump 246_ in the original simulations. Running new simulations, I get the below results
+
+```{r}
+####----------------------------------------------------------#
+#### Linear regression simulation week 5
+####----------------------------------------------------------#
+
+# Adjust turnout data
+d_state_turnout_clean <- d_state_turnout |> 
+  mutate(vep_turnout = as.numeric(str_remove(vep_turnout, "%"))/100) |> 
+  select(year, state, vep_turnout)
+
+# Adjust polling data
+d_pollav_state <- d_state_polls |> 
+  group_by(year, state, party) |>
+  mutate(mean_pollav = mean(poll_support, na.rm = TRUE)) |>
+  top_n(1, poll_date) |> 
+  rename(latest_pollav = poll_support) |>
+  select(-c(weeks_left, days_left, poll_date, candidate, before_convention)) |>
+  pivot_wider(names_from = party, values_from = c(latest_pollav, mean_pollav))
+
+# Merge data
+d <- d_pollav_state %>%
+  left_join(d_state_popvote, by = c("year", "state")) %>%
+  left_join(d_popvote %>% filter(party == "democrat"), by = "year") %>%
+  left_join(d_state_demog, by = c("year", "state")) %>%
+  left_join(d_state_turnout_clean, by = c("year", "state")) %>%
+  left_join(d_econ, by = "year") %>% 
+  filter(year >= 1980) %>%
+  ungroup()
+
+# Sequester states for which we have polling data for 2024 
+states.2024 <- unique(d$state[d$year == 2024])
+states.2024 <- states.2024[-which(states.2024 == "Nebraska Cd 2")]
+
+# Subset and split data
+d <- d %>%
+  filter(state %in% states.2024)
+
+d_train <- d %>%
+  filter(year < 2024)
+d_test <- d %>%
+  filter(year == 2024)
+
+# Pooled model
+simp.vars <- c("D_pv2p_lag1", "D_pv2p_lag2", "latest_pollav_DEM", "mean_pollav_DEM",
+               "R_pv2p_lag1", "R_pv2p_lag2", "latest_pollav_REP", "mean_pollav_REP",
+               "vep_turnout", "GDP_growth_quarterly", "RDPI_growth_quarterly")
+
+mod_lm_dem_simp <- lm(D_pv2p ~ D_pv2p_lag1 + D_pv2p_lag2 + latest_pollav_DEM + mean_pollav_DEM + vep_turnout + GDP_growth_quarterly + RDPI_growth_quarterly,
+                      data = d_train)
+mod_lm_rep_simp <- lm(R_pv2p ~ R_pv2p_lag1 + R_pv2p_lag2 + latest_pollav_REP + mean_pollav_REP + vep_turnout + GDP_growth_quarterly + RDPI_growth_quarterly,
+                      data = d_train)
+
+# Add back in lagged vote share for 2024
+t <- d %>%
+  filter(year >= 2016) %>%
+  arrange(year) %>%
+  group_by(state) %>%
+  mutate(
+    D_pv2p_lag1 = lag(D_pv2p, 1),
+    R_pv2p_lag1 = lag(R_pv2p, 1),
+    D_pv2p_lag2 = lag(D_pv2p, 2),
+    R_pv2p_lag2 = lag(R_pv2p, 2)) %>%
+  filter(year == 2024) %>%
+  select(state, year, D_pv2p, R_pv2p, D_pv2p_lag1, R_pv2p_lag1, D_pv2p_lag2, R_pv2p_lag2)
+
+# Subset testing data to only relevant variables for our simple model
+d_test_simp <- d_test %>%
+  select(-c(R_pv2p, R_pv2p_lag1, R_pv2p_lag2, 
+            D_pv2p, D_pv2p_lag1, D_pv2p_lag2)) %>%
+  left_join(t, by = c("state", "year")) %>%
+  select(state, year, all_of(simp.vars))
+
+# Get average state-level turnout across 2020, 2016, 2012
+d_turnout_avg <- d_train %>%
+  filter(year %in% c(2020, 2016, 2012)) %>%
+  filter(state %in% unique(d_test_simp$state)) %>%
+  group_by(state) %>%
+  summarize(vep_turnout = mean(vep_turnout, na.rm = TRUE))
+
+# Make predictions with simple average turnout
+d_test_simp <- d_test_simp %>%
+  left_join(d_turnout_avg, by = "state") %>%
+  select(-vep_turnout.x) %>%
+  rename(vep_turnout = vep_turnout.y)
+
+simp_pred_dem <- predict(mod_lm_dem_simp, d_test_simp)
+simp_pred_rep <- predict(mod_lm_rep_simp, d_test_simp)
+
+# Now let's simulate this with varying levels of turnout and get both confidence intervals on our predictions
+# and approximate win percentages for each state
+m <- 1e4 # Number of simulations
+pred.mat <- data.frame(state = rep(d_test_simp$state, m),
+                       year = rep(2024, m * length(d_test_simp$state)),
+                       vep_turnout = rep(d_turnout_avg$vep_turnout, m),
+                       simp_pred_dem = rep(simp_pred_dem, m),
+                       simp_pred_rep = rep(simp_pred_rep, m))
+
+j <- 1
+for (i in 1:m) {
+  vep_turnout <- sapply(d_turnout_avg$vep_turnout, function(mu) {
+    rnorm(1, mean = mu, sd = 0.05) # Simulate turnout from Gaussian centered on state average with 5% SD
+  })
+
+  d_test_samp <- d_test_simp
+  d_test_samp$vep_turnout <- vep_turnout
+
+  simp_pred_dem <- predict(mod_lm_dem_simp, d_test_samp)
+  simp_pred_rep <- predict(mod_lm_rep_simp, d_test_samp)
+
+  pred.mat$simp_pred_dem[j:(i * length(states.2024))] <- simp_pred_dem
+  pred.mat$simp_pred_rep[j:(i * length(states.2024))] <- simp_pred_rep
+  j <- j + length(states.2024) # Hack for filling out matrix
+}
+
+# Calculate confidence intervals for predictions
+summary_results <- pred.mat %>%
+  group_by(state) %>%
+  summarize(
+    mean_dem = mean(simp_pred_dem),
+    mean_rep = mean(simp_pred_rep),
+    sd_dem = sd(simp_pred_dem),
+    sd_rep = sd(simp_pred_rep),
+    lower_dem = mean_dem - 1.96 * sd_dem,
+    upper_dem = mean_dem + 1.96 * sd_dem,
+    lower_rep = mean_rep - 1.96 * sd_rep,
+    upper_rep = mean_rep + 1.96 * sd_rep
+  )
+
+# Focus on specific states of interest
+key_states <- c("Wisconsin", "Pennsylvania", "North Carolina", 
+                "Nevada", "Michigan", "Georgia", "Arizona")
+
+final_results <- summary_results %>%
+  filter(state %in% key_states) %>%
+  select(state, mean_dem, lower_dem, upper_dem, mean_rep, lower_rep, upper_rep)
+
+# Create a styled table with hover effects
+final_results %>%
+  kable("html", caption = "2024 Election Upated Simulation Results for Key States") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  row_spec(0, background = "#f2f2f2", bold = TRUE) %>%
+  add_header_above(c(" " = 1, "Democratic Vote Share" = 3, "Republican Vote Share" = 3), 
+                   bold = TRUE, background = "#f2f2f2") %>% 
+  column_spec(1, bold = TRUE)
+
+```
+
+```{r}
+# Reshape predictions into long format
+pred_long <- pred.mat %>%
+  pivot_longer(cols = c(simp_pred_dem, simp_pred_rep), 
+               names_to = "party", 
+               values_to = "vote_share")
+
+# Filter for the seven states of interest
+states_of_interest <- c("Wisconsin", "Pennsylvania", "North Carolina", "Nevada", "Michigan", "Georgia", "Arizona")
+
+pred_long_filtered <- pred_long %>%
+  filter(state %in% states_of_interest)
+
+# Plot histograms for the seven states
+ggplot(pred_long_filtered, aes(x = vote_share, fill = party)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 40) +
+  scale_fill_manual(values = c("simp_pred_dem" = "blue", "simp_pred_rep" = "red"),
+                    labels = c("Democratic Vote Share", "Republican Vote Share")) +
+  facet_wrap(~ state) +
+  labs(title = "Updated Simulation Outcomes for Key States, 2024 General",
+       x = "Vote Share",
+       y = "Frequency",
+       fill = "Party") +
+  barplot_theme +
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8))
+
+```
+
+From these outcomes, I can see that the states with popular vote values predicted outside of the prediction interval to go for one party or the other are Michigan, Nevada, Pennsylvania, and Wisconsin, all for the democrats. For states within the margin of the prediction interval, I have Arizona (R), Georgia (D), and North Carolina (R). This does not differ from my original week 5 prediction by any state, but the margin has gotten larger in favor of Republicans in Arizona, smaller for democrats in Georgia, Michigan, Nevada, Pennsylvania, and Wisconsin, smaller for Republicans in North Carolina, based solely on comparing the mean predicted vote shares from the simulations. 
+
+**Week 6:** This week maintained the same prediction from last week, but urged inclusion of FEC contributions data in future models to see if it improves fit. The prediction remained _Harris 292 - Trump 246_.
+
+As next steps for the following weeks, there are additional new model evaluation techniques in addition to those used in past posts to consider. Looking forward, I will improve predictive accuracy and model robustness as a result of these. These techniques provide insight into how to help guide the direction of future refinements and eventual model choice. 
+
 
 ### Important Predictors to Include
-- which ones I chose to use, which I didn't
-- what is going to be in this week's model
-- no ground game because of data difficulties and limited marginal effect it appears, may be important to consider for turnout model below
+In developing my election prediction model, I’ve decided to include economic fundamentals and polling data, both of which have consistently proven effective in past models. Moving forward, I plan to experiment with FEC data to see if it improves the each models' fit. Another factor I may add is incumbency interaction effects, similar to what’s been used in super learning models. However, I’ve chosen to exclude certain variables like demographics, air war data (campaign ads), and ground war data (in-person campaigning) based on recent explorations showing limited predictive power in the persuasion space. Ground game data, in particular, has been difficult to gather, and according to [Enos and Hersch (2015)](https://www-cambridge-org.ezp-prod1.hul.harvard.edu/core/journals/american-political-science-review/article/party-activists-as-campaign-advertisers-the-ground-campaign-as-a-principalagent-problem/6117E8EF4C72A046ABFE6A8FDEDEA95E) and meta studies, the effect of on-the-ground strategies on persuasion is essentially zero. Their research found that campaign contacts may not have an effect potentially because persuasive messages don’t have longevity. This exclusion also aligns with meta-analyses showing that individual targeting does little to alter voter preferences. 
+
+However, I am adding ground game data in a separate turnout prediction model, as studies like [Enos and Fowler (2016)](https://www-cambridge-org.ezp-prod1.hul.harvard.edu/core/journals/political-science-research-and-methods/article/aggregate-effects-of-largescale-campaigns-on-voter-turnout/20C500B0DE62227873FD24CB3555F779) suggest that ground efforts can increase turnout by as much as 6-7% in heavily targeted areas. For this reason, while I’m excluding ground game from my main model, I recognize its importance for predicting turnout, especially in combination with air war data from the final week of the campaign. 
+
+Additional decisions I have made include focusing my predictions on state-level outcomes in the seven swing states, which will then be aggregated to predict the overall Electoral College result. My model will use data from elections after 1964 rather than starting with 1952 or even pre-World War II. Given the changing landscape of election laws, I see this as a way to account for legal consistency is that has changed the electorate over time in the data I have.
+
 
 ### Pooled, Unpooled, and Ensembling Notes
-- how I will approach this in my model
+In my election prediction model, I plan to use pooled models, which combine data from multiple states and treat them as part of a single system, applying the same coefficients across all states to make predictions. This allows the model to capture correlations across states, meaning if we have more certainty about the result in one state, it can help improve predictions for others. Pooled models are especially useful because they rely on less data from individual states by "drawing strength" from states with more data, leading to more reliable predictions, even in data-sparse regions. Professional election forecasters often use these correlations to update one state’s prediction based on another’s outcome, enhancing the model's adaptability as new information becomes available. There are also more advanced ways of pooling states together using techniques like clustering, which could improve the model’s ability to group similar states. I will consider these in future weeks. 
+
+Additionally, pooling offers the flexibility to combine pooled and unpooled models, or multiple pooled models, through ensembling, which blends different modeling approaches to capture their respective strengths. This allows the model to balance the benefits of pooled predictions with the more state-specific insights from unpooled models. By using appropriate checks on model performance, ensembling helps create a more accurate and balanced prediction by drawing from multiple perspectives. This combination of pooling and ensembling makes for a powerful approach that can improve the overall robustness of the election forecast. Both emsebling and pooled models were used in the models described in the previous sections descrbining my work from past weeks.
+
 
 ### Adjusting Turnout Predictions
-- visualize trends in turnout using our data
-- hard to predict turnout due to the lasting shock of COVID-19 and mail-in voting
-- How do the FiveThirtyEight and Economist forecasts deal with this unpredictability
-- Build probabilistic models to simulate fluctuations in turnout. (Rather than fixing each state’s maximum number of Binomial draws to VEP, draw a random number from a distribution constructed using VEP and your guess on the effect of vote-by-mail and other factors.) 
+In the future, I plan to implement a more refined model to better predict voter turnout, addressing the lingering challenges caused by the unpredictability of COVID-19 and the widespread adoption of mail-in voting. These factors have created lasting shocks to turnout patterns that make forecasting difficult, and it’s clear from watching forecasts like FiveThirtyEight and The Economist that this unpredictability needs special handling. My approach will be to build probabilistic models that simulate fluctuations in turnout rather than using a fixed, static number for each state's voter pool. For example, instead of setting each state’s maximum number of Binomial draws to the Voting Eligible Population (VEP) as I will do in the binomial simulations model below, I’ll draw a random number from a distribution based on VEP, while factoring in expected effects from vote-by-mail, early voting, and other dynamics. Additionally, this model will incorporate key variables such as demographics, ground game data, and air war data, all of which can have strong turnout effects. This approach will allow the model to adapt more flexibly to changes in voter behavior and the varying effectiveness of campaign strategies across states.
+
 
 ### Binomial Simulations Model
-- trying a new model this week
+My new model for this week will be binomial simulations. Whereas the linear regression model simulations may have values that do not add to 100%, this type of model addresses that. 
+
+**Pennsylvania**
+```{r}
+####----------------------------------------------------------#
+#### Binomial simulations for election prediction. 
+####----------------------------------------------------------#
+
+# Merge popular vote and polling data. 
+d <- d_state_popvote |> 
+  inner_join(d_state_polls |> filter(weeks_left == 3)) |> 
+  mutate(state_abb = state.abb[match(state, state.name)])
+
+# Merge turnout data into main dataset. 
+d <- d |> 
+  left_join(d_state_turnout, by = c("state", "year")) |> 
+  filter(year >= 1964) # Filter to when turnout dataset begins. 
+
+# Generate probabilistic univariate poll-based state forecasts. 
+state_glm_forecast <- list()
+state_glm_forecast_outputs <- data.frame()
+for (s in unique(d$state_abb)) {
+  # Democrat model. 
+  state_glm_forecast[[s]]$dat_D <- d |> filter(state_abb == s, party == "DEM")
+  state_glm_forecast[[s]]$mod_D <- glm(cbind(votes_D, vep - votes_D) ~ poll_support, # Cbind(N Success, N Total) for Binomial Model 
+                                      state_glm_forecast[[s]]$dat_D, 
+                                      family = binomial(link = "logit"))
+  
+  # Republican model. 
+  state_glm_forecast[[s]]$dat_R <- d |> filter(state_abb == s, party == "REP")
+  state_glm_forecast[[s]]$mod_R <- glm(cbind(votes_R, vep - votes_R) ~ poll_support, 
+                                      state_glm_forecast[[s]]$dat_R, 
+                                      family = binomial(link = "logit"))
+  
+  if (nrow(state_glm_forecast[[s]]$dat_R) > 2) {
+    for (hypo_avg_poll in seq(from = 0, to = 100, by = 10)) { 
+      # Democrat prediction. 
+      D_pred_vote_prob <- predict(state_glm_forecast[[s]]$mod_D, 
+                                  newdata = data.frame(poll_support = hypo_avg_poll), se = TRUE, type = "response")
+      D_pred_qt <- qt(0.975, df = df.residual(state_glm_forecast[[s]]$mod_D)) # Used in the prediction interval formula. 
+      
+      # Republican prediction. 
+      R_pred_vote_prob <- predict(state_glm_forecast[[s]]$mod_R, 
+                                  newdata = data.frame(poll_support = hypo_avg_poll), se = TRUE, type = "response")
+      R_pred_qt <- qt(0.975, df = df.residual(state_glm_forecast[[s]]$mod_R)) # Used in the prediction interval formula.
+      
+      # Save predictions. 
+      state_glm_forecast_outputs <- rbind(state_glm_forecast_outputs, 
+                                          cbind.data.frame(x = hypo_avg_poll,
+                                                           y = D_pred_vote_prob$fit*100,
+                                                           ymin = (D_pred_vote_prob$fit - D_pred_qt*D_pred_vote_prob$se.fit)*100,
+                                                           ymax = (D_pred_vote_prob$fit + D_pred_qt*D_pred_vote_prob$se.fit)*100,
+                                                           state_abb = s, 
+                                                           party = "DEM"),
+                                          cbind.data.frame(x = hypo_avg_poll,
+                                                           y = R_pred_vote_prob$fit*100,
+                                                           ymin = (R_pred_vote_prob$fit - R_pred_qt*R_pred_vote_prob$se.fit)*100,
+                                                           ymax = (R_pred_vote_prob$fit + R_pred_qt*R_pred_vote_prob$se.fit)*100,
+                                                           state_abb = s, 
+                                                           party = "REP"))
+    }
+  }
+}
+
+```
+
+```{r}
+# Pennsylvania
+
+# Simulating a distribution of potential election results in Pennsylvania for 2024. 
+# First step. Let's use GAM (general additive model) to impute VEP in Pennsylvania for 2024 using historical VEP.
+
+# Get historical eligible voting population in Pennsylvania. 
+vep_PA_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Pennsylvania" & d_state_turnout$year == 2020])
+vep_PA <- d_state_turnout |> filter(state == "Pennsylvania") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_PA <- lm(vep ~ year, vep_PA)
+
+vep_PA_2024_ols <- predict(lm_vep_PA, newdata = data.frame(year = 2024)) |> as.numeric()
+
+gam_vep_PA <- mgcv::gam(vep ~ s(year), data = vep_PA)
+
+# Use generalized additive model (GAM) to predict 2024 VEP in Pennsylvania.
+vep_PA_2024_gam <- predict(gam_vep_PA, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GAM predictions for final prediction. 
+vep_PA_2024 <- as.integer(0.75*vep_PA_2024_gam + 0.25*vep_PA_2024_ols)
+
+# Split datasets by party. 
+PA_D <- d |> filter(state == "Pennsylvania" & party == "DEM")
+PA_R <- d |> filter(state == "Pennsylvania" & party == "REP")
+
+# Fit Democrat and Republican models. 
+PA_D_glm <- glm(cbind(votes_D, vep - votes_D) ~ poll_support, data = PA_D, family = binomial(link = "logit"))
+PA_R_glm <- glm(cbind(votes_R, vep - votes_R) ~ poll_support, data = PA_R, family = binomial(link = "logit"))
+
+# Get predicted draw probabilities for D and R. 
+PA_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> mean(na.rm = T)
+PA_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> mean(na.rm = T)
+PA_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> na.omit())
+PA_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> na.omit())
+
+prob_D_vote_PA_2024 <- predict(PA_D_glm, newdata = data.frame(poll_support = PA_pollav_D), se = TRUE, type = "response")[[1]] |> as.numeric()
+prob_R_vote_PA_2024 <- predict(PA_R_glm, newdata = data.frame(poll_support = PA_pollav_R), se = TRUE, type = "response")[[1]] |> as.numeric()
+
+# Simulations incorporating prior for SD of polling averages  
+sim_D_votes_PA_2024_2 <- rbinom(n = 10000, size = vep_PA_2024, prob = rnorm(10000, PA_pollav_D/100, PA_sdpoll_D/100))
+sim_R_votes_PA_2024_2 <- rbinom(n = 10000, size = vep_PA_2024, prob = rnorm(10000, PA_pollav_R/100, PA_sdpoll_R/100))
+sim_elxns_PA_2024_2 <- ((sim_R_votes_PA_2024_2-sim_D_votes_PA_2024_2)/(sim_D_votes_PA_2024_2 + sim_R_votes_PA_2024_2))*100
+
+sim_data <- data.frame(
+  sim_D_votes_PA = sim_D_votes_PA_2024_2,
+  sim_R_votes_PA = sim_R_votes_PA_2024_2,
+  total_votes = sim_D_votes_PA_2024_2 + sim_R_votes_PA_2024_2
+)
+
+sim_data <- sim_data %>%
+  mutate(
+    D_vote_share = sim_D_votes_PA / total_votes * 100,
+    R_vote_share = sim_R_votes_PA / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# graph outcomes for both parties
+ggplot(sim_data) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Pennsylvania (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+# calculate the margins and vote distributions predicted
+quantiles_margin <- quantile(sim_data$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem <- quantile(sim_data$D_vote_share, probs = c(0.05, 0.5, 0.95))
+quantiles_rep <- quantile(sim_data$R_vote_share, probs = c(0.05, 0.5, 0.95))
+
+# put together the margin
+margin_table <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin, 2)
+)
+
+# to get median values (commmented out for printing purposes)
+#(dem_med <- round(quantiles_dem[2], 2))
+#(rep_med <- round(quantiles_rep[2], 2))
+
+# make kable of margin results
+kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Pennsylvania 2024 Simulated Election Margin" = 2))
+
+```
+
+Interpreting the simulated distributions, the blue density curve represents the distribution of simulated vote shares for Democrats. Since the peak of the blue curve is shifted more to the right than the red curve for the Republicans, that suggests that the Democratic vote share is predicted to be higher in more simulations. The fact that the curves are equally wide and tall implies that both parties face similar levels of uncertainty or variability in their predicted vote shares, but the model slightly favors Democrats in terms of likely outcomes. There is substantial overlap between the blue and red curves, meaning the model predicts a close race with both parties having a significant chance of securing similar vote shares. Note that this curve is only for the popular vote share outcome in Pennsylvania. 
+
+In the Pennsylvania outcomes, the median simulated outome was a Democrat popular vote share of 51.75% and Republican of 48.25% 
+
+I will now look at the results for each of the rest of the swing states: 
+
+**Wisconsin**
+```{r}
+# Wisconsin
+
+# Simulating a distribution of potential election results in Wisconsin for 2024. 
+# First step. Let's use GAM (general additive model) to impute VEP in Wisconsin for 2024 using historical VEP.
+
+# Get historical eligible voting population in Wisconsin. 
+vep_WI_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Wisconsin" & d_state_turnout$year == 2020])
+vep_WI <- d_state_turnout |> filter(state == "Wisconsin") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_WI <- lm(vep ~ year, vep_WI)
+
+vep_WI_2024_ols <- predict(lm_vep_WI, newdata = data.frame(year = 2024)) |> as.numeric()
+
+gam_vep_WI <- mgcv::gam(vep ~ s(year), data = vep_WI)
+
+# Use generalized additive model (GAM) to predict 2024 VEP in Wisconsin.
+vep_WI_2024_gam <- predict(gam_vep_WI, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GAM predictions for final prediction. 
+vep_WI_2024 <- as.integer(0.75*vep_WI_2024_gam + 0.25*vep_WI_2024_ols)
+
+# Split datasets by party. 
+WI_D <- d |> filter(state == "Wisconsin" & party == "DEM")
+WI_R <- d |> filter(state == "Wisconsin" & party == "REP")
+
+# Fit Democrat and Republican models. 
+WI_D_glm <- glm(cbind(votes_D, vep - votes_D) ~ poll_support, data = WI_D, family = binomial(link = "logit"))
+WI_R_glm <- glm(cbind(votes_R, vep - votes_R) ~ poll_support, data = WI_R, family = binomial(link = "logit"))
+
+# Get predicted draw probabilities for D and R. 
+WI_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Wisconsin" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> mean(na.rm = T)
+WI_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Wisconsin" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> mean(na.rm = T)
+WI_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Wisconsin" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> na.omit())
+WI_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Wisconsin" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> na.omit())
+
+prob_D_vote_WI_2024 <- predict(WI_D_glm, newdata = data.frame(poll_support = WI_pollav_D), se = TRUE, type = "response")[[1]] |> as.numeric()
+prob_R_vote_WI_2024 <- predict(WI_R_glm, newdata = data.frame(poll_support = WI_pollav_R), se = TRUE, type = "response")[[1]] |> as.numeric()
+
+# Simulations incorporating prior for SD of polling averages  
+sim_D_votes_WI_2024_2 <- rbinom(n = 10000, size = vep_WI_2024, prob = rnorm(10000, WI_pollav_D/100, WI_sdpoll_D/100))
+sim_R_votes_WI_2024_2 <- rbinom(n = 10000, size = vep_WI_2024, prob = rnorm(10000, WI_pollav_R/100, WI_sdpoll_R/100))
+sim_elxns_WI_2024_2 <- ((sim_R_votes_WI_2024_2-sim_D_votes_WI_2024_2)/(sim_D_votes_WI_2024_2 + sim_R_votes_WI_2024_2))*100
+
+sim_data <- data.frame(
+  sim_D_votes_WI = sim_D_votes_WI_2024_2,
+  sim_R_votes_WI = sim_R_votes_WI_2024_2,
+  total_votes = sim_D_votes_WI_2024_2 + sim_R_votes_WI_2024_2
+)
+
+sim_data <- sim_data %>%
+  mutate(
+    D_vote_share = sim_D_votes_WI / total_votes * 100,
+    R_vote_share = sim_R_votes_WI / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# graph outcomes for both parties
+ggplot(sim_data) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Wisconsin (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+# calculate the margins and vote distributions predicted
+quantiles_margin <- quantile(sim_data$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem <- quantile(sim_data$D_vote_share, probs = c(0.05, 0.5, 0.95))
+quantiles_rep <- quantile(sim_data$R_vote_share, probs = c(0.05, 0.5, 0.95))
+
+# put together the margin
+margin_table <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin, 2)
+)
+
+# to get median values (commented out for printing purposes)
+(dem_med <- round(quantiles_dem[2], 2))
+(rep_med <- round(quantiles_rep[2], 2))
+
+# make kable of margin results
+kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Wisconsin 2024 Simulated Election Margin" = 2))
+
+```
+
+The distributions above look similar to those for Pennsylvania, though they are slightly wider and therefore the outcome has a larger standard deviation. The median margin is also slightly bigger, but once again there is no clear winner with a 95% prediction interval. In the Wisconsin outcomes, the median simulated outcome was a Democrat popular vote share of 52.14% and Republican of 47.86% 
+
+**North Carolina**
+```{r}
+# North Carolina
+
+# Simulating a distribution of potential election results in North Carolina for 2024. 
+# First step. Let's use GAM (general additive model) to impute VEP in North Carolina for 2024 using historical VEP.
+
+# Get historical eligible voting population in North Carolina. 
+vep_NC_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "North Carolina" & d_state_turnout$year == 2020])
+vep_NC <- d_state_turnout |> filter(state == "North Carolina") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_NC <- lm(vep ~ year, vep_NC)
+
+vep_NC_2024_ols <- predict(lm_vep_NC, newdata = data.frame(year = 2024)) |> as.numeric()
+
+gam_vep_NC <- mgcv::gam(vep ~ s(year), data = vep_NC)
+
+# Use generalized additive model (GAM) to predict 2024 VEP in North Carolina.
+vep_NC_2024_gam <- predict(gam_vep_NC, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GAM predictions for final prediction. 
+vep_NC_2024 <- as.integer(0.75*vep_NC_2024_gam + 0.25*vep_NC_2024_ols)
+
+# Split datasets by party. 
+NC_D <- d |> filter(state == "North Carolina" & party == "DEM")
+NC_R <- d |> filter(state == "North Carolina" & party == "REP")
+
+# Fit Democrat and Republican models. 
+NC_D_glm <- glm(cbind(votes_D, vep - votes_D) ~ poll_support, data = NC_D, family = binomial(link = "logit"))
+NC_R_glm <- glm(cbind(votes_R, vep - votes_R) ~ poll_support, data = NC_R, family = binomial(link = "logit"))
+
+# Get predicted draw probabilities for D and R. 
+NC_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> mean(na.rm = T)
+NC_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> mean(na.rm = T)
+NC_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> na.omit())
+NC_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> na.omit())
+
+prob_D_vote_NC_2024 <- predict(NC_D_glm, newdata = data.frame(poll_support = NC_pollav_D), se = TRUE, type = "response")[[1]] |> as.numeric()
+prob_R_vote_NC_2024 <- predict(NC_R_glm, newdata = data.frame(poll_support = NC_pollav_R), se = TRUE, type = "response")[[1]] |> as.numeric()
+
+# Simulations incorporating prior for SD of polling averages  
+sim_D_votes_NC_2024_2 <- rbinom(n = 10000, size = vep_NC_2024, prob = rnorm(10000, NC_pollav_D/100, NC_sdpoll_D/100))
+sim_R_votes_NC_2024_2 <- rbinom(n = 10000, size = vep_NC_2024, prob = rnorm(10000, NC_pollav_R/100, NC_sdpoll_R/100))
+sim_elxns_NC_2024_2 <- ((sim_R_votes_NC_2024_2-sim_D_votes_NC_2024_2)/(sim_D_votes_NC_2024_2 + sim_R_votes_NC_2024_2))*100
+
+sim_data <- data.frame(
+  sim_D_votes_NC = sim_D_votes_NC_2024_2,
+  sim_R_votes_NC = sim_R_votes_NC_2024_2,
+  total_votes = sim_D_votes_NC_2024_2 + sim_R_votes_NC_2024_2
+)
+
+sim_data <- sim_data %>%
+  mutate(
+    D_vote_share = sim_D_votes_NC / total_votes * 100,
+    R_vote_share = sim_R_votes_NC / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# graph outcomes for both parties
+ggplot(sim_data) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for North Carolina (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+# calculate the margins and vote distributions predicted
+quantiles_margin <- quantile(sim_data$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem <- quantile(sim_data$D_vote_share, probs = c(0.05, 0.5, 0.95))
+quantiles_rep <- quantile(sim_data$R_vote_share, probs = c(0.05, 0.5, 0.95))
+
+# put together the margin
+margin_table <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin, 2)
+)
+
+# to get median values (commented out for printing purposes)
+#(dem_med <- round(quantiles_dem[2], 2))
+#(rep_med <- round(quantiles_rep[2], 2))
+
+# make kable of margin results
+kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "North Carolina 2024 Simulated Election Margin" = 2))
+
+```
+
+In North Carolina, the Republicans do better in more simulations that Democrats. The distributions are again slightly wider and therefore the outcome has a larger standard deviation. The median margin is also bigger, this time in favor of the Republicans, and again there is no clear winner with a 95% prediction interval. In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share of 46.61% and Republican of 53.39% 
+
+**Nevada**
+```{r}
+# Nevada
+
+# Simulating a distribution of potential election results in Nevada for 2024. 
+# First step. Let's use GAM (general additive model) to impute VEP in Nevada for 2024 using historical VEP.
+
+# Get historical eligible voting population in Nevada. 
+vep_NV_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Nevada" & d_state_turnout$year == 2020])
+vep_NV <- d_state_turnout |> filter(state == "Nevada") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_NV <- lm(vep ~ year, vep_NV)
+
+vep_NV_2024_ols <- predict(lm_vep_NV, newdata = data.frame(year = 2024)) |> as.numeric()
+
+gam_vep_NV <- mgcv::gam(vep ~ s(year), data = vep_NV)
+
+# Use generalized additive model (GAM) to predict 2024 VEP in Nevada.
+vep_NV_2024_gam <- predict(gam_vep_NV, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GAM predictions for final prediction. 
+vep_NV_2024 <- as.integer(0.75*vep_NV_2024_gam + 0.25*vep_NV_2024_ols)
+
+# Split datasets by party. 
+NV_D <- d |> filter(state == "Nevada" & party == "DEM")
+NV_R <- d |> filter(state == "Nevada" & party == "REP")
+
+# Fit Democrat and Republican models. 
+NV_D_glm <- glm(cbind(votes_D, vep - votes_D) ~ poll_support, data = NV_D, family = binomial(link = "logit"))
+NV_R_glm <- glm(cbind(votes_R, vep - votes_R) ~ poll_support, data = NV_R, family = binomial(link = "logit"))
+
+# Get predicted draw probabilities for D and R. 
+NV_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> mean(na.rm = T)
+NV_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> mean(na.rm = T)
+NV_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> na.omit())
+NV_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> na.omit())
+
+prob_D_vote_NV_2024 <- predict(NV_D_glm, newdata = data.frame(poll_support = NV_pollav_D), se = TRUE, type = "response")[[1]] |> as.numeric()
+prob_R_vote_NV_2024 <- predict(NV_R_glm, newdata = data.frame(poll_support = NV_pollav_R), se = TRUE, type = "response")[[1]] |> as.numeric()
+
+# Simulations incorporating prior for SD of polling averages  
+sim_D_votes_NV_2024_2 <- rbinom(n = 10000, size = vep_NV_2024, prob = rnorm(10000, NV_pollav_D/100, NV_sdpoll_D/100))
+sim_R_votes_NV_2024_2 <- rbinom(n = 10000, size = vep_NV_2024, prob = rnorm(10000, NV_pollav_R/100, NV_sdpoll_R/100))
+sim_elxns_NV_2024_2 <- ((sim_R_votes_NV_2024_2-sim_D_votes_NV_2024_2)/(sim_D_votes_NV_2024_2 + sim_R_votes_NV_2024_2))*100
+
+sim_data <- data.frame(
+  sim_D_votes_NV = sim_D_votes_NV_2024_2,
+  sim_R_votes_NV = sim_R_votes_NV_2024_2,
+  total_votes = sim_D_votes_NV_2024_2 + sim_R_votes_NV_2024_2
+)
+
+sim_data <- sim_data %>%
+  mutate(
+    D_vote_share = sim_D_votes_NV / total_votes * 100,
+    R_vote_share = sim_R_votes_NV / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# graph outcomes for both parties
+ggplot(sim_data) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Nevada (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+# calculate the margins and vote distributions predicted
+quantiles_margin <- quantile(sim_data$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem <- quantile(sim_data$D_vote_share, probs = c(0.05, 0.5, 0.95))
+quantiles_rep <- quantile(sim_data$R_vote_share, probs = c(0.05, 0.5, 0.95))
+
+# put together the margin
+margin_table <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin, 2)
+)
+
+# to get median values (commented out for printing purposes)
+#(dem_med <- round(quantiles_dem[2], 2))
+#(rep_med <- round(quantiles_rep[2], 2))
+
+# make kable of margin results
+kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Nevada 2024 Simulated Election Margin" = 2))
+
+```
+
+Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share of 47.93% and Republican of 52.07%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Nevada has flipped Republican in this case, but within the margin of error. 
+
+**Georgia** 
+```{r}
+# Georgia
+
+# Simulating a distribution of potential election results in Georgia for 2024. 
+# First step. Let's use GAM (general additive model) to impute VEP in Georgia for 2024 using historical VEP.
+
+# Get historical eligible voting population in Georgia. 
+vep_GA_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Georgia" & d_state_turnout$year == 2020])
+vep_GA <- d_state_turnout |> filter(state == "Georgia") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_GA <- lm(vep ~ year, vep_GA)
+
+vep_GA_2024_ols <- predict(lm_vep_GA, newdata = data.frame(year = 2024)) |> as.numeric()
+
+gam_vep_GA <- mgcv::gam(vep ~ s(year), data = vep_GA)
+
+# Use generalized additive model (GAM) to predict 2024 VEP in Georgia.
+vep_GA_2024_gam <- predict(gam_vep_GA, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GAM predictions for final prediction. 
+vep_GA_2024 <- as.integer(0.75*vep_GA_2024_gam + 0.25*vep_GA_2024_ols)
+
+# Split datasets by party. 
+GA_D <- d |> filter(state == "Georgia" & party == "DEM")
+GA_R <- d |> filter(state == "Georgia" & party == "REP")
+
+# Fit Democrat and Republican models. 
+GA_D_glm <- glm(cbind(votes_D, vep - votes_D) ~ poll_support, data = GA_D, family = binomial(link = "logit"))
+GA_R_glm <- glm(cbind(votes_R, vep - votes_R) ~ poll_support, data = GA_R, family = binomial(link = "logit"))
+
+# Get predicted draw probabilities for D and R. 
+GA_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> mean(na.rm = T)
+GA_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> mean(na.rm = T)
+GA_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> na.omit())
+GA_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> na.omit())
+
+prob_D_vote_GA_2024 <- predict(GA_D_glm, newdata = data.frame(poll_support = GA_pollav_D), se = TRUE, type = "response")[[1]] |> as.numeric()
+prob_R_vote_GA_2024 <- predict(GA_R_glm, newdata = data.frame(poll_support = GA_pollav_R), se = TRUE, type = "response")[[1]] |> as.numeric()
+
+# Simulations incorporating prior for SD of polling averages  
+sim_D_votes_GA_2024_2 <- rbinom(n = 10000, size = vep_GA_2024, prob = rnorm(10000, GA_pollav_D/100, GA_sdpoll_D/100))
+sim_R_votes_GA_2024_2 <- rbinom(n = 10000, size = vep_GA_2024, prob = rnorm(10000, GA_pollav_R/100, GA_sdpoll_R/100))
+sim_elxns_GA_2024_2 <- ((sim_R_votes_GA_2024_2-sim_D_votes_GA_2024_2)/(sim_D_votes_GA_2024_2 + sim_R_votes_GA_2024_2))*100
+
+sim_data <- data.frame(
+  sim_D_votes_GA = sim_D_votes_GA_2024_2,
+  sim_R_votes_GA = sim_R_votes_GA_2024_2,
+  total_votes = sim_D_votes_GA_2024_2 + sim_R_votes_GA_2024_2
+)
+
+sim_data <- sim_data %>%
+  mutate(
+    D_vote_share = sim_D_votes_GA / total_votes * 100,
+    R_vote_share = sim_R_votes_GA / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# graph outcomes for both parties
+ggplot(sim_data) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Georgia (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+# calculate the margins and vote distributions predicted
+quantiles_margin <- quantile(sim_data$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem <- quantile(sim_data$D_vote_share, probs = c(0.05, 0.5, 0.95))
+quantiles_rep <- quantile(sim_data$R_vote_share, probs = c(0.05, 0.5, 0.95))
+
+# put together the margin
+margin_table <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin, 2)
+)
+
+# to get median values (commented out for printing purposes)
+#(dem_med <- round(quantiles_dem[2], 2))
+#(rep_med <- round(quantiles_rep[2], 2))
+
+# make kable of margin results
+kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Georgia 2024 Simulated Election Margin" = 2))
+
+```
+
+Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the Georgia outcomes, the median simulated outcome was a Democrat popular vote share of 47.73% and Republican of 52.27%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Georgia has flipped Republican in this case, but within the margin of error. 
+
+**Arizona**
+```{r}
+# Arizona
+
+# Simulating a distribution of potential election results in Arizona for 2024. 
+# First step. Let's use GAM (general additive model) to impute VEP in Arizona for 2024 using historical VEP.
+
+# Get historical eligible voting population in Arizona. 
+vep_AZ_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Arizona" & d_state_turnout$year == 2020])
+vep_AZ <- d_state_turnout |> filter(state == "Arizona") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_AZ <- lm(vep ~ year, vep_AZ)
+
+vep_AZ_2024_ols <- predict(lm_vep_AZ, newdata = data.frame(year = 2024)) |> as.numeric()
+
+gam_vep_AZ <- mgcv::gam(vep ~ s(year), data = vep_AZ)
+
+# Use generalized additive model (GAM) to predict 2024 VEP in Arizona.
+vep_AZ_2024_gam <- predict(gam_vep_AZ, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GAM predictions for final prediction. 
+vep_AZ_2024 <- as.integer(0.75*vep_AZ_2024_gam + 0.25*vep_AZ_2024_ols)
+
+# Split datasets by party. 
+AZ_D <- d |> filter(state == "Arizona" & party == "DEM")
+AZ_R <- d |> filter(state == "Arizona" & party == "REP")
+
+# Fit Democrat and Republican models. 
+AZ_D_glm <- glm(cbind(votes_D, vep - votes_D) ~ poll_support, data = AZ_D, family = binomial(link = "logit"))
+AZ_R_glm <- glm(cbind(votes_R, vep - votes_R) ~ poll_support, data = AZ_R, family = binomial(link = "logit"))
+
+# Get predicted draw probabilities for D and R. 
+AZ_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> mean(na.rm = T)
+AZ_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> mean(na.rm = T)
+AZ_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> na.omit())
+AZ_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> na.omit())
+
+prob_D_vote_AZ_2024 <- predict(AZ_D_glm, newdata = data.frame(poll_support = AZ_pollav_D), se = TRUE, type = "response")[[1]] |> as.numeric()
+prob_R_vote_AZ_2024 <- predict(AZ_R_glm, newdata = data.frame(poll_support = AZ_pollav_R), se = TRUE, type = "response")[[1]] |> as.numeric()
+
+# Simulations incorporating prior for SD of polling averages  
+sim_D_votes_AZ_2024_2 <- rbinom(n = 10000, size = vep_AZ_2024, prob = rnorm(10000, AZ_pollav_D/100, AZ_sdpoll_D/100))
+sim_R_votes_AZ_2024_2 <- rbinom(n = 10000, size = vep_AZ_2024, prob = rnorm(10000, AZ_pollav_R/100, AZ_sdpoll_R/100))
+sim_elxns_AZ_2024_2 <- ((sim_R_votes_AZ_2024_2-sim_D_votes_AZ_2024_2)/(sim_D_votes_AZ_2024_2 + sim_R_votes_AZ_2024_2))*100
+
+sim_data <- data.frame(
+  sim_D_votes_AZ = sim_D_votes_AZ_2024_2,
+  sim_R_votes_AZ = sim_R_votes_AZ_2024_2,
+  total_votes = sim_D_votes_AZ_2024_2 + sim_R_votes_AZ_2024_2
+)
+
+sim_data <- sim_data %>%
+  mutate(
+    D_vote_share = sim_D_votes_AZ / total_votes * 100,
+    R_vote_share = sim_R_votes_AZ / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# graph outcomes for both parties
+ggplot(sim_data) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Arizona (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+# calculate the margins and vote distributions predicted
+quantiles_margin <- quantile(sim_data$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem <- quantile(sim_data$D_vote_share, probs = c(0.05, 0.5, 0.95))
+quantiles_rep <- quantile(sim_data$R_vote_share, probs = c(0.05, 0.5, 0.95))
+
+# put together the margin
+margin_table <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin, 2)
+)
+
+# to get median values (commented out for printing purposes)
+#(dem_med <- round(quantiles_dem[2], 2))
+#(rep_med <- round(quantiles_rep[2], 2))
+
+# make kable of margin results
+kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Arizona 2024 Simulated Election Margin" = 2))
+
+```
+
+In the Arizona outcomes, the median simulated outcome was a Democrat popular vote share of 47.05% and Republican of 52.95%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Arizona has flipped Republican in this case, but within the margin of error. 
+
+**Michigan**
+```{r}
+# Michigan
+
+# Simulating a distribution of potential election results in Michigan for 2024. 
+# First step. Let's use GAM (general additive model) to impute VEP in Michigan for 2024 using historical VEP.
+
+# Get historical eligible voting population in Michigan. 
+vep_MI_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Michigan" & d_state_turnout$year == 2020])
+vep_MI <- d_state_turnout |> filter(state == "Michigan") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_MI <- lm(vep ~ year, vep_MI)
+
+vep_MI_2024_ols <- predict(lm_vep_MI, newdata = data.frame(year = 2024)) |> as.numeric()
+
+gam_vep_MI <- mgcv::gam(vep ~ s(year), data = vep_MI)
+
+# Use generalized additive model (GAM) to predict 2024 VEP in Michigan.
+vep_MI_2024_gam <- predict(gam_vep_MI, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GAM predictions for final prediction. 
+vep_MI_2024 <- as.integer(0.75*vep_MI_2024_gam + 0.25*vep_MI_2024_ols)
+
+# Split datasets by party. 
+MI_D <- d |> filter(state == "Michigan" & party == "DEM")
+MI_R <- d |> filter(state == "Michigan" & party == "REP")
+
+# Fit Democrat and Republican models. 
+MI_D_glm <- glm(cbind(votes_D, vep - votes_D) ~ poll_support, data = MI_D, family = binomial(link = "logit"))
+MI_R_glm <- glm(cbind(votes_R, vep - votes_R) ~ poll_support, data = MI_R, family = binomial(link = "logit"))
+
+# Get predicted draw probabilities for D and R. 
+MI_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> mean(na.rm = T)
+MI_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> mean(na.rm = T)
+MI_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$weeks_left == 3 & d_state_polls$party == "DEM"] |> na.omit())
+MI_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$weeks_left == 3 & d_state_polls$party == "REP"] |> na.omit())
+
+prob_D_vote_MI_2024 <- predict(MI_D_glm, newdata = data.frame(poll_support = MI_pollav_D), se = TRUE, type = "response")[[1]] |> as.numeric()
+prob_R_vote_MI_2024 <- predict(MI_R_glm, newdata = data.frame(poll_support = MI_pollav_R), se = TRUE, type = "response")[[1]] |> as.numeric()
+
+# Simulations incorporating prior for SD of polling averages  
+sim_D_votes_MI_2024_2 <- rbinom(n = 10000, size = vep_MI_2024, prob = rnorm(10000, MI_pollav_D/100, MI_sdpoll_D/100))
+sim_R_votes_MI_2024_2 <- rbinom(n = 10000, size = vep_MI_2024, prob = rnorm(10000, MI_pollav_R/100, MI_sdpoll_R/100))
+sim_elxns_MI_2024_2 <- ((sim_R_votes_MI_2024_2-sim_D_votes_MI_2024_2)/(sim_D_votes_MI_2024_2 + sim_R_votes_MI_2024_2))*100
+
+sim_data <- data.frame(
+  sim_D_votes_MI = sim_D_votes_MI_2024_2,
+  sim_R_votes_MI = sim_R_votes_MI_2024_2,
+  total_votes = sim_D_votes_MI_2024_2 + sim_R_votes_MI_2024_2
+)
+
+sim_data <- sim_data %>%
+  mutate(
+    D_vote_share = sim_D_votes_MI / total_votes * 100,
+    R_vote_share = sim_R_votes_MI / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# graph outcomes for both parties
+ggplot(sim_data) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 40, position = "identity") +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Michigan (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+# calculate the margins and vote distributions predicted
+quantiles_margin <- quantile(sim_data$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem <- quantile(sim_data$D_vote_share, probs = c(0.05, 0.5, 0.95))
+quantiles_rep <- quantile(sim_data$R_vote_share, probs = c(0.05, 0.5, 0.95))
+
+# put together the margin
+margin_table <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin, 2)
+)
+
+# to get median values (commented out for printing purposes)
+#(dem_med <- round(quantiles_dem[2], 2))
+#(rep_med <- round(quantiles_rep[2], 2))
+
+# make kable of margin results
+kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Michigan 2024 Simulated Election Margin" = 2))
+
+```
+
+In the Michigan outcomes, the median simulated outcome was a Democrat popular vote share of 51.4% and Republican of 48.6%. This remains for the Democrats, within the margin of error.
+
+Using the above binomial models and new turnout modeling using a weighted average of the prediction of the voter eligible population from a general additive model and OLS regression, three states have flipped from my past models. I now have the results:
+
+Wisconsin: D
+Pennsylvania: D
+North Carolina: R
+Nevada: R
+Georgia: R
+Arizona: R
+Michigan: D
+
+This leads to a predicted electoral college outcome of _Harris 270 - Trump 268_.
 
 ### Notes of Bayesian Approaches
 Although I initially planned to compare my model with a Bayesian approach using MCMC, I decided not to proceed with Bayesian methods for now. Bayesian models are useful because they allow for incorporating prior information and uncertainty into predictions, making them valuable for updating forecasts as new data becomes available. However, while some professional election forecasters use these models effectively, in my case, more complex approaches have not shown significant improvements over traditional OLS or time-for-change models. Given this, and the added complexity, I'm hesitant to explore them further at this stage.
 
 
-### This Week's Updated Model: XXX
-- do a new model and simulations of the Outcome
+### This Week's Prediction
+This week, I ran out of time to add FEC contributions data into each model and then evaluate their fit, so this will be including in next week's model choice post. For now, we have a large number of models, many of which agree on most states' outcomes. As a result, I have chosen this week to take the two past week's updated electoral college vote models, which result in _Harris 287 - Trump 251_ and _Harris 292 - Trump 246_, and the binomial simulations model, which gave _Harris 270 - Trump 268_, and average them (not possible in real electoral vote numbers) to get
+
+**Current Forecast: Harris 282 - Trump 256**
+
+### Data Sources
+- Popular Vote Data, national and by state, 1948–2020
+- Electoral College Distribution, national, 1948–2024
+- Turnout Data, national and by state, 1980–2022
+- Polling Data, national and by State, 1968–2024
+- FRED Economic Data, quarter 2
+- Demographics, by state and county
