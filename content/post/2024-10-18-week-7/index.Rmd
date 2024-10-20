@@ -287,15 +287,8 @@ kable_new <- kable(final_predictions_new[, c("Party", "Prediction")],
   add_header_above(c("Original Week 3 Ensemble Model Predictions" = 2)) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
-# Render tables side by side using HTML tags
-htmltools::tagList(
-  htmltools::tags$table(
-    htmltools::tags$tr(
-      htmltools::tags$td(kable_prev),
-      htmltools::tags$td(kable_new)
-    )
-  )
-)
+kable_prev
+kable_new
 
 ```
 
