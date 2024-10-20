@@ -130,7 +130,7 @@ Today marks 17 days until election day. As such, this week's post will focus on 
 ### Review of Past Forecasting Models
 In this section, I review the forecasting models developed throughout weeks 1 to 6. Each model was built with a unique combination of variables and assumptions, leading to varying results. By walking through the results and calculations from each week, I reflect on which model performed best and why. I also update the models with the newest polling data and introduce new evaluation techniques. 
 
-Because these models were made up to six weeks ago, the polling inputs have changed, particularly in those that use most recent polling data and average poll numbers. The models that I can update with new polling data include XXXXX. This helps determine if my eventual preferred model still holds up or if adjustments are necessary to account for new information.
+Because these models were made up to six weeks ago, the polling inputs have changed, particularly in those that use most recent polling data and average poll numbers. This helps determine if my eventual preferred model still holds up or if adjustments are necessary to account for new information.
 
 Below are the results from each week's model, as well as those that have been updated with new polling. 
 
@@ -634,6 +634,7 @@ In the future, I plan to implement a more refined model to better predict voter 
 My new model for this week will be binomial simulations. Whereas the linear regression model simulations may have values that do not add to 100%, this type of model addresses that. 
 
 **Pennsylvania**
+
 ```{r}
 ####----------------------------------------------------------#
 #### Binomial simulations for election prediction. 
@@ -793,6 +794,7 @@ In the Pennsylvania outcomes, the median simulated outome was a Democrat popular
 I will now look at the results for each of the rest of the swing states: 
 
 **Wisconsin**
+
 ```{r}
 # Wisconsin
 
@@ -872,8 +874,8 @@ margin_table <- data.frame(
 )
 
 # to get median values (commented out for printing purposes)
-(dem_med <- round(quantiles_dem[2], 2))
-(rep_med <- round(quantiles_rep[2], 2))
+#(dem_med <- round(quantiles_dem[2], 2))
+#(rep_med <- round(quantiles_rep[2], 2))
 
 # make kable of margin results
 kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
@@ -885,6 +887,7 @@ kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
 The distributions above look similar to those for Pennsylvania, though they are slightly wider and therefore the outcome has a larger standard deviation. The median margin is also slightly bigger, but once again there is no clear winner with a 95% prediction interval. In the Wisconsin outcomes, the median simulated outcome was a Democrat popular vote share of 52.14% and Republican of 47.86% 
 
 **North Carolina**
+
 ```{r}
 # North Carolina
 
@@ -977,6 +980,7 @@ kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
 In North Carolina, the Republicans do better in more simulations that Democrats. The distributions are again slightly wider and therefore the outcome has a larger standard deviation. The median margin is also bigger, this time in favor of the Republicans, and again there is no clear winner with a 95% prediction interval. In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share of 46.61% and Republican of 53.39% 
 
 **Nevada**
+
 ```{r}
 # Nevada
 
@@ -1069,6 +1073,7 @@ kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
 Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share of 47.93% and Republican of 52.07%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Nevada has flipped Republican in this case, but within the margin of error. 
 
 **Georgia** 
+
 ```{r}
 # Georgia
 
@@ -1161,6 +1166,7 @@ kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
 Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the Georgia outcomes, the median simulated outcome was a Democrat popular vote share of 47.73% and Republican of 52.27%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Georgia has flipped Republican in this case, but within the margin of error. 
 
 **Arizona**
+
 ```{r}
 # Arizona
 
@@ -1253,6 +1259,7 @@ kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
 In the Arizona outcomes, the median simulated outcome was a Democrat popular vote share of 47.05% and Republican of 52.95%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Arizona has flipped Republican in this case, but within the margin of error. 
 
 **Michigan**
+
 ```{r}
 # Michigan
 

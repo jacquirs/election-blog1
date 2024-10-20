@@ -15,7 +15,7 @@ tags: []
 <div id="review-of-past-forecasting-models" class="section level3">
 <h3>Review of Past Forecasting Models</h3>
 <p>In this section, I review the forecasting models developed throughout weeks 1 to 6. Each model was built with a unique combination of variables and assumptions, leading to varying results. By walking through the results and calculations from each week, I reflect on which model performed best and why. I also update the models with the newest polling data and introduce new evaluation techniques.</p>
-<p>Because these models were made up to six weeks ago, the polling inputs have changed, particularly in those that use most recent polling data and average poll numbers. The models that I can update with new polling data include XXXXX. This helps determine if my eventual preferred model still holds up or if adjustments are necessary to account for new information.</p>
+<p>Because these models were made up to six weeks ago, the polling inputs have changed, particularly in those that use most recent polling data and average poll numbers. This helps determine if my eventual preferred model still holds up or if adjustments are necessary to account for new information.</p>
 <p>Below are the results from each week’s model, as well as those that have been updated with new polling.</p>
 <p><strong>Week 1:</strong> This week used a simplified Norpoth model to make a prediction based on a weighted average of the election results from 2016 and 2020 by state. The predictive model can be defined as <span class="math inline">\(vote_{2024} = 0.75vote_{2020} + 0.25vote_{2016}\)</span>. This forecast resulted in <em>Harris 276 - Trump 262</em>.</p>
 <p><strong>Week 2:</strong> This week focused on economic variables and linear regressions. Evaluating a variety of economic fundamentals as predictors of two way popular vote, I found Q2 GDP growth in the election year to be the best predictor by on R sqaured, RMSE, and a variety of other linear model evaluations as compared to other economic variables. This forecast focused on two way popular vote, leading to a result of <em>Harris 51.585% - Trump 48.415%</em>.</p>
@@ -633,12 +633,8 @@ Median
 <p>Interpreting the simulated distributions, the blue density curve represents the distribution of simulated vote shares for Democrats. Since the peak of the blue curve is shifted more to the right than the red curve for the Republicans, that suggests that the Democratic vote share is predicted to be higher in more simulations. The fact that the curves are equally wide and tall implies that both parties face similar levels of uncertainty or variability in their predicted vote shares, but the model slightly favors Democrats in terms of likely outcomes. There is substantial overlap between the blue and red curves, meaning the model predicts a close race with both parties having a significant chance of securing similar vote shares. Note that this curve is only for the popular vote share outcome in Pennsylvania.</p>
 <p>In the Pennsylvania outcomes, the median simulated outome was a Democrat popular vote share of 51.75% and Republican of 48.25%</p>
 <p>I will now look at the results for each of the rest of the swing states:</p>
-<p><strong>Wisconsin</strong>
-<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
-<pre><code>##   50% 
-## 52.07</code></pre>
-<pre><code>##   50% 
-## 47.93</code></pre>
+<p><strong>Wisconsin</strong></p>
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-11-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -698,7 +694,7 @@ Median
 </tbody>
 </table>
 <p>The distributions above look similar to those for Pennsylvania, though they are slightly wider and therefore the outcome has a larger standard deviation. The median margin is also slightly bigger, but once again there is no clear winner with a 95% prediction interval. In the Wisconsin outcomes, the median simulated outcome was a Democrat popular vote share of 52.14% and Republican of 47.86%</p>
-<strong>North Carolina</strong>
+<p><strong>North Carolina</strong></p>
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-12-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
@@ -759,7 +755,7 @@ Median
 </tbody>
 </table>
 <p>In North Carolina, the Republicans do better in more simulations that Democrats. The distributions are again slightly wider and therefore the outcome has a larger standard deviation. The median margin is also bigger, this time in favor of the Republicans, and again there is no clear winner with a 95% prediction interval. In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share of 46.61% and Republican of 53.39%</p>
-<strong>Nevada</strong>
+<p><strong>Nevada</strong></p>
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-13-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
@@ -820,7 +816,7 @@ Median
 </tbody>
 </table>
 <p>Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share of 47.93% and Republican of 52.07%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Nevada has flipped Republican in this case, but within the margin of error.</p>
-<strong>Georgia</strong>
+<p><strong>Georgia</strong></p>
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-14-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
@@ -881,7 +877,7 @@ Median
 </tbody>
 </table>
 <p>Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the Georgia outcomes, the median simulated outcome was a Democrat popular vote share of 47.73% and Republican of 52.27%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Georgia has flipped Republican in this case, but within the margin of error.</p>
-<strong>Arizona</strong>
+<p><strong>Arizona</strong></p>
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-15-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
@@ -942,7 +938,7 @@ Median
 </tbody>
 </table>
 <p>In the Arizona outcomes, the median simulated outcome was a Democrat popular vote share of 47.05% and Republican of 52.95%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Arizona has flipped Republican in this case, but within the margin of error.</p>
-<strong>Michigan</strong>
+<p><strong>Michigan</strong></p>
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-16-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
