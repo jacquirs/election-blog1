@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=4321&amp;path=livereload" data-no-instant defer></script>
+  <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Week 7: Fine Tuning The Model | A minimal Hugo website</title>
@@ -35,8 +35,8 @@
 
 <main>
 
-<script src="/post/2024/10/18/week-7/index_files/kePrint/kePrint.js"></script>
-<link href="/post/2024/10/18/week-7/index_files/lightable/lightable.css" rel="stylesheet" />
+<script src="https://example.org/post/2024/10/18/week-7/index_files/kePrint/kePrint.js"></script>
+<link href="https://example.org/post/2024/10/18/week-7/index_files/lightable/lightable.css" rel="stylesheet" />
 
 
 <p>Today marks 17 days until election day. As such, this week’s post will focus on bringing together all of the work I have done so far in determining predictors and building and forecast for the 2024 presidential election outcome. Beginning with a review of my past models, I will update them based on new polling data and use additional model evaluation techniques to understand their current performance. Following this, I explain decisions for choosing certain predictors, ensembling methods, and create a new probability-based turnout prediction rather than a simple weighted average of past turnout. Finally, I try a new model, using binomial simulations to compare to my chosen modeling technique. By the end of this post, I will have determined my base model for the next two weeks to fine tune as I attempt to predict the outcome of the election.</p>
@@ -663,7 +663,7 @@ Wisconsin
 </tr>
 </tbody>
 </table>
-<p><img src="/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p><img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>From these outcomes, I can see that the states with popular vote values predicted outside of the prediction interval to go for one party or the other are Michigan, Nevada, Pennsylvania, and Wisconsin, all for the democrats. For states within the margin of the prediction interval, I have Arizona (R), Georgia (D), and North Carolina (R). This does not differ from my original week 5 prediction by any state, but the margin has gotten larger in favor of Republicans in Arizona, smaller for democrats in Georgia, Michigan, Nevada, Pennsylvania, and Wisconsin, smaller for Republicans in North Carolina, based solely on comparing the mean predicted vote shares from the simulations.</p>
 <p><strong>Week 6:</strong> This week maintained the same prediction from last week, but urged inclusion of FEC contributions data in future models to see if it improves fit. The prediction remained <em>Harris 292 - Trump 246</em>.</p>
 <p>As next steps for the following weeks, there are additional new model evaluation techniques in addition to those used in past posts to consider. Looking forward, I will improve predictive accuracy and model robustness as a result of these. These techniques provide insight into how to help guide the direction of future refinements and eventual model choice.</p>
@@ -687,7 +687,7 @@ Wisconsin
 <h3>Binomial Simulations Model</h3>
 <p>My new model for this week will be binomial simulations. Whereas the linear regression model simulations may have values that do not add to 100%, this type of model addresses that.</p>
 <p><strong>Pennsylvania</strong></p>
-<img src="/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-10-1.png" width="672" />
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-10-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -750,7 +750,7 @@ Median
 <p>In the Pennsylvania outcomes, the median simulated outome was a Democrat popular vote share of 51.75% and Republican of 48.25%</p>
 <p>I will now look at the results for each of the rest of the swing states:</p>
 <p><strong>Wisconsin</strong></p>
-<img src="/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-11-1.png" width="672" />
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-11-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -811,7 +811,7 @@ Median
 </table>
 <p>The distributions above look similar to those for Pennsylvania, though they are slightly wider and therefore the outcome has a larger standard deviation. The median margin is also slightly bigger, but once again there is no clear winner with a 95% prediction interval. In the Wisconsin outcomes, the median simulated outcome was a Democrat popular vote share of 52.14% and Republican of 47.86%</p>
 <p><strong>North Carolina</strong></p>
-<img src="/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-12-1.png" width="672" />
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-12-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -872,7 +872,7 @@ Median
 </table>
 <p>In North Carolina, the Republicans do better in more simulations that Democrats. The distributions are again slightly wider and therefore the outcome has a larger standard deviation. The median margin is also bigger, this time in favor of the Republicans, and again there is no clear winner with a 95% prediction interval. In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share of 46.61% and Republican of 53.39%</p>
 <p><strong>Nevada</strong></p>
-<img src="/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-13-1.png" width="672" />
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-13-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -931,9 +931,9 @@ Median
 </tr>
 </tbody>
 </table>
-<p>Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share of 47.93% and Republican of 52.07%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Nevada has flipped Republican in this case, but within the margin of error.</p>
+<p>Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the Nevada outcomes, the median simulated outcome was a Democrat popular vote share of 47.93% and Republican of 52.07%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Nevada has flipped Republican in this case, but within the margin of error.</p>
 <p><strong>Georgia</strong></p>
-<img src="/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-14-1.png" width="672" />
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-14-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -994,7 +994,7 @@ Median
 </table>
 <p>Once again, a 95% prediction interval for the margins include 0, so there is no clear winner. In the Georgia outcomes, the median simulated outcome was a Democrat popular vote share of 47.73% and Republican of 52.27%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Georgia has flipped Republican in this case, but within the margin of error.</p>
 <p><strong>Arizona</strong></p>
-<img src="/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-15-1.png" width="672" />
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-15-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -1055,7 +1055,7 @@ Median
 </table>
 <p>In the Arizona outcomes, the median simulated outcome was a Democrat popular vote share of 47.05% and Republican of 52.95%. It is worth noting that this result is distinctly different from both of my previous models I ran simulations for, so Arizona has flipped Republican in this case, but within the margin of error.</p>
 <p><strong>Michigan</strong></p>
-<img src="/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-16-1.png" width="672" />
+<img src="https://example.org/post/2024/10/18/week-7/index_files/figure-html/unnamed-chunk-16-1.png" width="672" />
 <table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>

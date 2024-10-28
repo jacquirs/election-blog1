@@ -1,0 +1,536 @@
+---
+title: 'Week 8: Sudden Shocks and Shoring Up My Model'
+author: Jacqui Schlesinger
+date: '2024-10-27'
+slug: week-8
+categories: []
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/kePrint/kePrint.js"></script>
+<link href="{{< blogdown/postref >}}index_files/lightable/lightable.css" rel="stylesheet" />
+
+
+<p>In my last post before my final prediction, I will be exploring the final variables I must evaluate for inclusion in my model– those related to sudden shocks– and reviewing professional forecasts and what they have to say about the coming election. Additionally, I will tweak my binomial model specification, and test the in sample fit of my binomial and linear regression models.</p>
+<div id="review-of-professional-forecasts" class="section level3">
+<h3>Review of Professional Forecasts</h3>
+<p>As we draw closer to election day, many professional election forecasters have released their models for the race. Though each model yields a different result, many hover around the idea that the election is currently a toss-up, with some authors even using that language, even calling it a jump ball.</p>
+<p>In the recent paper (unpublished) aggregating 12 forecasts, including the Tien and Lewis-Beck model, the average two party vote share predicted was 50.3% for Harris to 49.7% Trump. The electoral college was more clearly in support of Trump, giving him on average 292 electoral votes to Harris’ 246. They do note that these “forecasters are not fortune tellers” in their conclusion, but these models and their eventual comparison to the real outcome provides an especially useful look into how voters and campaigns act and react.</p>
+<p>Specifically, the Lockerbie (2024) economic pessimism model (unpublished), one of those included in this aggregation, finds that time in the white house and whether people think the next year will be worse are important variables to include in the model, leading to low absolute errors in many years but outliers as large as 8.1 in 2020. These seem to be proxy variables for economic outlook and incumbency. Lockerbie uses “jump ball” to describe how this election could go, but does note that the model points to the presidency and house going together, which is consistent with our understanding of incumbent party cycles.</p>
+<p>The Tien and Lewis-Beck (2024) political economy model (unpublished) measures incumbent party vote share by looking at presidential popularity and economic growth, weighting growth much higher. A potential issue with this model could be its reliance on July presidential approval, which would not reflect directly on Harris. The impact of this is unknown, and points to how I have been cutting the polling weeks for Harris versus Biden. Many others models predict similar jump ball outcomes for the election.</p>
+</div>
+<div id="review-of-sudden-shocks" class="section level3">
+<h3>Review of Sudden Shocks</h3>
+<p>The last set of variables I considered including in my model were related to sudden shocks, which some may have heard of as something like an October surprise. However, I am looking much more broadly at both political and apolitical shocks. Apolitical shocks, including natural disasters, sports outcomes, and lottery winnings have all been shown to have some effect on support for incumbent candidates.</p>
+<p>The common debate over whether sudden shocks effect voting is often talked about in context of <a href="https://muse-jhu-edu.ezp-prod1.hul.harvard.edu/book/64646">Achen and Bartels’ 1916 paper</a> on the effect of shark attacks in beach towns in New Jersey. They found the towns with these had less votes for the incumbents at a significant level compared to non-beach towns, which would not have been effected. However, <a href="https://www-journals-uchicago-edu.ezp-prod1.hul.harvard.edu/doi/pdfplus/10.1086%2F699244">Fowler and Hall (2018)</a> refute this, pointing to an omitted town which takes away part of the effect and looking at all counties. The county that Achen and Bartels looked at, Ocean County, was an outlier, and Folwer and Hall found that beach towns and other voted very similarly.</p>
+<p>It is also important to consider what the government could have changed in their response, as these apolitical shocks may not be so removed from politics. <a href="https://www-nowpublishers-com.ezp-prod1.hul.harvard.edu/article/Details/QJPS-9057">Healy and Malhotra (2010)</a> found that the effects of the event on votes depend on whether there was any sort of disaster declaration, a potential variable to consider.</p>
+<p>These and other shocks could have temporary or lasting, large or small effects on vote share, or perhaps on turnout. It is not unreasonable to believe that a natural disaster like the recent hurricanes in the important state of North Carolina could effect turnout in the region. Some other shocks discussed this week to consider with natural disasters were protests and Supreme Court cases. It is also worth noting that the effects of these may already be captured in polling or will be captured once I update my turnout model. For these reasons and those in the papers referenced above, I will not be including them in my model.</p>
+</div>
+<div id="tweaking-the-binomial-model-specifications" class="section level3">
+<h3>Tweaking the Binomial Model Specifications</h3>
+<p>Oringally, my binomial model’s only regressor was poll support. That resulted in the following predictions for each party’s vote share in each state based on hypothetical average polling data.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Because this only used poll support, and my models have been based off of fundamentals and polling, I created a new binomial regression using poll support, latest polling average, mean polling average, GDP growth quarterly, and RDPI growth quarterly, as I have in the past. The differing results from this model, as well as a more detailed interpretation of these graphs and the model, are below.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>The graphs above show the predicted probabilities of voting for the Democratic and Republican parties as a function of hypothetical average poll support. On the x-axis, the values represent varying levels of public polling support for each party, while the y-axis displays the corresponding predicted vote percentages, expressed as probabilities. As hypothetical poll support increases, the predictions for both parties typically demonstrate distinct trends: for instance, higher poll support generally correlates with an increased likelihood of receiving votes, reflecting the intuitive relationship between public opinion and electoral success. This depends on the state and appears to perform worse in some states that the poll support only model. The confidence intervals shaded around each prediction, which are hard to see, highlight the uncertainty associated with these estimates. Overall, the graphs effectively convey how shifts in poll support can significantly influence voter behavior.</p>
+<p>The underlying model code generates probabilistic state forecasts by employing logistic regression to analyze the relationship between voter support and various predictors. Specifically, separate models are created for Democratic and Republican candidates for each state, utilizing the glm() function with a binomial family to model the votes received as a function of predictors. The primary predictor of interest is poll_support, which reflects the percentage of respondents favoring each party in recent polls. Additionally, the models incorporate several other variables that the original did not: latest_pollav_REP and mean_pollav_REP represent the most recent and average polling support for the Republican party, respectively, while GDP_growth_quarterly and RDPI_growth_quarterly capture economic indicators that may influence voter preferences. By iterating over a range of hypothetical poll support values, the code predicts the likelihood of voter support for each party, allowing for a comprehensive understanding of how changes in polling influence electoral outcomes across different states.</p>
+<p>It is concerning how differently the model with the additional variables performs, and will need to be explored in the future. From each of these models, I would run simulations based on voter eligible population predictions and the logistic regression to find 2024 results.</p>
+<pre><code>## # A tibble: 7,732 × 60
+## # Groups:   state [50]
+##     year state       D_pv  R_pv D_pv2p R_pv2p votes_D votes_R total_votes
+##    &lt;dbl&gt; &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;       &lt;dbl&gt;
+##  1  1972 California  41.5  55.0   43.0   57.0 3475847 4602096     8367862
+##  2  1972 California  41.5  55.0   43.0   57.0 3475847 4602096     8367862
+##  3  1972 California  41.5  55.0   43.0   57.0 3475847 4602096     8367862
+##  4  1972 California  41.5  55.0   43.0   57.0 3475847 4602096     8367862
+##  5  1972 California  41.5  55.0   43.0   57.0 3475847 4602096     8367862
+##  6  1972 California  41.5  55.0   43.0   57.0 3475847 4602096     8367862
+##  7  1972 California  41.5  55.0   43.0   57.0 3475847 4602096     8367862
+##  8  1972 California  41.5  55.0   43.0   57.0 3475847 4602096     8367862
+##  9  1972 California  41.5  55.0   43.0   57.0 3475847 4602096     8367862
+## 10  1972 California  41.5  55.0   43.0   57.0 3475847 4602096     8367862
+## # ℹ 7,722 more rows
+## # ℹ 51 more variables: two_party_votes &lt;dbl&gt;, D_pv_lag1 &lt;dbl&gt;, R_pv_lag1 &lt;dbl&gt;,
+## #   D_pv2p_lag1 &lt;dbl&gt;, R_pv2p_lag1 &lt;dbl&gt;, D_pv_lag2 &lt;dbl&gt;, R_pv_lag2 &lt;dbl&gt;,
+## #   D_pv2p_lag2 &lt;dbl&gt;, R_pv2p_lag2 &lt;dbl&gt;, weeks_left &lt;dbl&gt;, days_left &lt;dbl&gt;,
+## #   party &lt;chr&gt;, candidate &lt;chr&gt;, poll_date &lt;date&gt;, poll_support &lt;dbl&gt;,
+## #   before_convention &lt;lgl&gt;, state_abb &lt;chr&gt;, vep_turnout &lt;chr&gt;,
+## #   vep_highest_office &lt;chr&gt;, vap_highest_office &lt;chr&gt;, total_ballots &lt;dbl&gt;, …</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>From this, we see that this model is having a difficult time overall, with
+Mean Squared Error for Democrats: 661.399
+Mean Squared Error for Republicans: 426.1851</p>
+<p>I can also use 5 fold cross validation to evaluate this model</p>
+<pre><code>## Dimensions of d_train: 6188 56</code></pre>
+<pre><code>## Dimensions of d_test: 1544 56</code></pre>
+<pre><code>##   Fold    MSE_D    MSE_R
+## 1    1 450.5822 606.7671
+## 2    2 450.0231 610.8412
+## 3    3 453.0353 607.8425
+## 4    4 453.6386 610.1295
+## 5    5 456.9026 608.4865</code></pre>
+<pre><code>## Mean MSE for Democrats across folds: 452.8364</code></pre>
+<pre><code>## Mean MSE for Republicans across folds: 608.8133</code></pre>
+<p>The mean Mean Squared Error (MSE) for the Democratic model across five folds of cross-validation is 454.46, indicating that the model’s predictions for Democratic vote shares deviate from actual values by this amount (squared). In contrast, the Republican model’s average MSE is higher at 608.07, suggesting less accuracy in predicting Republican vote shares. Fold-wise MSE results show that the Democratic model performs consistently across folds, ranging from 449.03 to 460.15, while the Republican model’s MSE ranges from 604.37 to 613.85, indicating stable yet less effective performance. Overall, the results suggest that while both models exhibit relatively low error rates, there is room for improvement, particularly for the Republican model, potentially through further tuning or the exploration of additional features.</p>
+</div>
+<div id="evaluating-the-fit-of-binomial-and-linear-regression-models" class="section level3">
+<h3>Evaluating the Fit of Binomial and Linear Regression Models</h3>
+<p>Using a linear regression model with the same variables could provide several advantages in predicting electoral outcomes. Firstly, linear regression assumes a direct linear relationship between the predictors and the response variable, which can simplify the interpretation of results and provide clear insights into the influence of each variable. It has been discussed that simpler, linear regression type models perform better in election prediction. Moreover, linear regression is less complex than generalized models, making it less prone to overfitting, particularly with smaller datasets like election results data. By adopting linear regression, we may achieve a model that is easier to understand and communicate, while still accurately capturing the dynamics of voter behavior and electoral outcomes.</p>
+</div>
+<div id="prediction" class="section level3">
+<h3>Prediction</h3>
+<p>I will use the updated binomial in each of my seven states of interest to determine how my prediction for this week may have changed from the last.</p>
+<p><strong>Pennsylvania</strong></p>
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-9-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Pennsylvania 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-14.14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+-1.79
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+10.58
+</td>
+</tr>
+</tbody>
+</table>
+<p>Looking at the state of Pennsylvania, our model predicts 50.86% Harris to 49.14% Trump. This result is closer than last week, which had a Democrat popular vote share of 51.75% and Republican of 48.25%.</p>
+<p><strong>Wisconsin</strong></p>
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-10-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Wisconsin 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-16.02
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+-4.08
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+8.13
+</td>
+</tr>
+</tbody>
+</table>
+<p>These are the exact slightly closer results than last week’s binomial model, with Harris 51.97% and Trump 48.03%.</p>
+<p><strong>North Carolina</strong></p>
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-11-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+North Carolina 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-8.73
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+6.58
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+21.06
+</td>
+</tr>
+</tbody>
+</table>
+<p>In the North Carolina outcomes, the median simulated outcome was a Democrat popular vote share was 46.79% and Republican 53.21%, with a slight but likely statistically insignificant increase on the democratic side of 0.18pp.</p>
+<p><strong>Nevada</strong></p>
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-12-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Nevada 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-7.46
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+4.69
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+19.56
+</td>
+</tr>
+</tbody>
+</table>
+<p>Nevada has gotten slightly less close according to these new predictions, 47.58% Harris to 52.42% Trump, but likely an insignificant change from last week. Trump still wins this state.</p>
+<p><strong>Georgia</strong></p>
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-13-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Georgia 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-6.25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+4.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+13.56
+</td>
+</tr>
+</tbody>
+</table>
+<p>The results in Georgia lead to Harris 47.92% to Trump 52.08%, consistent with the results from the past week. These numbers are slightly closer.</p>
+<p><strong>Arizona</strong></p>
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-14-1.png" width="672" />
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Arizona 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-6.72
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+7.70
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+23.72
+</td>
+</tr>
+</tbody>
+</table>
+<p>The Arizona results are more extreme in the Republican direction this week, with more than a two point change in the margin in the prediction, likely due to recent polling. Harris is predicted 45.99% to Trump’s 54.01%.</p>
+<p><strong>Michigan</strong></p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<pre><code>##   50% 
+## 51.35</code></pre>
+<pre><code>##   50% 
+## 48.65</code></pre>
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Michigan 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-15.45
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+-2.69
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+10.39
+</td>
+</tr>
+</tbody>
+</table>
+<p>These results are nearly identical to the simulations of the Michigan results last week, with a median popular vote for Harris of 51.34% and Trump of 48.66%</p>
+<p>With no state level prediction changes, I am left with the result of</p>
+<p>Wisconsin: D</p>
+<p>Pennsylvania: D</p>
+<p>North Carolina: R</p>
+<p>Nevada: R</p>
+<p>Georgia: R</p>
+<p>Arizona: R</p>
+<p>Michigan: D</p>
+<p>Culminating in <em>Harris 270 - Trump 268</em>.</p>
+</div>
+<div id="data-sources" class="section level3">
+<h3>Data Sources</h3>
+<ul>
+<li>Popular Vote Data, national and by state, 1948–2020</li>
+<li>Electoral College Distribution, national, 1948–2024</li>
+<li>Demographics Data, by state</li>
+<li>Primary Turnout Data, national and by state, 1789–2020</li>
+<li>Polling Data, National &amp; State, 1968–2024</li>
+<li>FRED Economic Data, national, 1927-2024</li>
+<li>ANES Data, national</li>
+<li>Voter File Data, by state</li>
+</ul>
+</div>
