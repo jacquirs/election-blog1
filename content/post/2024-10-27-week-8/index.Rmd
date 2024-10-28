@@ -57,6 +57,70 @@ library(lubridate)
 
 ```
 
+```{r, include = FALSE}
+####----------------------------------------------------------#
+#### Read data
+####----------------------------------------------------------#
+
+# Read popular vote datasets
+d_popvote <- read_csv("popvote_1948_2020.csv")
+d_popvote$party[d_popvote$party == "democrat"] <- "DEM"
+d_popvote$party[d_popvote$party == "republican"] <- "REP"
+
+d_state_popvote <- read_csv("state_popvote_1948_2020.csv")
+d_state_popvote[d_state_popvote$state == "District of Columbia",]$state <- "District Of Columbia"
+
+# Read elector distribution dataset 
+d_ec <- read_csv("corrected_ec_1948_2024.csv")
+
+# Read national polling data
+d_polls <- read_csv("national_polls_1968-2024.csv")
+
+# Read state polling data
+d_state_polls <- read_csv("state_polls_1968-2024.csv")
+d_state_polls
+# Read state turnout
+d_state_turnout <- read_csv("state_turnout_1980_2022.csv")
+
+# Read state-level demographics
+d_state_demog <- read_csv("demographics.csv")
+
+# Read county demographics
+d_county_demog <- read_csv("county_demographics.csv")
+
+# read economic data
+d_econ <- read_csv("fred_econ.csv") |> 
+  filter(quarter == 2)
+
+```
+
+```{r}
+barplot_theme <- theme_bw() + 
+  theme(
+    # Axis text and labels
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    
+    # Legend position and text
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 10),
+    
+    # Title
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    
+    panel.border = element_rect(color = "black"),
+    
+    # Grid lines
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_line(color = "grey95"),
+    
+    # Background color
+    plot.background = element_rect(fill = "white", color = NA)
+  )
+```
+
 In my last post before my final prediction, I will be exploring the final variables I must evaluate for inclusion in my model-- those related to sudden shocks-- and reviewing professional forecasts and what they have to say about the coming election. Additionally, I will tweak my binomial model specification, and test the in sample fit of my binomial and linear regression models. 
 
 ### Review of Professional Forecasts
@@ -79,7 +143,7 @@ It is also important to consider what the government could have changed in their
 These and other shocks could have temporary or lasting, large or small effects on vote share, or perhaps on turnout. It is not unreasonable to believe that a natural disaster like the recent hurricanes in the important state of North Carolina could effect turnout in the region. Some other shocks discussed this week to consider with natural disasters were protests and Supreme Court cases. It is also worth noting that the effects of these may already be captured in polling or will be captured once I update my turnout model. For these reasons and those in the papers referenced above, I will not be including them in my model.
 
 
-### Tweaking the Binomial Model Specification
+### Tweaking the Binomial Model Specifications
 
 
 ### Evaluating the Fit of Binomial and Linear Regression Models
