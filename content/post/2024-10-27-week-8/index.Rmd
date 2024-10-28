@@ -60,14 +60,24 @@ library(lubridate)
 In my last post before my final prediction, I will be exploring the final variables I must evaluate for inclusion in my model-- those related to sudden shocks-- and reviewing professional forecasts and what they have to say about the coming election. Additionally, I will tweak my binomial model specification, and test the in sample fit of my binomial and linear regression models. 
 
 ### Review of Professional Forecasts
-came out recently
-from slides
+As we draw closer to election day, many professional election forecasters have released their models for the race. Though each model yields a different result, many hover around the idea that the election is currently a toss-up, with some authors even using that language, even calling it a jump ball. 
+
+In the recent paper (unpublished) aggregating 12 forecasts, including the Tien and Lewis-Beck model, the average two party vote share predicted was 50.3% for Harris to 49.7% Trump. The electoral college was more clearly in support of Trump, giving him on average 292 electoral votes to Harris' 246. They do note that these "forecasters are not fortune tellers" in their conclusion, but these models and their eventual comparison to the real outcome provides an especially useful look into how voters and campaigns act and react. 
+
+Specifically, the Lockerbie (2024) economic pessimism model (unpublished), one of those included in this aggregation, finds that time in the white house and whether people think the next year will be worse are important variables to include in the model, leading to low absolute errors in many years but outliers as large as 8.1 in 2020. These seem to be proxy variables for economic outlook and incumbency. Lockerbie uses "jump ball" to describe how this election could go, but does note that the model points to the presidency and house going together, which is consistent with our understanding of incumbent party cycles. 
+
+The Tien and Lewis-Beck (2024) political economy model (unpublished) measures incumbent party vote share by looking at presidential popularity and economic growth, weighting growth much higher. A potential issue with this model could be its reliance on July presidential approval, which would not reflect directly on Harris. The impact of this is unknown, and points to how I have been cutting the polling weeks for Harris versus Biden. Many others models predict similar jump ball outcomes for the election. 
+
 
 ### Review of Sudden Shocks
-data viz
-what are they
-why I won't use them
-lit inclusion
+The last set of variables I considered including in my model were related to sudden shocks, which some may have heard of as something like an October surprise. However, I am looking much more broadly at both political and apolitical shocks. Apolitical shocks, including natural disasters, sports outcomes, and lottery winnings have all been shown to have some effect on support for incumbent candidates. 
+
+The common debate over whether sudden shocks effect voting is often talked about in context of [Achen and Bartels' 1916 paper](https://muse-jhu-edu.ezp-prod1.hul.harvard.edu/book/64646) on the effect of shark attacks in beach towns in New Jersey. They found the towns with these had less votes for the incumbents at a significant level compared to non-beach towns, which would not have been effected. However, [Fowler and Hall (2018)](https://www-journals-uchicago-edu.ezp-prod1.hul.harvard.edu/doi/pdfplus/10.1086%2F699244) refute this, pointing to an omitted town which takes away part of the effect and looking at all counties. The county that Achen and Bartels looked at, Ocean County, was an outlier, and Folwer and Hall found that beach towns and other voted very similarly. 
+
+It is also important to consider what the government could have changed in their response, as these apolitical shocks may not be so removed from politics. [Healy and Malhotra (2010)](https://www-nowpublishers-com.ezp-prod1.hul.harvard.edu/article/Details/QJPS-9057) found that the effects of the event on votes depend on whether there was any sort of disaster declaration, a potential variable to consider.
+
+These and other shocks could have temporary or lasting, large or small effects on vote share, or perhaps on turnout. It is not unreasonable to believe that a natural disaster like the recent hurricanes in the important state of North Carolina could effect turnout in the region. Some other shocks discussed this week to consider with natural disasters were protests and Supreme Court cases. It is also worth noting that the effects of these may already be captured in polling or will be captured once I update my turnout model. For these reasons and those in the papers referenced above, I will not be including them in my model.
+
 
 ### Tweaking the Binomial Model Specification
 
