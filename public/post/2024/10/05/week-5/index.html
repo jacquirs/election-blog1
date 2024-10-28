@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=4321&amp;path=livereload" data-no-instant defer></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Week 5: Demographics, Turnout, and the First Stage of Our Final Prediction | A minimal Hugo website</title>
@@ -35,8 +35,8 @@
 
 <main>
 
-<script src="https://example.org/post/2024/10/05/week-5/index_files/kePrint/kePrint.js"></script>
-<link href="https://example.org/post/2024/10/05/week-5/index_files/lightable/lightable.css" rel="stylesheet" />
+<script src="/post/2024/10/05/week-5/index_files/kePrint/kePrint.js"></script>
+<link href="/post/2024/10/05/week-5/index_files/lightable/lightable.css" rel="stylesheet" />
 
 
 <p><em>Note: For this week of class, I was in charge of putting together a presentation of my findings. As a result, this post and the accompanying code as seen on Github contain many more plots than in past weeks, many of which are simply descriptive and exploratory statistics.</em></p>
@@ -46,17 +46,17 @@
 <div id="exploring-the-voterfile" class="section level3">
 <h3>Exploring the Voterfile</h3>
 <p>Voterfile data allow me to see granular information on the demographic characteristics of the voting population of each state. The voterfiles for this post were graciously provided by <a href="https://statara.com/">Statara Solutions</a>. In the following plots, I break down the voterfile data for our seven states of interest</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>The gender splits of each state are not surprising, with most being around 50/50. While gender alone may not be able to provide significant and high percentage information on who someone is voting for or whether they turn out, what combined with other demographic variables it is possible it may be a statistically significant predictor, as I will explore below.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>The distribution of race demographics in the states of interest is more varied than gender. As certain racial demographics may lead to certain political views, which I will attempt to explore later, these different makeups may lead to differing support for the two candidates in these states. The fact that the voters have different characteristics may make it likely that they may support different candidates. It is important also to note that while many states have a large number of white people on the voterfile, large groups of minorities like the hispanic popular of Arizona or African American population of Georgia are often cited on the news as important voting blocks to watch for. However, it is likely that these groups are not a monolith.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <p>The variation in age may also effect turnout or popular vote outcomes, especially when combined with other demographic variables. Age is consistently found to be a good predictor of turnout in logit regressions of historical data, as in <a href="https://www.jstor.org/stable/30024496">Matsusaka and Palida (1997)</a>. They also find education to be a good predictor. Looking later at <a href="https://link.springer.com/content/pdf/10.1007/s11109-022-09816-z.pdf">Kim and Zilinsky (2023)</a>, I will explore how much of past turnout and popular vote outcomes these and other demographic variables can really explain.</p>
 <p>While looking at demographics alone can tell me about the makeup of each state, it is also important to understand how each group acts. Below, I plot the percent of people in each age x race category that voted in the 2020 general election. For many groups, it surprisingly low, while for others there is incredibly high turnout (though these groups are consistently very small). The height of each bar represents the percentage of people in that age and race category who voted in the 2020 general election.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-1.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-2.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-3.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-4.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-5.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-6.png" width="40%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-7.png" width="40%" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-1.png" width="40%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-2.png" width="40%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-3.png" width="40%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-4.png" width="40%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-5.png" width="40%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-6.png" width="40%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-12-7.png" width="40%" /></p>
 <p>As is often observed in the literature, there is low turnout in 2020 among young people, but it is worth noting that 18 is the first year they can vote, and the ages in this data are up to date with 2024, making that group significantly smaller in the first place. To understand whether young people actually vote less, it would be best to dive into those currently aged 22-28 to see if and how they voted in 2020.</p>
 <p>Below I also include these graphs as heat maps for ease of reading, but feel free to use whichever works best for your understanding.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-1.png" width="30%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-2.png" width="30%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-3.png" width="30%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-4.png" width="30%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-5.png" width="30%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-6.png" width="30%" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-7.png" width="30%" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-1.png" width="30%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-2.png" width="30%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-3.png" width="30%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-4.png" width="30%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-5.png" width="30%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-6.png" width="30%" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-13-7.png" width="30%" /></p>
 <p>Overall, these demographic explorations provide the context necessary as I move into exploring whether they are good to include in my predictive model.</p>
 </div>
 <div id="demographics-and-prediction" class="section level3">
@@ -709,7 +709,7 @@ Voted
 </table>
 <p>Slightly different than with vote share, it appears that the most statistically significant unfactored predictors of turnout are income, age, and education, which are consistent with the literature. As the confusion matrices show, the in-sample accuracy is 66.48% and out of sample accuracy is 64.99%.</p>
 <p>I now transition to a random forest for presidential vote share and turnout, with similar set up to the logistic regressions above. The positive here is the democratic vote share, and I factored each variable such that individual levels can have an impact correctly due to the categorical nature of the data.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-18-1.png" width="672" />
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-18-1.png" width="672" />
 In this random forest, I split the variables into their factors for proper analysis, leading to an in-sample accuracy of 71.65% and out-of-sample accuracy of 70.25%. The confusion matrices for these two cases are shown below.</p>
 <table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>
@@ -795,12 +795,12 @@ Republican
 </table>
 <p>Based on the feature importance analysis (impurity) from the random forest model, age emerged as the most significant factor in predicting voting behavior, followed by race, church attendance, religion, and income. These features had a high influence on whether individuals voted Democrat or Republican, indicating that demographics and social factors played a crucial role in determining voter preference. Gender, southern residence, and homeowner status, while still contributing, had much lower importance values, suggesting that they were less impactful in the model’s overall predictions. The findings underscore the importance of understanding voter demographics and personal attributes in political analysis, but the accuracy from splitting the variables by factors was not greatly improved overall.</p>
 <p>I can also perform one-hot encoding to view the individual contributions of the levels factored from each variable. A graph of the 25 most important factors but impurity is shown below.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
 <p>This graph gives us insight into which groups were most important at determining vote choice. The better a node is at splitting the data correctly, the more important it is, as measured by impurity. Because the above only looks at 2016, I thought it would also be important to see how much this changes for 2012 and 2020.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-21-1.png" width="672" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-21-2.png" width="672" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-21-3.png" width="672" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-21-4.png" width="672" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-21-1.png" width="672" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-21-2.png" width="672" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-21-3.png" width="672" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-21-4.png" width="672" /></p>
 <p>The general feature importance is mostly consistent across years. It does appear that the top 25 most important features are somewhat different, at least in order, over the three most recent elections, further pointing to demographic data as difficult to use in terms of accuracy of prediction. For this reason, I will not be using demographics to directly calculate vote share in my model, though as discussed in the next section it may be helpful for determining 2024 turnout. The full interpretations of these graphs and their important will be more fully explored in my presentation for this week.</p>
 <p>Before moving on to my model for the week, I turn to the random forest model of turnout, as I did with presidential vote share. As I discuss below, turnout is hard to measure across years due to no significant 2024 demographic data and other questions on how turnout chnages each year, but for now I look at 2012-2020 to understand the factors that impact it. My turnout model in my simulation will be simple, but these insights can be drawn on for the future to make a more significant turnout model.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 <p>The random forest model for turnout in 2016 shows that age, income, and church attendance are the most important predictors of voter turnout. Variables like gender, southern residence, and homeownership have less predictive power in comparison to the top features. Remember, in a random forest, impurity measures how mixed or “impure” the data is at a given node, with lower impurity indicating more homogeneity; feature importance is determined by how much each variable reduces impurity, meaning the most important features are those that most effectively split the data into pure or homogeneous groups.</p>
 <p>Looking at the confusion matrices below, I see an accuracy of demographic variables alone in sample of 64.11% and out of sample of 62.41%, performing worse than tha logistic regression and having less predictive power on this than vote share. Note that did not vote is the positive class below.</p>
 <table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
@@ -886,9 +886,9 @@ Voted
 </tbody>
 </table>
 <p>I can also split across features as indicators of each level of a variable. For 2016, the top 25 are seen below.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
 <p>This graph gives us insight into which groups were most important at determining turnout, but not this is not causal. Because the above only looks at 2016, I thought it would also be important to see how much this changes for 2012 and 2020.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-25-1.png" width="672" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-25-2.png" width="672" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-25-3.png" width="672" /><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-25-4.png" width="672" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-25-1.png" width="672" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-25-2.png" width="672" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-25-3.png" width="672" /><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-25-4.png" width="672" /></p>
 <p>The general feature importance is somewhat consistent across years. It does appear that the top 25 most important features are somewhat different, at least in order, over the three most recent elections, further pointing to demographic data as difficult to use in terms of accuracy of prediction. Demographics can somewhat help predict turnout, but it does not seem strong enough to warrant strong inclusion in my model. I may include demographics as a predictor of turnout in a future iteration, but as discussed below my model this week uses historical weights.</p>
 </div>
 <div id="simulating-the-outcome" class="section level3">
@@ -1114,7 +1114,7 @@ North Carolina: R
 Pennsylvania: D
 Wisconsin: D</p>
 <p>Note that Michigan, Pennsylvania, Wisconsin, and Nevada were statistically significantly different, while others are still indeterminable by the simulations. Below I plot the distribution of values for each in the simulations.</p>
-<p><img src="https://example.org/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-33-1.png" width="672" /></p>
+<p><img src="/post/2024/10/05/week-5/index_files/figure-html/unnamed-chunk-33-1.png" width="672" /></p>
 <p>It appears that Democratic vote share is more clustered, while Republican is more distributed with a larger standard deviation. As a result of all of this, I can now make my new prediction, which is different by a state (Arizona to Republican) from my prediction from last week.</p>
 <p><strong>Current Forecast: Harris 292 - Trump 246</strong></p>
 </div>

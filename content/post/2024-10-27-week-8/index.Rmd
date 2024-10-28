@@ -1,0 +1,83 @@
+---
+title: 'Week 8: Sudden Shocks and Shoring Up My Model'
+author: Jacqui Schlesinger
+date: '2024-10-27'
+slug: week-8
+categories: []
+tags: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+set.seed(02138)
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Load Libraries
+####----------------------------------------------------------#
+
+library(geofacet)
+library(ggpubr)
+library(ggthemes)
+library(haven)
+library(kableExtra)
+library(maps)
+library(mgcv)
+library(mgcViz)
+library(RColorBrewer)
+library(scales)
+library(sf)
+library(spData)
+library(stargazer)
+library(tidygeocoder)
+library(tidyverse)
+library(tigris)
+library(tmap)
+library(tmaptools)
+library(viridis)
+library(ggplot2)
+library(plotly)
+library(ggrepel)
+library(car)
+library(purrr)
+library(broom)
+library(knitr)
+library(dplyr)
+library(tidyr)
+library(car)
+library(caret)
+library(CVXR)
+library(glmnet)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(plotly)
+library(lubridate)
+
+```
+
+In my last post before my final prediction, I will be exploring the final variables I must evaluate for inclusion in my model-- those related to sudden shocks-- and reviewing professional forecasts and what they have to say about the coming election. Additionally, I will tweak my binomial model specification, and test the in sample fit of my binomial and linear regression models. 
+
+### Review of Professional Forecasts
+came out recently
+from slides
+
+### Review of Sudden Shocks
+data viz
+what are they
+why I won't use them
+lit inclusion
+
+### Tweaking the Binomial Model Specification
+
+
+### Evaluating the Fit of Binomial and Linear Regression Models
+
+
+
+### The Key: Turnout
+this new model will be updated in my final prediction, stay tuned
+
+### Data Sources
+

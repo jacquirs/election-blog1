@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=4321&amp;path=livereload" data-no-instant defer></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Week 4: Incumbency, Expert Prediction, and Super Learning in Models | A minimal Hugo website</title>
@@ -35,17 +35,17 @@
 
 <main>
 
-<link href="https://example.org/post/2024/09/28/week-4/index_files/htmltools-fill/fill.css" rel="stylesheet" />
-<script src="https://example.org/post/2024/09/28/week-4/index_files/htmlwidgets/htmlwidgets.js"></script>
-<script src="https://example.org/post/2024/09/28/week-4/index_files/plotly-binding/plotly.js"></script>
-<script src="https://example.org/post/2024/09/28/week-4/index_files/typedarray/typedarray.min.js"></script>
-<script src="https://example.org/post/2024/09/28/week-4/index_files/jquery/jquery.min.js"></script>
-<link href="https://example.org/post/2024/09/28/week-4/index_files/crosstalk/css/crosstalk.min.css" rel="stylesheet" />
-<script src="https://example.org/post/2024/09/28/week-4/index_files/crosstalk/js/crosstalk.min.js"></script>
-<link href="https://example.org/post/2024/09/28/week-4/index_files/plotly-htmlwidgets-css/plotly-htmlwidgets.css" rel="stylesheet" />
-<script src="https://example.org/post/2024/09/28/week-4/index_files/plotly-main/plotly-latest.min.js"></script>
-<script src="https://example.org/post/2024/09/28/week-4/index_files/kePrint/kePrint.js"></script>
-<link href="https://example.org/post/2024/09/28/week-4/index_files/lightable/lightable.css" rel="stylesheet" />
+<link href="/post/2024/09/28/week-4/index_files/htmltools-fill/fill.css" rel="stylesheet" />
+<script src="/post/2024/09/28/week-4/index_files/htmlwidgets/htmlwidgets.js"></script>
+<script src="/post/2024/09/28/week-4/index_files/plotly-binding/plotly.js"></script>
+<script src="/post/2024/09/28/week-4/index_files/typedarray/typedarray.min.js"></script>
+<script src="/post/2024/09/28/week-4/index_files/jquery/jquery.min.js"></script>
+<link href="/post/2024/09/28/week-4/index_files/crosstalk/css/crosstalk.min.css" rel="stylesheet" />
+<script src="/post/2024/09/28/week-4/index_files/crosstalk/js/crosstalk.min.js"></script>
+<link href="/post/2024/09/28/week-4/index_files/plotly-htmlwidgets-css/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="/post/2024/09/28/week-4/index_files/plotly-main/plotly-latest.min.js"></script>
+<script src="/post/2024/09/28/week-4/index_files/kePrint/kePrint.js"></script>
+<link href="/post/2024/09/28/week-4/index_files/lightable/lightable.css" rel="stylesheet" />
 
 
 <p>This week, I will explore the importance of new variables to predict the two-way popular vote within contentious states in the presidential election. Key factors include incumbency measures, federal spending, and expert prediction. I finish with my new prediction using super learning.</p>
@@ -75,7 +75,7 @@
 <p><em>Is federal spending something I should use to predict popular vote outcomes? The answer is no.</em> <a href="https://www.cambridge.org/core/journals/journal-of-experimental-political-science/article/voters-dont-care-much-about-incumbency/ECFE39E003912F8AF65C2AD14A34BD8C">Kriner and Reeves (2012)</a> find that increased federal spending boosts electoral support for incumbents, especially in battleground states. Federal grants serve as “electoral currency,” particularly where congresspeople align with the president’s party. However, the benefits of spending vary, with liberal/ moderate voters rewarding presidents more than conservatives, highlighting the nuanced role of federal spending in electoral outcomes based on partisan dynamics, voter ideology, and electoral context.</p>
 <p>My analysis focuses on the distribution of federal/pork spending over time: whether presidents propose equitable budgets (universalism), reward co-partisans (partisanship), or target electorally important constituents (electoral particularism).</p>
 <p>Note: core states are where the president has a large number of co-partisans.</p>
-<p><img src="https://example.org/post/2024/09/28/week-4/index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="/post/2024/09/28/week-4/index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>Within each state group, spending across years is not statistically-significantly different, indicating that presidents don’t spend more in election years or that the budget takes time. However, between swing and core states, the difference is statistically significant; presidents spent more in swing states on average 1988-2008, supporting that the budget is used to influence competitive states. Additionally, incumbents do not spend significantly more when they versus their successors are running. This means Harris will likely not have different spending than Biden would as candidate.</p>
 <p>Running regressions to predict popular vote outcomes based on the interaction between federal grant spending and votes, including year fixed effects, does not do well on the state level and <em>is not useful for my final prediction model</em>.</p>
 </div>

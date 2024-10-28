@@ -2,37 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://example.org/</loc>
+    <loc>http://localhost:4321/</loc>
     <lastmod>2024-10-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://example.org/post/</loc>
+    <loc>http://localhost:4321/post/</loc>
     <lastmod>2024-10-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://example.org/post/2024/10/18/week-7/</loc>
+    <loc>http://localhost:4321/post/2024/10/18/week-7/</loc>
     <lastmod>2024-10-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://example.org/post/2024/10/13/week-6-advertising-and-campaign-effects/</loc>
+    <loc>http://localhost:4321/post/2024/10/13/week-6-advertising-and-campaign-effects/</loc>
     <lastmod>2024-10-13T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://example.org/post/2024/10/05/week-5/</loc>
+    <loc>http://localhost:4321/post/2024/10/05/week-5/</loc>
     <lastmod>2024-10-05T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://example.org/post/2024/09/28/week-4/</loc>
+    <loc>http://localhost:4321/post/2024/09/28/week-4/</loc>
     <lastmod>2024-09-28T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://example.org/post/2024/09/21/week-3-mutlivariate-analyses/</loc>
+    <loc>http://localhost:4321/post/2024/09/21/week-3-mutlivariate-analyses/</loc>
     <lastmod>2024-09-21T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://example.org/post/2024/09/13/week-2/</loc>
+    <loc>http://localhost:4321/post/2024/09/13/week-2/</loc>
     <lastmod>2024-09-13T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://example.org/post/2024/09/05/week-1-introductory-post/</loc>
+    <loc>http://localhost:4321/post/2024/09/05/week-1-introductory-post/</loc>
     <lastmod>2024-09-05T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://example.org/about/</loc>
+    <loc>http://localhost:4321/about/</loc>
   </url><url>
-    <loc>https://example.org/categories/</loc>
+    <loc>http://localhost:4321/categories/</loc>
   </url><url>
-    <loc>https://example.org/tags/</loc>
+    <loc>http://localhost:4321/tags/</loc>
   </url>
 </urlset>
