@@ -426,8 +426,8 @@ d_train <- d_non2024[train_indices, ]
 d_test <- d_non2024[-train_indices, ]
 
 # Print dimensions of both datasets
-cat("Dimensions of d_train:", dim(d_train), "\n")
-cat("Dimensions of d_test:", dim(d_test), "\n")
+#cat("Dimensions of d_train:", dim(d_train), "\n")
+#cat("Dimensions of d_test:", dim(d_test), "\n")
 
 # Implementing k-fold cross-validation
 k <- 5  # Number of folds
@@ -1205,8 +1205,8 @@ margin_table <- data.frame(
 )
 
 # to get median values (commmented out for printing purposes)
-(dem_med <- round(quantiles_dem[2], 2))
-(rep_med <- round(quantiles_rep[2], 2))
+#(dem_med <- round(quantiles_dem[2], 2))
+#(rep_med <- round(quantiles_rep[2], 2))
 
 # Make kable of margin results
 kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
