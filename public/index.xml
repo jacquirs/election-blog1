@@ -6,8 +6,15 @@
     <description>Recent content in Home on A minimal Hugo website</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 27 Oct 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 30 Oct 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://example.org/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Final Election Prediction</title>
+      <link>https://example.org/post/2024/10/30/final-election-prediction/</link>
+      <pubDate>Wed, 30 Oct 2024 00:00:00 +0000</pubDate>
+      <guid>https://example.org/post/2024/10/30/final-election-prediction/</guid>
+      <description>&lt;script src=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/kePrint/kePrint.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;link href=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/lightable/lightable.css&#34; rel=&#34;stylesheet&#34; /&gt;&#xD;&#xA;&lt;link href=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/htmltools-fill/fill.css&#34; rel=&#34;stylesheet&#34; /&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/htmlwidgets/htmlwidgets.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/plotly-binding/plotly.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/typedarray/typedarray.min.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/jquery/jquery.min.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;link href=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/crosstalk/css/crosstalk.min.css&#34; rel=&#34;stylesheet&#34; /&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/crosstalk/js/crosstalk.min.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;link href=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/plotly-htmlwidgets-css/plotly-htmlwidgets.css&#34; rel=&#34;stylesheet&#34; /&gt;&#xD;&#xA;&lt;script src=&#34;https://example.org/post/2024/10/30/final-election-prediction/index_files/plotly-main/plotly-latest.min.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;&lt;p&gt;&lt;em&gt;This post marks the end of my weekly blog predicting the 2024 presidential election results for Gov 1347: Election Analytics, Fall 2024, at Harvard College. Thank you for sticking with me for the past nine weeks as we have explored the ins and outs of campaigns, fundamental variables, and model specifications used in predictive modeling of elections.&lt;/em&gt;&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Week 8: Sudden Shocks and Shoring Up My Model</title>
       <link>https://example.org/post/2024/10/27/week-8/</link>

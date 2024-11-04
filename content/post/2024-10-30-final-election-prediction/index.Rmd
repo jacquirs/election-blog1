@@ -96,6 +96,34 @@ d_econ <- read_csv("fred_econ.csv") |>
 
 ```
 
+```{r}
+barplot_theme <- theme_bw() + 
+  theme(
+    # Axis text and labels
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    
+    # Legend position and text
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 10),
+    
+    # Title
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    
+    panel.border = element_rect(color = "black"),
+    
+    # Grid lines
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_line(color = "grey95"),
+    
+    # Background color
+    plot.background = element_rect(fill = "white", color = NA)
+  )
+```
+
+
 _This post marks the end of my weekly blog predicting the 2024 presidential election results for Gov 1347: Election Analytics, Fall 2024, at Harvard College. Thank you for sticking with me for the past nine weeks as we have explored the ins and outs of campaigns, fundamental variables, and model specifications used in predictive modeling of elections._
 
 Nine weeks ago I presented a simple model to predict the outcome of the election-- $ vote_{2024} = 0.75vote_{2020} + 0.25vote_{2016}$. While this simple weighted average may seem to over-simply the complex process that is the presidential election, as discussed over the past blog posts it is incredibly important to carefully evaluate all elements of a model. The most complicated model may not always be the best, as parsimony can be key and overfitting can be fatal. 
