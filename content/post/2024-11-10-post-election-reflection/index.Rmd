@@ -1,0 +1,9 @@
+---
+title: Post Election Reflection
+author: Jacqui Schlesinger
+date: '2024-11-10'
+slug: post-election-reflection
+categories: []
+tags: []
+---
+
