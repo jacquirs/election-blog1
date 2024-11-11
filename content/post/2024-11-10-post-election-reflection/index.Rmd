@@ -137,20 +137,38 @@ While none of these models provided the exact correct result, or even winner, of
 Examining specific areas where these models diverged from reality, such as underestimating or overestimating support in particular demographic groups, can highlight biases in the data or assumptions that may need to be recalibrrated in future predictions. For instance, variations in regional turnout or unexpected shifts in key swing states may reveal trends not captured by conventional data inputs, signaling areas for future improvement in turnout models, particularly post-COVID and 2016 with Trump's rise which may not be well suited by using years before in prediction. Evaluating these discrepancies can be particularly enlightening, as it allows us to identify potential blind spots in the models and understand how emerging societal changes impact voter behavior. Additionally, this examination provides a window into the assumptions embedded in these models, which may reflect outdated understandings of the electorate that are less applicable in today’s dynamic political climate.
 
 
-**Accuracy of My Models**
+### Accuracy of My Models
 - description of the accuracy of the models
 - apparent patterns in the accuracy
 - graphics
 
-**Understanding the Inaccuracies**
+
+### Learning from 2020
+After the 2020 election, Alan Abramowitz, the creator of the time for change model, wrote an article for the Center for Politics: Sabato's Crystal Ball on how to evaluate the forecasts of 2020 post-election. Abramowitz notes how important the assumptions that political scientists decided to implement in their models were, especially due to the 2020 election being during COVID. Though 2024 was not a COVID year, I would argue these changes are still ongoing, brought on not only by COVID but also larger structural changes in American democracy and the opinions of the people, still complicating the forecasting process. While in aggregate forecasting models in 2020 were accurate, individual models were not and varied a lot. 
+
+For 2020, Abramowitz notes that incorpating economic conditions which would usually reflect on the incumbent would have inaccurately used the effect of COVID, which many did not blame on the current President Trump, to his disadvantage. The same blame effect for the economy could be affecting my model here, as the current economic conditions may not be tied directly to Vice President Harris, and more so she may be effected by the negatives in the economy than the positives given her position, though empirically this is unknown. 
+
+Abramowitz also discusses how early polling in the primaries may have been an innacurate predictor. This is also a useful discussion in 2024 given the candidate switch. Understanding how the polls affect Harris, especially incorpoarting them pre-candidate switch, and how they may have been inflated due to the recency of the candidate switch and wave of movement and action it caused only among the already most enagaged democrats may be worth exploring.
+
+Taking unusual circumstances into account, with a former president against a candidate-switch candidate, may be worth exploring how to integrate, if it is even quantifiable.
+
+
+### Understanding the Inaccuracies
 - hypotheses for why the models were inaccurate in the estimates or locations where it was inaccurate
 - reasons should not simply be statements of about the quality of the components of the model, e.g., “the polls were not good” or “economic growth was not a good predictor” 
 - hypotheses on why components of the model may not have been predictive or may not have been predictive in certain cases
 
-**Testing My Hypothesis**
+
+### Testing My Hypothesis
 - proposed quantitative tests that could test these hypotheses
 - what data, if available, could allow you to test whether the reason proposed really did cause the inaccuracy in your model
 - if there is no plausible test of the hypothesis, explain why
+- economy and harris
+- candidate switch motivates active democrats, lose others in polling and cracks
 
-**If I Could Do It All Over**
+
+### If I Could Do It All Over
 A description of how you might change your model if you were to do it again.  
+
+
+### Data Sources

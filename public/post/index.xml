@@ -6,8 +6,15 @@
     <description>Recent content in Posts on A minimal Hugo website</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 30 Oct 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 10 Nov 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://example.org/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Post Election Reflection</title>
+      <link>https://example.org/post/2024/11/10/post-election-reflection/</link>
+      <pubDate>Sun, 10 Nov 2024 00:00:00 +0000</pubDate>
+      <guid>https://example.org/post/2024/11/10/post-election-reflection/</guid>
+      <description>&lt;p&gt;&lt;em&gt;With the election finally concluded and all states accounted for, I now take on the task of evaluating my final and other weeks’ models to determine their accuracy and understand why the election outcome was so far from what I predicted.&lt;/em&gt;&lt;/p&gt;&#xD;&#xA;&lt;p&gt;While my final prediction had Harris winning by a healthy margin in the electoral college, as I return to my models post election I see that the result is not completely different from what I predicted. Almost every model I have every created had either candidate winning within the margin of error for almost every state. Though my final model was less conservative than my past weeks, as noted this was partially due to last minute changes I had to make in my ensembling and modeling approach. Overall, though my predictions overtime all chose Kamala Harris to win the presidency, a Trump win was in the margin of error, but as we will evaluate below a win by this much was unexpected given my model. I will evaluate how this could have happened and what steps I could take to improve on this below.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Final Election Prediction</title>
       <link>https://example.org/post/2024/10/30/final-election-prediction/</link>
