@@ -7,3 +7,150 @@ categories: []
 tags: []
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+set.seed(02138)
+```
+
+```{r}
+####----------------------------------------------------------#
+#### Load Libraries
+####----------------------------------------------------------#
+
+library(geofacet)
+library(ggpubr)
+library(ggthemes)
+library(haven)
+library(kableExtra)
+library(maps)
+library(mgcv)
+library(mgcViz)
+library(RColorBrewer)
+library(scales)
+library(sf)
+library(spData)
+library(stargazer)
+library(tidygeocoder)
+library(tidyverse)
+library(tigris)
+library(tmap)
+library(tmaptools)
+library(viridis)
+library(ggplot2)
+library(plotly)
+library(ggrepel)
+library(car)
+library(purrr)
+library(broom)
+library(knitr)
+library(dplyr)
+library(tidyr)
+library(car)
+library(caret)
+library(CVXR)
+library(glmnet)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(plotly)
+library(lubridate)
+library(caret)
+library(dplyr)
+
+```
+
+```{r, include = FALSE}
+####----------------------------------------------------------#
+#### Read data
+####----------------------------------------------------------#
+
+# Read popular vote datasets
+d_popvote <- read_csv("popvote_1948_2020.csv")
+d_popvote$party[d_popvote$party == "democrat"] <- "DEM"
+d_popvote$party[d_popvote$party == "republican"] <- "REP"
+
+d_state_popvote <- read_csv("state_popvote_1948_2020.csv")
+d_state_popvote[d_state_popvote$state == "District of Columbia",]$state <- "District Of Columbia"
+
+# Read elector distribution dataset 
+d_ec <- read_csv("corrected_ec_1948_2024.csv")
+
+# Read national polling data
+d_polls <- read_csv("national_polls_1968-2024.csv")
+
+# Read state polling data
+d_state_polls <- read_csv("state_polls_1968-2024.csv")
+
+# Read state turnout
+d_state_turnout <- read_csv("state_turnout_1980_2022.csv")
+
+# Read state-level demographics
+d_state_demog <- read_csv("demographics.csv")
+
+# Read county demographics
+d_county_demog <- read_csv("county_demographics.csv")
+
+# read economic data
+d_econ <- read_csv("fred_econ.csv") |> 
+  filter(quarter == 2)
+
+```
+
+_With the election finally concluded and all states accounted for, I now take on the task of evaluating my final and other weeks' models to determine their accuracy and understand why the election outcome was so far from what I predicted._
+
+While my final prediction had Harris winning by a healthy margin in the electoral college, as I return to my models post election I see that the result is not completely different from what I predicted. Almost every model I have every created had either candidate winning within the margin of error for almost every state. Though my final model was less conservative than my past weeks, as noted this was partially due to last minute changes I had to make in my ensembling and modeling approach. Overall, though my predictions overtime all chose Kamala Harris to win the presidency, a Trump win was in the margin of error, but as we will evaluate below a win by this much was unexpected given my model. I will evaluate how this could have happened and what steps I could take to improve on this below. 
+
+
+### Review of Models and Predictions
+In this section, I review the forecasting models developed throughout weeks 1 to 9 and the results each yielded. Each model was built with a unique combination of variables and assumptions, leading to varying results. By walking through the results and calculations from each week, I reflect on which model performed best and why. While most of these were not in my final prediction, we will look through each step in the week-by-week decision making process where assumptions or decisions may have led to overfitting, bias, and other contributors to my prediction's differences. Some of these models were reviewed and updated with new data through week 6, making their predictions more timely.
+
+
+**Week 1:** This week used a simplified Norpoth model to make a prediction based on a weighted average of the election results from 2016 and 2020 by state. The predictive model can be defined as $vote_{2024} = 0.75vote_{2020} + 0.25vote_{2016}$. This forecast resulted in Harris 276 - Trump 262.
+
+
+**Week 2:** This week focused on economic variables and linear regressions. Evaluating a variety of economic fundamentals as predictors of two way popular vote, I found Q2 GDP growth in the election year to be the best predictor by on R sqaured, RMSE, and a variety of other linear model evaluations as compared to other economic variables. This forecast focused on two way popular vote, leading to a result of _Harris 51.585% - Trump 48.415%_.
+
+
+**Week 3:** The main two models developed this week were ensembled elastic net regression models that weighed fundamentals more closer to the election and weighed polling more closer to the election. The final forecast for this week was an unweighted average between the two, leading to _Harris 52.25% - Trump 49.85%_ when updated with new polling data.
+
+
+**Week 4:** During this week, I began to narrow my work only down to the seven critical states: Arizona, Georgia, Michigan, Nevada, North Carolina, Pennsylvania, and Wisconsin. The model used was a super-learning model, leading to _Harris 287 - Trump 251_. The predictors used were polling, economic fundamentals, and lagged vote share of 2016 and 2020 in a pooled model.
+
+
+**Week 5:** In week 5, I used a linear regression model with the predictors lagged popular vote, latest poll average, mean poll average, a weighted average of turnout, GDP quarterly growth, and RDPI quarterly growth. The results of two separate models led to predictions that added to above 100% for the combined vote share of the two parties, which I handled by comparing the two. My goal in this case was to get at solely electoral college, but updated this with a binomial model will be explored below. This was once again a pooled model. The results led to an outcome of _Harris 292 - Trump 246_ in the updated simulations.
+
+
+**Week 6:** This week maintained the same prediction from last week, but urged inclusion of FEC contributions data in future models to see if it improves fit. The prediction remained _Harris 292 - Trump 246_.
+
+
+**Week 7:** This week evaluated the results of model sin weeks 1-6, similar to the above. It also introduced the binomial simulations model, which predicted turnout as a weighted average of linear and GAM predictions. The simulations drawing from the binomial distribution using polling averages and standard deviations as hyperparameters and size of draws of the voter eligible population predicted above, this resulted in _Harris 270 - Trump 268_. This was my closest prediction of any week, with the result in any of the battleground states being within the margin of error. The result of this year's election was therefore contained within the prediction interval of this model. 
+
+
+**Week 8:** Making small tweaks to the binomial simulations model, I ended up with the same results as week 7, _Harris 270 - Trump 268_, with the results in all battleground states being within the margin of error. This week's prediction therefore also captured the actual result.
+
+
+**Week 9:** For my 2024 election prediction, I explored various models to project presidential race outcomes, ultimately deciding on a linear regression model to predict vote margins after initial technical issues with a logistic regression and binomial simulations approach. My final model draws on predictors like polling data, voter turnout, past vote shares, and economic indicators such as GDP and income growth interacted with incumbency. Simulation results showed close races in swing states, with Democratic victories projected in Wisconsin, Michigan, Nevada, Pennsylvania, Georgia, and North Carolina, while Arizona leaned Republican. Predictive intervals indicated significant uncertainty in the swing states, but my model ultimately suggested a likely Democratic win, forecasting 308 Electoral College votes for Harris and 230 for Trump. While data limitations prevented me from incorporating ensembling, this simplified linear model provides a moderate accuracy level, with promising projections for Democratic outcomes across swing states. The actual results of the election were captured within the predictive intervals for each swing state. 
+
+
+While none of these models provided the exact correct result, or even winner, of the election, their predictive intervals are quite large and often include the end result. However, evaluating their accuracy more closely and making observations about where they went wrong, including on important variables, performance of past elections versus today, and turnout, can be instructive for understanding how our democracy currently functions and what brought about the end result. 
+
+Examining specific areas where these models diverged from reality, such as underestimating or overestimating support in particular demographic groups, can highlight biases in the data or assumptions that may need to be recalibrrated in future predictions. For instance, variations in regional turnout or unexpected shifts in key swing states may reveal trends not captured by conventional data inputs, signaling areas for future improvement in turnout models, particularly post-COVID and 2016 with Trump's rise which may not be well suited by using years before in prediction. Evaluating these discrepancies can be particularly enlightening, as it allows us to identify potential blind spots in the models and understand how emerging societal changes impact voter behavior. Additionally, this examination provides a window into the assumptions embedded in these models, which may reflect outdated understandings of the electorate that are less applicable in today’s dynamic political climate.
+
+
+**Accuracy of My Models**
+- description of the accuracy of the models
+- apparent patterns in the accuracy
+- graphics
+
+**Understanding the Inaccuracies**
+- hypotheses for why the models were inaccurate in the estimates or locations where it was inaccurate
+- reasons should not simply be statements of about the quality of the components of the model, e.g., “the polls were not good” or “economic growth was not a good predictor” 
+- hypotheses on why components of the model may not have been predictive or may not have been predictive in certain cases
+
+**Testing My Hypothesis**
+- proposed quantitative tests that could test these hypotheses
+- what data, if available, could allow you to test whether the reason proposed really did cause the inaccuracy in your model
+- if there is no plausible test of the hypothesis, explain why
+
+**If I Could Do It All Over**
+A description of how you might change your model if you were to do it again.  
