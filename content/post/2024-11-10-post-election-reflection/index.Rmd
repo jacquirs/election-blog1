@@ -144,27 +144,30 @@ Examining specific areas where these models diverged from reality, such as under
 
 
 ### Learning from 2020
-After the 2020 election, Alan Abramowitz, the creator of the time for change model, wrote an article for the Center for Politics: Sabato's Crystal Ball on how to evaluate the forecasts of 2020 post-election. Abramowitz notes how important the assumptions that political scientists decided to implement in their models were, especially due to the 2020 election being during COVID. Though 2024 was not a COVID year, I would argue these changes are still ongoing, brought on not only by COVID but also larger structural changes in American democracy and the opinions of the people, still complicating the forecasting process. While in aggregate forecasting models in 2020 were accurate, individual models were not and varied a lot. 
+After the 2020 election, Alan Abramowitz, the creator of the time for change model, [wrote an article for the Center for Politics: Sabato's Crystal Ball](https://centerforpolitics.org/crystalball/how-did-the-political-science-forecasters-do/) on how to evaluate the forecasts of 2020 post-election. Abramowitz notes how important the assumptions that political scientists decided to implement in their models were, especially due to the 2020 election being during COVID. Though 2024 was not a COVID year, I would argue these changes are still ongoing, brought on not only by COVID but also larger structural changes in American democracy and the opinions of the people, still complicating the forecasting process. While in aggregate forecasting models in 2020 were accurate, individual models were not and varied a lot. 
 
 For 2020, Abramowitz notes that incorpating economic conditions which would usually reflect on the incumbent would have inaccurately used the effect of COVID, which many did not blame on the current President Trump, to his disadvantage. The same blame effect for the economy could be affecting my model here, as the current economic conditions may not be tied directly to Vice President Harris, and more so she may be effected by the negatives in the economy than the positives given her position, though empirically this is unknown. 
 
-Abramowitz also discusses how early polling in the primaries may have been an innacurate predictor. This is also a useful discussion in 2024 given the candidate switch. Understanding how the polls affect Harris, especially incorpoarting them pre-candidate switch, and how they may have been inflated due to the recency of the candidate switch and wave of movement and action it caused only among the already most enagaged democrats may be worth exploring.
-
-Taking unusual circumstances into account, with a former president against a candidate-switch candidate, may be worth exploring how to integrate, if it is even quantifiable.
+Abramowitz also discusses how early polling in the primaries may have been an inaccurate predictor. This is also a useful discussion in 2024 given the candidate switch. Understanding how the polls affect Harris, especially incorporating them pre-candidate switch, and how they may have been inflated due to the recency of the candidate switch and wave of movement and action it caused only among the already most enagaged democrats may be worth exploring. Taking unusual circumstances into account, with a former president against a candidate-switch candidate, may be worth exploring how to integrate into future models, if they are quantifiable.
 
 
 ### Understanding the Inaccuracies
+Moving beyond a direct analysis of the inaccuracies of my model, I move to make theoretically testable hypotheses to understand which locations and assumptions within my model contributed to the incorrect result. As noted above, the end result was in the margin of error for many if not all of my prior weeks models, but because the confidence intervals were so large this is unsurprising. Instead, I will focus on why the point estimate of the result may have been inaccurate, shying away from solely pointing to the quality of my model inputs and instead focusing on why certain components may not have have been predictive. 
+
+Arguments for why models like mine were inaccurate should not fall simply to bad data inputs, though critically analyzing these inputs is important. In fact, [538 early analysis](https://abcnews.go.com/538/2024-polls-accurate-underestimated-trump/story?id=115652118) found that polling data were actually the lowest in error as they have been in the past 25 years, but instead may have had bias in the direction of Harris. This bias was lower than in 2016 and 2020 polling, but higher than the years prior to that. 538's takeaway well summed it up: "Pollsters are having a hard time reaching the types of people who support Trump." However, this is not the only reason I believe my model was incorrect, as I believe there are issues with the model and its assumptions above and beyond the quality of its components.  
+
+
 - hypotheses for why the models were inaccurate in the estimates or locations where it was inaccurate
 - reasons should not simply be statements of about the quality of the components of the model, e.g., “the polls were not good” or “economic growth was not a good predictor” 
 - hypotheses on why components of the model may not have been predictive or may not have been predictive in certain cases
+- economy and harris
+- candidate switch motivates active democrats, lose others in polling and cracks
 
 
 ### Testing My Hypothesis
 - proposed quantitative tests that could test these hypotheses
 - what data, if available, could allow you to test whether the reason proposed really did cause the inaccuracy in your model
 - if there is no plausible test of the hypothesis, explain why
-- economy and harris
-- candidate switch motivates active democrats, lose others in polling and cracks
 
 
 ### If I Could Do It All Over
