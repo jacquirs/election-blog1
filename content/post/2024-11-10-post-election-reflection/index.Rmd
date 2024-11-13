@@ -94,7 +94,62 @@ d_county_demog <- read_csv("county_demographics.csv")
 d_econ <- read_csv("fred_econ.csv") |> 
   filter(quarter == 2)
 
+# Read 2024 results datasets. 
+d_state_2024 <- read_csv("state_votes_pres_2024.csv")[-1, 1:6]
+d_county_2024 <- read_csv("county_votes_pres_2024.csv")[-1, 1:6]
+d_county_2020 <- read_csv("county_votes_pres_2020.csv")[-1, 1:6]
+
+d_final_pred_summary_results <- read_csv("final_pred_summary_results.csv")
+
 ```
+
+```{r, include = FALSE}
+# Process 2024 state and county-level data. 
+d_state_2024 <- d_state_2024 |> 
+  mutate(FIPS = as.numeric(FIPS), 
+         votes_trump = as.numeric(`Donald J. Trump`), 
+         votes_harris = as.numeric(`Kamala D. Harris`), 
+         votes = as.numeric(`Total Vote`), 
+         trump_pv = votes_trump/votes, 
+         harris_pv = votes_harris/votes, 
+         trump_2pv = votes_trump/(votes_trump + votes_harris), 
+         harris_2pv = votes_harris/(votes_trump + votes_harris)) |> 
+  mutate(winner = case_when(votes_trump > votes_harris ~ "REP", 
+                            .default = "DEM")) |> 
+  select(FIPS, `Geographic Name`, `Geographic Subtype`, votes_trump, votes_harris, votes, 
+         winner, trump_pv, harris_pv, trump_2pv, harris_2pv)
+
+d_county_2024 <- d_county_2024 |>
+  mutate(FIPS = as.numeric(FIPS),
+         votes_trump = as.numeric(`Donald J. Trump`), 
+         votes_harris = as.numeric(`Kamala D. Harris`), 
+         votes = as.numeric(`Total Vote`), 
+         trump_pv = votes_trump/votes, 
+         harris_pv = votes_harris/votes, 
+         trump_2pv = votes_trump/(votes_trump + votes_harris), 
+         harris_2pv = votes_harris/(votes_trump + votes_harris)) |> 
+  mutate(winner = case_when(votes_trump > votes_harris ~ "REP", 
+                            .default = "DEM")) |> 
+  select(FIPS, `Geographic Name`, `Geographic Subtype`, votes_trump, votes_harris, votes, 
+         winner, trump_pv, harris_pv, trump_2pv, harris_2pv)
+
+d_county_2020 <- d_county_2020 |> 
+  mutate(FIPS = as.numeric(FIPS),
+         votes_trump_2020 = as.numeric(`Donald J. Trump`), 
+         votes_biden_2020 = as.numeric(`Joseph R. Biden Jr.`), 
+         votes_2020 = as.numeric(`Total Vote`), 
+         trump_pv_2020 = votes_trump_2020/votes_2020, 
+         biden_pv_2020 = votes_biden_2020/votes_2020, 
+         trump_2pv_2020 = votes_trump_2020/(votes_trump_2020 + votes_biden_2020), 
+         biden_2pv_2020 = votes_biden_2020/(votes_trump_2020 + votes_biden_2020)) |> 
+  mutate(winner_2020 = case_when(votes_trump_2020 > votes_biden_2020 ~ "REP", 
+                            .default = "DEM")) |> 
+  select(FIPS, `Geographic Name`, `Geographic Subtype`, votes_trump_2020, votes_biden_2020, votes_2020, 
+         winner_2020, trump_pv_2020, biden_pv_2020, trump_2pv_2020, biden_2pv_2020)
+
+
+```
+
 
 _With the election finally concluded and all states accounted for, I now take on the task of evaluating my final and other weeks' models to determine their accuracy and understand why the election outcome was so far from what I predicted._
 
@@ -129,7 +184,7 @@ In this section, I review the forecasting models developed throughout weeks 1 to
 **Week 8:** Making small tweaks to the binomial simulations model, I ended up with the same results as week 7, _Harris 270 - Trump 268_, with the results in all battleground states being within the margin of error. This week's prediction therefore also captured the actual result.
 
 
-**Week 9:** For my 2024 election prediction, I explored various models to project presidential race outcomes, ultimately deciding on a linear regression model to predict vote margins after initial technical issues with a logistic regression and binomial simulations approach. My final model draws on predictors like polling data, voter turnout, past vote shares, and economic indicators such as GDP and income growth interacted with incumbency. Simulation results showed close races in swing states, with Democratic victories projected in Wisconsin, Michigan, Nevada, Pennsylvania, Georgia, and North Carolina, while Arizona leaned Republican. Predictive intervals indicated significant uncertainty in the swing states, but my model ultimately suggested a likely Democratic win, forecasting 308 Electoral College votes for Harris and 230 for Trump. While data limitations prevented me from incorporating ensembling, this simplified linear model provides a moderate accuracy level, with promising projections for Democratic outcomes across swing states. The actual results of the election were captured within the predictive intervals for each swing state. 
+**Final Prediction:** For my 2024 election prediction, I explored various models to project presidential race outcomes, ultimately deciding on a linear regression model to predict vote margins after initial technical issues with a logistic regression and binomial simulations approach. My final model draws on predictors like polling data, voter turnout, past vote shares, and economic indicators such as GDP and income growth interacted with incumbency. Simulation results showed close races in swing states, with Democratic victories projected in Wisconsin, Michigan, Nevada, Pennsylvania, Georgia, and North Carolina, while Arizona leaned Republican. Predictive intervals indicated significant uncertainty in the swing states, but my model ultimately suggested a likely Democratic win, forecasting 308 Electoral College votes for Harris and 230 for Trump. While data limitations prevented me from incorporating ensembling, this simplified linear model provides a moderate accuracy level, with promising projections for Democratic outcomes across swing states. The actual results of the election were captured within the predictive intervals for each swing state. 
 
 
 While none of these models provided the exact correct result, or even winner, of the election, their predictive intervals are quite large and often include the end result. However, evaluating their accuracy more closely and making observations about where they went wrong, including on important variables, performance of past elections versus today, and turnout, can be instructive for understanding how our democracy currently functions and what brought about the end result. 
@@ -137,10 +192,21 @@ While none of these models provided the exact correct result, or even winner, of
 Examining specific areas where these models diverged from reality, such as underestimating or overestimating support in particular demographic groups, can highlight biases in the data or assumptions that may need to be recalibrrated in future predictions. For instance, variations in regional turnout or unexpected shifts in key swing states may reveal trends not captured by conventional data inputs, signaling areas for future improvement in turnout models, particularly post-COVID and 2016 with Trump's rise which may not be well suited by using years before in prediction. Evaluating these discrepancies can be particularly enlightening, as it allows us to identify potential blind spots in the models and understand how emerging societal changes impact voter behavior. Additionally, this examination provides a window into the assumptions embedded in these models, which may reflect outdated understandings of the electorate that are less applicable in today’s dynamic political climate.
 
 
-### Accuracy of My Models
+### Analysis of 2024 County Level Results
+- maps of what happened
+
+### Accuracy of the Final Model
 - description of the accuracy of the models
 - apparent patterns in the accuracy
 - graphics
+
+```{r}
+
+```
+
+
+### Accuracy of the Unused Binomial Simulations Model
+- 
 
 
 ### Learning from 2020

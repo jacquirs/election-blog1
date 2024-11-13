@@ -1,0 +1,374 @@
+#' @title GOV 1347: Week 9 (Ground Game) Laboratory Session
+#' @author Matthew E. Dardet
+#' @date October 30, 2024
+
+####----------------------------------------------------------#
+#### Preamble
+####----------------------------------------------------------#
+
+# Load libraries.
+library(censable)
+library(geofacet)
+library(ggpubr)
+library(ggthemes)
+library(haven)
+library(kableExtra)
+library(maps)
+library(mgcv)
+library(mgcViz)
+library(RColorBrewer)
+library(readstata13)
+library(scales)
+library(sf)
+library(spData)
+library(stargazer)
+library(tidygeocoder)
+library(tidyverse)
+library(tigris)
+library(tmap)
+library(tmaptools)
+library(viridis)
+
+####-------------------------------------------------------------------------#
+#### Read, merge, and process data.
+####-------------------------------------------------------------------------#
+
+# Read 2024 results datasets. 
+d_state_2024 <- read_csv("state_votes_pres_2024.csv")[-1, 1:6]
+d_county_2024 <- read_csv("county_votes_pres_2024.csv")[-1, 1:6]
+d_county_2020 <- read_csv("county_votes_pres_2020.csv")[-1, 1:6]
+
+# Process 2024 state and county-level data. 
+d_state_2024 <- d_state_2024 |> 
+  mutate(FIPS = as.numeric(FIPS), 
+         votes_trump = as.numeric(`Donald J. Trump`), 
+         votes_harris = as.numeric(`Kamala D. Harris`), 
+         votes = as.numeric(`Total Vote`), 
+         trump_pv = votes_trump/votes, 
+         harris_pv = votes_harris/votes, 
+         trump_2pv = votes_trump/(votes_trump + votes_harris), 
+         harris_2pv = votes_harris/(votes_trump + votes_harris)) |> 
+  mutate(winner = case_when(votes_trump > votes_harris ~ "REP", 
+                            .default = "DEM")) |> 
+  select(FIPS, `Geographic Name`, `Geographic Subtype`, votes_trump, votes_harris, votes, 
+         winner, trump_pv, harris_pv, trump_2pv, harris_2pv)
+
+d_county_2024 <- d_county_2024 |>
+  mutate(FIPS = as.numeric(FIPS),
+         votes_trump = as.numeric(`Donald J. Trump`), 
+         votes_harris = as.numeric(`Kamala D. Harris`), 
+         votes = as.numeric(`Total Vote`), 
+         trump_pv = votes_trump/votes, 
+         harris_pv = votes_harris/votes, 
+         trump_2pv = votes_trump/(votes_trump + votes_harris), 
+         harris_2pv = votes_harris/(votes_trump + votes_harris)) |> 
+  mutate(winner = case_when(votes_trump > votes_harris ~ "REP", 
+                            .default = "DEM")) |> 
+  select(FIPS, `Geographic Name`, `Geographic Subtype`, votes_trump, votes_harris, votes, 
+         winner, trump_pv, harris_pv, trump_2pv, harris_2pv)
+
+d_county_2020 <- d_county_2020 |> 
+  mutate(FIPS = as.numeric(FIPS),
+         votes_trump_2020 = as.numeric(`Donald J. Trump`), 
+         votes_biden_2020 = as.numeric(`Joseph R. Biden Jr.`), 
+         votes_2020 = as.numeric(`Total Vote`), 
+         trump_pv_2020 = votes_trump_2020/votes_2020, 
+         biden_pv_2020 = votes_biden_2020/votes_2020, 
+         trump_2pv_2020 = votes_trump_2020/(votes_trump_2020 + votes_biden_2020), 
+         biden_2pv_2020 = votes_biden_2020/(votes_trump_2020 + votes_biden_2020)) |> 
+  mutate(winner_2020 = case_when(votes_trump_2020 > votes_biden_2020 ~ "REP", 
+                            .default = "DEM")) |> 
+  select(FIPS, `Geographic Name`, `Geographic Subtype`, votes_trump_2020, votes_biden_2020, votes_2020, 
+         winner_2020, trump_pv_2020, biden_pv_2020, trump_2pv_2020, biden_2pv_2020)
+
+####-------------------------------------------------------------------------#
+#### Visualizing the results of the 2024 Presidential Election. 
+####-------------------------------------------------------------------------#
+
+# Sequester state and county-level map.
+states_2024 <- states(cb = TRUE, year = 2023) |> 
+  shift_geometry() |> 
+  mutate(GEOID = as.numeric(GEOID)) |> 
+  left_join(d_state_2024, by = c("GEOID" = "FIPS")) |> 
+  drop_na()
+counties_2024 <- counties(cb = TRUE, resolution = "5m", year = 2023) |> 
+  shift_geometry() |> 
+  mutate(GEOID = as.numeric(GEOID)) |> 
+  left_join(d_county_2024, by = c("GEOID" = "FIPS")) |> 
+  left_join(d_county_2020, by = c("GEOID" = "FIPS")) |>
+  mutate(shift = (trump_pv - trump_pv_2020) * 100, 
+         shift_dir = case_when(shift > 0 ~ "REP", 
+                               shift < 0 ~ "DEM", 
+                               TRUE ~ "No Change"),
+         centroid = st_centroid(geometry), 
+         centroid_long = st_coordinates(centroid)[,1],
+         centroid_lat = st_coordinates(centroid)[,2],
+         scale_factor = 1e4, 
+         end_long = centroid_long + scale_factor * shift,
+         end_lat = centroid_lat + scale_factor * shift) |>
+  drop_na()
+county_pop_2024 <- read_csv("PopulationEstimates.csv") |> 
+  mutate(FIPStxt = as.numeric(FIPStxt)) |>
+  select(FIPStxt, POP_ESTIMATE_2023)
+counties_2024 <- counties_2024 |> 
+  left_join(county_pop_2024, by = c("GEOID" = "FIPStxt"))
+
+# Make map of state winners. 
+ggplot(states_2024, aes(fill = factor(winner))) + 
+  geom_sf() + 
+  scale_fill_manual(values = c("DEM" = "blue", "REP" = "red")) + 
+  theme_bw() + 
+  labs(title = "2024 Presidential Election Results by State", 
+       fill = "Winner") + 
+  theme(legend.position = "bottom") 
+
+# Make map of county winners.
+ggplot(counties_2024, aes(fill = factor(winner))) + 
+  geom_sf() + 
+  scale_fill_manual(values = c("DEM" = "blue", "REP" = "red")) + 
+  theme_bw() + 
+  labs(title = "2024 Presidential Election Results by County", 
+       fill = "Winner") + 
+  theme(legend.position = "bottom")
+
+# Make bubble map of county-level results for the US for 2024. 
+counties_2024 |> 
+  ggplot() + 
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_point(aes(x = centroid_long, y = centroid_lat, size = POP_ESTIMATE_2023, color = factor(winner)),
+             alpha = 0.7) +  # Semi-transparent bubbles
+  scale_size_continuous(range = c(1, 10), breaks = c(10000, 100000, 500000, 1000000),
+                        labels = scales::comma) +  # Scale bubble size proportionally to population
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +  # Color by party
+  theme_minimal() +
+  labs(title = "2024 Presidential Election Results by County",
+       subtitle = "(Bubble size represents county population)",
+       size = "Population",
+       color = "Winner") +
+  theme(legend.position = "right")
+
+# Make arrow map of county-level shifts across US. 
+counties_2024$shift |> mean()
+counties_2024 |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+              arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+              curvature = 0.2,  # Add a slight curve to each arrow
+              size = 0.2) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County Across the US",
+       subtitle = "Democratic vs. Republican Gains")
+
+# Check county-level shifts in Pennsylvania between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Pennsylvania") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1e4, label = NAME),
+            size = 2,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Pennsylvania",
+       subtitle = "Democratic vs. Republican Gains")
+
+# Check county-level shifts in Arizona between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Arizona") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1.5e4, label = NAME),
+            size = 2,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Arizona",
+       subtitle = "Democratic vs. Republican Gains")
+
+# Check county-level shifts in Nevada between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Nevada") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-2e4, label = NAME),
+            size = 2,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Nevada",
+       subtitle = "Democratic vs. Republican Gains")
+
+# Check county-level shifts in Florida between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Florida") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1.6e4, label = NAME),
+            size = 2,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Florida",
+       subtitle = "Democratic vs. Republican Gains")
+
+# Check county-level shifts in California between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "California") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-2.6e4, label = NAME),
+            size = 2,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in California",
+       subtitle = "Democratic vs. Republican Gains")
+
+# Check county-level shifts in Michigan between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Michigan") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1e4, label = NAME),
+            size = 1.7,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Michigan",
+       subtitle = "Democratic vs. Republican Gains")
+
+# Check county-level shifts in Wisconsin between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Wisconsin") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1.5e4, label = NAME),
+            size = 1.8,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Wisconsin",
+       subtitle = "Democratic vs. Republican Gains")
+
+# Check county-level shifts in Georgia between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Georgia") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1e4, label = NAME),
+            size = 1.5,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Georgia",
+       subtitle = "Democratic vs. Republican Gains")
+
+# Check county-level shifts in North Carolina between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "North Carolina") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1e4, label = NAME),
+            size = 1.5,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in North Carolina",
+       subtitle = "Democratic vs. Republican Gains")
+
+####-------------------------------------------------------------------------#
+#### Model evaluation. 
+####-------------------------------------------------------------------------#
+
+# TODO
+
+
+
+
+
+
+
+
+
+
+
+
+

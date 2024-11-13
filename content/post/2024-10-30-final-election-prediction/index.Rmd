@@ -775,6 +775,8 @@ summary_results <- pred_for_graphing %>%
   ) %>%
   mutate(winning_party = ifelse(mean_margin > 0, "Democrat", "Republican"))
 
+write.csv(summary_results, "final_pred_summary_results.csv", row.names = FALSE)
+
 # Create the final styled table
 final_results <- summary_results %>%
   select(state, lower_margin, mean_margin, upper_margin,
