@@ -221,7 +221,7 @@ Before quantitatively analyzing the accuracy of my models, I will review the res
 
 First, looking at the states which each candidate won in the end, we see that our seven swing states-- Wisconsin, Michigan, Arizona, Nevada, Georgia, and North Carolina-- were all won by the Republicans. None of my previous predictions had this outcome as the point estimate outcome.
 
-```{r}
+```{r, include = FALSE}
 ####-------------------------------------------------------------------------#
 #### Visualizing the results of the 2024 Presidential Election. 
 ####-------------------------------------------------------------------------#
@@ -255,7 +255,9 @@ county_pop_2024 <- read_csv("PopulationEstimates.csv") |>
 
 counties_2024 <- counties_2024 |> 
   left_join(county_pop_2024, by = c("GEOID" = "FIPStxt"))
+```
 
+```{r}
 # Make map of state winners. 
 ggplot(states_2024, aes(fill = factor(winner))) + 
   geom_sf() + 
@@ -271,7 +273,7 @@ I can also look at how individual counties within these states shifted compared 
 
 ```{r}
 # Make arrow map of county-level shifts across US. 
-counties_2024$shift |> mean()
+##counties_2024$shift |> mean()
 counties_2024 |> 
   ggplot() +
   geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
