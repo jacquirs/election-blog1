@@ -123,6 +123,9 @@ d_county_2020 <- read_csv("county_votes_pres_2020.csv")[-1, 1:6]
 d_final_pred_summary_results <- read_csv("final_pred_summary_results.csv")
 d_final_pred_simulation_results <- read_csv("final_pred_simulation_results.csv")
 
+# Read state turnout
+d_state_turnout <- read_csv("state_turnout_1980_2022.csv")
+
 ```
 
 ```{r, include = FALSE}
@@ -666,6 +669,22 @@ I start with the outcomes for Wisconsin, then each of the other swing states
 
 ```{r}
 # WISCONSIN
+
+# Get historical eligible voting population in Wisconsin. 
+vep_WI_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Wisconsin" & d_state_turnout$year == 2020])
+vep_WI <- d_state_turnout |> filter(state == "Wisconsin") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_WI <- lm(vep ~ year, vep_WI)
+
+vep_WI_2024_ols <- predict(lm_vep_WI, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Use GLM to predict 2024 VEP in Wisconsin.
+vep_WI_2024_glm <- predict(glm(cbind(vep) ~ year, data = vep_WI, family = gaussian()), newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GLM predictions for final prediction. 
+vep_WI_2024 <- as.integer(0.75 * vep_WI_2024_glm + 0.25 * vep_WI_2024_ols)
+
 # Get predicted draw probabilities for D and R. 
 WI_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Wisconsin" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
 WI_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Wisconsin" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
@@ -707,7 +726,7 @@ quantiles_rep_WI <- quantile(sim_data_WI$R_vote_share, probs = c(0.1, 0.5, 0.9))
 # Put together the margin
 margin_table <- data.frame(
   `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
-  `Margin (R - D)` = round(quantiles_margin, 2)
+  `Margin (R - D)` = round(quantiles_margin_WI, 2)
 )
 
 # to get median values
@@ -726,6 +745,22 @@ Now below are the results for Nevada.
 
 ```{r}
 # NEVADA
+
+# Get historical eligible voting population in Nevada. 
+vep_NV_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Nevada" & d_state_turnout$year == 2020])
+vep_NV <- d_state_turnout |> filter(state == "Nevada") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_NV <- lm(vep ~ year, vep_NV)
+
+vep_NV_2024_ols <- predict(lm_vep_NV, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Use GLM to predict 2024 VEP in Nevada.
+vep_NV_2024_glm <- predict(glm(cbind(vep) ~ year, data = vep_NV, family = gaussian()), newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GLM predictions for final prediction. 
+vep_NV_2024 <- as.integer(0.75 * vep_NV_2024_glm + 0.25 * vep_NV_2024_ols)
+
 NV_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
 NV_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
 NV_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$party == "DEM"] |> na.omit())
@@ -779,6 +814,22 @@ Arizona results are below.
 
 ```{r}
 # ARIZONA
+
+# Get historical eligible voting population in Arizona. 
+vep_AZ_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Arizona" & d_state_turnout$year == 2020])
+vep_AZ <- d_state_turnout |> filter(state == "Arizona") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_AZ <- lm(vep ~ year, vep_AZ)
+
+vep_AZ_2024_ols <- predict(lm_vep_AZ, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Use GLM to predict 2024 VEP in Arizona.
+vep_AZ_2024_glm <- predict(glm(cbind(vep) ~ year, data = vep_AZ, family = gaussian()), newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GLM predictions for final prediction. 
+vep_AZ_2024 <- as.integer(0.75 * vep_AZ_2024_glm + 0.25 * vep_AZ_2024_ols)
+
 AZ_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
 AZ_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
 AZ_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$party == "DEM"] |> na.omit())
@@ -832,6 +883,22 @@ Now I calculate this for North Carolina.
 
 ```{r}
 # NORTH CAROLINA
+
+# Get historical eligible voting population in North Carolina. 
+vep_NC_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "North Carolina" & d_state_turnout$year == 2020])
+vep_NC <- d_state_turnout |> filter(state == "North Carolina") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_NC <- lm(vep ~ year, vep_NC)
+
+vep_NC_2024_ols <- predict(lm_vep_NC, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Use GLM to predict 2024 VEP in North Carolina.
+vep_NC_2024_glm <- predict(glm(cbind(vep) ~ year, data = vep_NC, family = gaussian()), newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GLM predictions for final prediction. 
+vep_NC_2024 <- as.integer(0.75 * vep_NC_2024_glm + 0.25 * vep_NC_2024_ols)
+
 NC_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
 NC_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
 NC_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$party == "DEM"] |> na.omit())
@@ -885,6 +952,22 @@ And this is calculated for Georgia.
 
 ```{r}
 # GEORGIA
+
+# Get historical eligible voting population in Georgia. 
+vep_GA_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Georgia" & d_state_turnout$year == 2020])
+vep_GA <- d_state_turnout |> filter(state == "Georgia") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_GA <- lm(vep ~ year, vep_GA)
+
+vep_GA_2024_ols <- predict(lm_vep_GA, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Use GLM to predict 2024 VEP in Georgia.
+vep_GA_2024_glm <- predict(glm(cbind(vep) ~ year, data = vep_GA, family = gaussian()), newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GLM predictions for final prediction. 
+vep_GA_2024 <- as.integer(0.75 * vep_GA_2024_glm + 0.25 * vep_GA_2024_ols)
+
 GA_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
 GA_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
 GA_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$party == "DEM"] |> na.omit())
@@ -938,6 +1021,22 @@ Next, for Michigan.
 
 ```{r}
 # MICHIGAN
+
+# Get historical eligible voting population in Michigan. 
+vep_MI_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Michigan" & d_state_turnout$year == 2020])
+vep_MI <- d_state_turnout |> filter(state == "Michigan") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_MI <- lm(vep ~ year, vep_MI)
+
+vep_MI_2024_ols <- predict(lm_vep_MI, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Use GLM to predict 2024 VEP in Michigan.
+vep_MI_2024_glm <- predict(glm(cbind(vep) ~ year, data = vep_MI, family = gaussian()), newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GLM predictions for final prediction. 
+vep_MI_2024 <- as.integer(0.75 * vep_MI_2024_glm + 0.25 * vep_MI_2024_ols)
+
 MI_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
 MI_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
 MI_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$party == "DEM"] |> na.omit())
@@ -991,6 +1090,21 @@ And finally, for Pennsylvania.
 
 ```{r}
 # PENNSYLVANIA
+# Get historical eligible voting population in Pennsylvania. 
+vep_PA_2020 <- as.integer(d_state_turnout$vep[d_state_turnout$state == "Pennsylvania" & d_state_turnout$year == 2020])
+vep_PA <- d_state_turnout |> filter(state == "Pennsylvania") |> select(vep, year)
+
+# Fit regression for 2024 VEP prediction. 
+lm_vep_PA <- lm(vep ~ year, vep_PA)
+
+vep_PA_2024_ols <- predict(lm_vep_PA, newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Use GLM to predict 2024 VEP in Pennsylvania.
+vep_PA_2024_glm <- predict(glm(cbind(vep) ~ year, data = vep_PA, family = gaussian()), newdata = data.frame(year = 2024)) |> as.numeric()
+
+# Take weighted average of linear and GLM predictions for final prediction. 
+vep_PA_2024 <- as.integer(0.75 * vep_PA_2024_glm + 0.25 * vep_PA_2024_ols)
+
 PA_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
 PA_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
 PA_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$party == "DEM"] |> na.omit())

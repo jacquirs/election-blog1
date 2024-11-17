@@ -35,6 +35,8 @@
 
 <main>
 
+<script src="https://example.org/post/2024/11/10/post-election-reflection/index_files/kePrint/kePrint.js"></script>
+<link href="https://example.org/post/2024/11/10/post-election-reflection/index_files/lightable/lightable.css" rel="stylesheet" />
 
 
 <p><em>With the election finally concluded and all states accounted for, I now take on the task of evaluating my final and other weeks’ models to determine their accuracy and understand why the election outcome was so far from what I predicted.</em></p>
@@ -50,23 +52,897 @@
 <p><strong>Week 6:</strong> This week maintained the same prediction from last week, but urged inclusion of FEC contributions data in future models to see if it improves fit. The prediction remained <em>Harris 292 - Trump 246</em>.</p>
 <p><strong>Week 7:</strong> This week evaluated the results of model sin weeks 1-6, similar to the above. It also introduced the binomial simulations model, which predicted turnout as a weighted average of linear and GAM predictions. The simulations drawing from the binomial distribution using polling averages and standard deviations as hyperparameters and size of draws of the voter eligible population predicted above, this resulted in <em>Harris 270 - Trump 268</em>. This was my closest prediction of any week, with the result in any of the battleground states being within the margin of error. The result of this year’s election was therefore contained within the prediction interval of this model.</p>
 <p><strong>Week 8:</strong> Making small tweaks to the binomial simulations model, I ended up with the same results as week 7, <em>Harris 270 - Trump 268</em>, with the results in all battleground states being within the margin of error. This week’s prediction therefore also captured the actual result.</p>
-<p><strong>Week 9:</strong> For my 2024 election prediction, I explored various models to project presidential race outcomes, ultimately deciding on a linear regression model to predict vote margins after initial technical issues with a logistic regression and binomial simulations approach. My final model draws on predictors like polling data, voter turnout, past vote shares, and economic indicators such as GDP and income growth interacted with incumbency. Simulation results showed close races in swing states, with Democratic victories projected in Wisconsin, Michigan, Nevada, Pennsylvania, Georgia, and North Carolina, while Arizona leaned Republican. Predictive intervals indicated significant uncertainty in the swing states, but my model ultimately suggested a likely Democratic win, forecasting 308 Electoral College votes for Harris and 230 for Trump. While data limitations prevented me from incorporating ensembling, this simplified linear model provides a moderate accuracy level, with promising projections for Democratic outcomes across swing states. The actual results of the election were captured within the predictive intervals for each swing state.</p>
+<p><strong>Final Prediction:</strong> For my 2024 election prediction, I explored various models to project presidential race outcomes, ultimately deciding on a linear regression model to predict vote margins after initial technical issues with a logistic regression and binomial simulations approach. My final model draws on predictors like polling data, voter turnout, past vote shares, and economic indicators such as GDP and income growth interacted with incumbency. Simulation results showed close races in swing states, with Democratic victories projected in Wisconsin, Michigan, Nevada, Pennsylvania, Georgia, and North Carolina, while Arizona leaned Republican. Predictive intervals indicated significant uncertainty in the swing states, but my model ultimately suggested a likely Democratic win, forecasting 308 Electoral College votes for Harris and 230 for Trump. While data limitations prevented me from incorporating ensembling, this simplified linear model provides a moderate accuracy level, with promising projections for Democratic outcomes across swing states. The actual results of the election were captured within the predictive intervals for each swing state.</p>
 <p>While none of these models provided the exact correct result, or even winner, of the election, their predictive intervals are quite large and often include the end result. However, evaluating their accuracy more closely and making observations about where they went wrong, including on important variables, performance of past elections versus today, and turnout, can be instructive for understanding how our democracy currently functions and what brought about the end result.</p>
 <p>Examining specific areas where these models diverged from reality, such as underestimating or overestimating support in particular demographic groups, can highlight biases in the data or assumptions that may need to be recalibrrated in future predictions. For instance, variations in regional turnout or unexpected shifts in key swing states may reveal trends not captured by conventional data inputs, signaling areas for future improvement in turnout models, particularly post-COVID and 2016 with Trump’s rise which may not be well suited by using years before in prediction. Evaluating these discrepancies can be particularly enlightening, as it allows us to identify potential blind spots in the models and understand how emerging societal changes impact voter behavior. Additionally, this examination provides a window into the assumptions embedded in these models, which may reflect outdated understandings of the electorate that are less applicable in today’s dynamic political climate.</p>
-<p><strong>Accuracy of My Models</strong>
-- description of the accuracy of the models
-- apparent patterns in the accuracy
-- graphics</p>
-<p><strong>Understanding the Inaccuracies</strong>
-- hypotheses for why the models were inaccurate in the estimates or locations where it was inaccurate
-- reasons should not simply be statements of about the quality of the components of the model, e.g., “the polls were not good” or “economic growth was not a good predictor”
-- hypotheses on why components of the model may not have been predictive or may not have been predictive in certain cases</p>
-<p><strong>Testing My Hypothesis</strong>
-- proposed quantitative tests that could test these hypotheses
-- what data, if available, could allow you to test whether the reason proposed really did cause the inaccuracy in your model
-- if there is no plausible test of the hypothesis, explain why</p>
-<p><strong>If I Could Do It All Over</strong>
-A description of how you might change your model if you were to do it again.</p>
+</div>
+<div id="analysis-of-2024-county-level-results" class="section level3">
+<h3>Analysis of 2024 County Level Results</h3>
+<p>Before quantitatively analyzing the accuracy of my models, I will review the results of the 2024 election. Many of the graphs below are courtesy of Matthew Dardet, the teaching fellow of this course.</p>
+<p>First, looking at the states which each candidate won in the end, we see that our seven swing states– Wisconsin, Michigan, Arizona, Nevada, Georgia, and North Carolina– were all won by the Republicans. None of my previous predictions had this outcome as the point estimate outcome.</p>
+<pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |==                                                                    |   3%  |                                                                              |===                                                                   |   4%  |                                                                              |===                                                                   |   5%  |                                                                              |====                                                                  |   5%  |                                                                              |=====                                                                 |   6%  |                                                                              |=====                                                                 |   7%  |                                                                              |======                                                                |   8%  |                                                                              |=======                                                               |  10%  |                                                                              |========                                                              |  12%  |                                                                              |==========                                                            |  14%  |                                                                              |==============                                                        |  20%  |                                                                              |===============                                                       |  21%  |                                                                              |===================                                                   |  27%  |                                                                              |===================                                                   |  28%  |                                                                              |=======================                                               |  33%  |                                                                              |========================                                              |  34%  |                                                                              |=========================                                             |  35%  |                                                                              |==========================                                            |  37%  |                                                                              |===========================                                           |  38%  |                                                                              |===========================                                           |  39%  |                                                                              |============================                                          |  39%  |                                                                              |============================                                          |  40%  |                                                                              |=============================                                         |  41%  |                                                                              |=============================                                         |  42%  |                                                                              |==============================                                        |  43%  |                                                                              |===============================                                       |  45%  |                                                                              |================================                                      |  45%  |                                                                              |================================                                      |  46%  |                                                                              |=================================                                     |  47%  |                                                                              |==================================                                    |  48%  |                                                                              |===================================                                   |  50%  |                                                                              |====================================                                  |  51%  |                                                                              |=====================================                                 |  52%  |                                                                              |=====================================                                 |  53%  |                                                                              |=======================================                               |  55%  |                                                                              |========================================                              |  57%  |                                                                              |=========================================                             |  58%  |                                                                              |=========================================                             |  59%  |                                                                              |==========================================                            |  60%  |                                                                              |===========================================                           |  61%  |                                                                              |============================================                          |  62%  |                                                                              |============================================                          |  63%  |                                                                              |=============================================                         |  64%  |                                                                              |=============================================                         |  65%  |                                                                              |==============================================                        |  66%  |                                                                              |================================================                      |  69%  |                                                                              |=================================================                     |  70%  |                                                                              |==================================================                    |  71%  |                                                                              |==================================================                    |  72%  |                                                                              |===================================================                   |  73%  |                                                                              |====================================================                  |  74%  |                                                                              |=====================================================                 |  76%  |                                                                              |======================================================                |  77%  |                                                                              |======================================================                |  78%  |                                                                              |=======================================================               |  78%  |                                                                              |========================================================              |  80%  |                                                                              |=========================================================             |  81%  |                                                                              |=========================================================             |  82%  |                                                                              |===========================================================           |  84%  |                                                                              |=============================================================         |  87%  |                                                                              |=============================================================         |  88%  |                                                                              |==============================================================        |  89%  |                                                                              |===============================================================       |  90%  |                                                                              |================================================================      |  91%  |                                                                              |================================================================      |  92%  |                                                                              |=================================================================     |  93%  |                                                                              |==================================================================    |  94%  |                                                                              |==================================================================    |  95%  |                                                                              |====================================================================  |  97%  |                                                                              |===================================================================== |  99%  |                                                                              |======================================================================| 100%</code></pre>
+<pre><code>##   |                                                                              |                                                                      |   0%  |                                                                              |                                                                      |   1%  |                                                                              |=                                                                     |   1%  |                                                                              |==                                                                    |   2%  |                                                                              |==                                                                    |   3%  |                                                                              |==                                                                    |   4%  |                                                                              |===                                                                   |   4%  |                                                                              |====                                                                  |   5%  |                                                                              |====                                                                  |   6%  |                                                                              |=====                                                                 |   7%  |                                                                              |======                                                                |   8%  |                                                                              |======                                                                |   9%  |                                                                              |=======                                                               |  10%  |                                                                              |=======                                                               |  11%  |                                                                              |========                                                              |  11%  |                                                                              |=========                                                             |  12%  |                                                                              |=========                                                             |  13%  |                                                                              |==========                                                            |  14%  |                                                                              |============                                                          |  17%  |                                                                              |=============                                                         |  19%  |                                                                              |==============                                                        |  20%  |                                                                              |===============                                                       |  21%  |                                                                              |===================                                                   |  27%  |                                                                              |====================                                                  |  28%  |                                                                              |=====================                                                 |  30%  |                                                                              |=====================                                                 |  31%  |                                                                              |======================                                                |  31%  |                                                                              |======================                                                |  32%  |                                                                              |=======================                                               |  33%  |                                                                              |========================                                              |  35%  |                                                                              |=========================                                             |  35%  |                                                                              |=========================                                             |  36%  |                                                                              |==========================                                            |  37%  |                                                                              |===========================                                           |  39%  |                                                                              |============================                                          |  40%  |                                                                              |============================                                          |  41%  |                                                                              |=============================                                         |  41%  |                                                                              |=============================                                         |  42%  |                                                                              |==============================                                        |  43%  |                                                                              |===============================                                       |  44%  |                                                                              |===============================                                       |  45%  |                                                                              |================================                                      |  45%  |                                                                              |================================                                      |  46%  |                                                                              |=================================                                     |  47%  |                                                                              |=================================                                     |  48%  |                                                                              |==================================                                    |  48%  |                                                                              |===================================                                   |  49%  |                                                                              |===================================                                   |  50%  |                                                                              |====================================                                  |  51%  |                                                                              |====================================                                  |  52%  |                                                                              |=====================================                                 |  52%  |                                                                              |=====================================                                 |  53%  |                                                                              |======================================                                |  55%  |                                                                              |=======================================                               |  55%  |                                                                              |=======================================                               |  56%  |                                                                              |========================================                              |  56%  |                                                                              |========================================                              |  57%  |                                                                              |=========================================                             |  58%  |                                                                              |=========================================                             |  59%  |                                                                              |==========================================                            |  59%  |                                                                              |==========================================                            |  60%  |                                                                              |===========================================                           |  61%  |                                                                              |===========================================                           |  62%  |                                                                              |============================================                          |  62%  |                                                                              |============================================                          |  63%  |                                                                              |=============================================                         |  64%  |                                                                              |=============================================                         |  65%  |                                                                              |==============================================                        |  65%  |                                                                              |===============================================                       |  67%  |                                                                              |===============================================                       |  68%  |                                                                              |===================================================                   |  73%  |                                                                              |====================================================                  |  74%  |                                                                              |====================================================                  |  75%  |                                                                              |=====================================================                 |  76%  |                                                                              |======================================================                |  78%  |                                                                              |=======================================================               |  78%  |                                                                              |=======================================================               |  79%  |                                                                              |========================================================              |  80%  |                                                                              |=========================================================             |  81%  |                                                                              |=========================================================             |  82%  |                                                                              |==========================================================            |  83%  |                                                                              |===========================================================           |  84%  |                                                                              |============================================================          |  85%  |                                                                              |============================================================          |  86%  |                                                                              |=============================================================         |  86%  |                                                                              |==============================================================        |  88%  |                                                                              |==============================================================        |  89%  |                                                                              |===============================================================       |  90%  |                                                                              |===============================================================       |  91%  |                                                                              |================================================================      |  91%  |                                                                              |================================================================      |  92%  |                                                                              |=================================================================     |  92%  |                                                                              |=================================================================     |  93%  |                                                                              |==================================================================    |  94%  |                                                                              |===================================================================   |  96%  |                                                                              |====================================================================  |  97%  |                                                                              |===================================================================== |  98%  |                                                                              |======================================================================|  99%  |                                                                              |======================================================================| 100%</code></pre>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>I can also look at how individual counties within these states shifted compared to 2020 election results. The average shift of a county, for those who data has been made available, is 1.885619 percentage points in the direction of the Republicans. This shift can be seen across the US, including in traditionally strong blue states which still went to Kamala Harris like California and New York. A map of these shifts across US states with data availabel can be seen below.</p>
+<pre><code>## [1] 1.885619</code></pre>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>The patterns on the map above may be difficult to see, so I can also look individually at important swing states to see how they compare to the 2020 results. As a reminder, the results in 2020 were</p>
+<ul>
+<li>Arizona, 49.4% Biden</li>
+<li>Nevada, 50.1% Biden</li>
+<li>Pennsylvania, 50% Biden</li>
+<li>North Carolina, 49.9% Trump</li>
+<li>Georgia, 49.5% Biden</li>
+<li>Wisconsin, 49.4% Biden</li>
+<li>Michigan, 50.6% Biden</li>
+</ul>
+<p>The changes for each swing state by county can be visualized below.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>As seen across the country, counties in Pennsylvania shifted almost unanimously to the right with the popular vote amounts per county. In a state like Pennsylvania which was necessary in many Democratic strategies to 270, and a place that was the subject of a lot of campaigning and money by both campaigns, analyzing why this is the case may help explain the election result.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>All Arizona counties had swing to the right, some with large amounts like in Yuma county which shifted by 10.6705605 percentage points towards Trump. Apache and Santa Cruz had similarly large shifts to the right compared to 2020. It is worth noting that both Yuma and Santa Cruz county are on the US-Mexico border.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>Nevada had some small left and right shifts compared to 2020, but the large shifts were all in favor of the Republicans. Shifts to the Democrats were incredibly small in magnitude.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>The is a pretty uniform right shift across Michigan counties in the lower peninsula. The upper peninsula had larger shifts towards Trump. There were also countries along the northwestern counties of Michigan which had small left shifts, but they were once again small in magnitude. Urban areas, not only in Michigan but across all states, had right shifts. Urban centers are traditionally a stronghold for Democrats. Though they may have still won many urban counties, the rightward shift leads to smaller margins which contribute to their loss on a statewide popular vote level.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>Like with Michigan, many counties had a moderately large rightward shift compared to 2020. Unlike other swing states, some countries had a slightly larger left shift as well, like Adams county in central Wisconsin. Urban areas like Milwaukee shifted left in Wisconsin, which is a contrast to other urban areas shifting right.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>Again, many large shifts to the republicans occurred in Georgia, particularly rural counties. Around Atlanta, some suburban counties had significant blue shifts, but otherwise were overpowered by the across the board rightward shift.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>In North Carolina, the magnitude of rightward shifts is again much larger than leftward shifts, though there are more counties in this state compared to others with a blue shift in 2024. Many counties had large Republican shifts in support.</p>
+<p>Overall, the 2024 results show a nearly uniform shift even at the county level of support for Trump in 2024 compared to 2020. We analyze the reasons for why this was not predicted by my models below.</p>
+</div>
+<div id="accuracy-of-the-final-model" class="section level3">
+<h3>Accuracy of the Final Model</h3>
+<p>Now I will begin to assess the accuracy of my final model. To do this, I will look at a variety of measures of accuracy including the MSE, RMSE, MAE, and bias. I will also look at confusion matrices for the simulations I ran and make an ROC curve of the results.</p>
+<p>First, I examine the mean squared error for each the my predictions in the seven states of interest I predicted the popular vote outcomes from. This is found by calculating the average of the squares of the errors. I will calculate this on the democratic party two way popular vote values that I predicted and those that were observed.</p>
+<pre><code>## MSE: 4.373352</code></pre>
+<pre><code>## RMSE: 2.091256</code></pre>
+<pre><code>## MAE: 2.045356</code></pre>
+<pre><code>## Bias: 2.045356</code></pre>
+<p>Looking at these results, we can interpret the error in our results. An MSE of 4.373352 means that, on average, the squared error between the two-party democratic popular vote share my model predicted and the actual outcome in vote share is about 4.37 percentage points squared. This value gives a sense of how large the errors tend to be, but the interpretation is abstract because it’s squared. Therefore, I look at the root mean squared error, or RMSE. An RMSE of 2.091256 means that, on average, my model’s predictions for the Democratic two-party vote share are off by about 2.09 percentage points. RMSE of 2.09 percentage points is a relatively small error in the context where vote shares typically range from 40% to 60%, so an error of 2 percentage points means my model’s predictions are reasonably close to the actual outcomes. However, this only moderate amount of error still led my overall outcome to be wildly different from the actual outcome, given that those two points determined the difference between the winner and loser in every swing state.</p>
+<p>Mean absolute error (MAE) measures the average of the absolute differences between predicted and actual vote share values. An MAE of 2.05 percentage points means that, on average, my model’s predicted two-party vote share is off by about 2.05 percentage points from the actual vote share in 2024. Like RMSE, MAE reflects the average prediction error, but unlike MSE and RMSE, it does not give more weight to larger errors. The MAE is not significantly different from the RMSE, indicating that there are not very many large errors. The bias and MAE give the same result because the model is consistently making errors of the same sign, under-predicting the results for the Republicans and over-predicting for the Democrats.</p>
+<p>Across all four of these error calculations, my model’s predictions for the Democratic two-party vote share were generally close, with average errors around 2 percentage points, although they led to a different result for all of the states due to how close the values were to 50%.</p>
+<p>For think linear regression model, which was described above, I also ran simulations. I can make confusion matrices for the predictions made by the 10000 simulations run using the model of each state by varying turnout. It may have been more effective to vary polling numbers to carry out simulations, as noted in the final prediction, which will be even more important when discussing polling bias as a source of error in my model in the following section. The confusion matrices for the predictions in each state are shown below.</p>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-14">Table 1: </span>Confusion Matrix for Pennsylvania Simulations
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Actual
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;background-color: rgba(91, 192, 222, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</td>
+<td style="text-align:center;">
+23
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</td>
+<td style="text-align:center;">
+9977
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-14">Table 1: </span>Confusion Matrix for Wisconsin Simulations
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Actual
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;background-color: rgba(91, 192, 222, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</td>
+<td style="text-align:center;">
+0
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</td>
+<td style="text-align:center;">
+10000
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-14">Table 1: </span>Confusion Matrix for Michigan Simulations
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Actual
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;background-color: rgba(91, 192, 222, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</td>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</td>
+<td style="text-align:center;">
+9999
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-14">Table 1: </span>Confusion Matrix for Arizona Simulations
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Actual
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;background-color: rgba(91, 192, 222, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</td>
+<td style="text-align:center;">
+7861
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</td>
+<td style="text-align:center;">
+2139
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-14">Table 1: </span>Confusion Matrix for Nevada Simulations
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Actual
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;background-color: rgba(91, 192, 222, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</td>
+<td style="text-align:center;">
+1855
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</td>
+<td style="text-align:center;">
+8145
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-14">Table 1: </span>Confusion Matrix for North Carolina Simulations
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Actual
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;background-color: rgba(91, 192, 222, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</td>
+<td style="text-align:center;">
+2044
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</td>
+<td style="text-align:center;">
+7956
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-14">Table 1: </span>Confusion Matrix for Georgia Simulations
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Actual
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;background-color: rgba(91, 192, 222, 255) !important;">
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</th>
+<th style="text-align:center;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Republican
+</td>
+<td style="text-align:center;">
+4826
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 3cm; font-weight: bold;background-color: rgba(91, 192, 222, 255) !important;">
+Democrat
+</td>
+<td style="text-align:center;">
+5174
+</td>
+<td style="text-align:center;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<p>As expected, in the states where the model predicted the majority of the cases to be democratic wins, as occurred in Michigan, Pennsylvania, and Wisconsin, the confusion matrices will result in very low accuracy. However, in the other states, the accuracy is higher, with the highest accuracy being in Arizona with 78.61%. It is worth noting that in states like Michigan, Pennsylvania, and Wisconsin, my accuracy with this final model was near 0%. This is different when looking at my binomial simulations model, which I will also analyze below.</p>
+</div>
+<div id="accuracy-of-the-binomial-simulations-model" class="section level3">
+<h3>Accuracy of the Binomial Simulations Model</h3>
+<p>I will also look briefly at the binomial simulations model. This was not my final model due to issues in the final stages, so the version solely using polling– which was leftwardly biased in this election as discussed below– is included for analysis. I first rerun the binomial simulations model for each of the seven swing states below.</p>
+<p>I start with the outcomes for Wisconsin, then each of the other swing states</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<pre><code>## The median Democrat two-way popular vote predicted is: 52.6</code></pre>
+<pre><code>## The median Republican two-way popular vote predicted is: 47.4</code></pre>
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Wisconsin 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-16.51
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+-5.19
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+6.81
+</td>
+</tr>
+</tbody>
+</table>
+<p>Now below are the results for Nevada.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<pre><code>## The median Democrat two-way popular vote predicted is: 48.89</code></pre>
+<pre><code>## The median Republican two-way popular vote predicted is: 51.11</code></pre>
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Nevada 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-5.94
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+2.23
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+10.94
+</td>
+</tr>
+</tbody>
+</table>
+<p>Arizona results are below.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<pre><code>## The median Democrat two-way popular vote predicted is: 46.36</code></pre>
+<pre><code>## The median Republican two-way popular vote predicted is: 53.64</code></pre>
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Arizona 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-5.20
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+7.29
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+20.43
+</td>
+</tr>
+</tbody>
+</table>
+<p>Now I calculate this for North Carolina.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<pre><code>## The median Democrat two-way popular vote predicted is: 47.73</code></pre>
+<pre><code>## The median Republican two-way popular vote predicted is: 52.27</code></pre>
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+North Carolina 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-6.49
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+4.53
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+15.66
+</td>
+</tr>
+</tbody>
+</table>
+<p>And this is calculated for Georgia.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<pre><code>## The median Democrat two-way popular vote predicted is: 47</code></pre>
+<pre><code>## The median Republican two-way popular vote predicted is: 53</code></pre>
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Georgia 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-3.08
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+6.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+14.81
+</td>
+</tr>
+</tbody>
+</table>
+<p>Next, for Michigan.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<pre><code>## The median Democrat two-way popular vote predicted is: 51.35</code></pre>
+<pre><code>## The median Republican two-way popular vote predicted is: 48.65</code></pre>
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Michigan 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-13.68
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+-2.70
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+8.61
+</td>
+</tr>
+</tbody>
+</table>
+<p>And finally, for Pennsylvania.</p>
+<p><img src="https://example.org/post/2024/11/10/post-election-reflection/index_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<pre><code>## The median Democrat two-way popular vote predicted is: 51.56</code></pre>
+<pre><code>## The median Republican two-way popular vote predicted is: 48.44</code></pre>
+<table class="table table-striped table-hover" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Pennsylvania 2024 Simulated Election Margin
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Margin (R - D)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:left;">
+10th Percentile
+</td>
+<td style="text-align:right;">
+-13.51
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+Median
+</td>
+<td style="text-align:right;">
+-3.12
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:left;">
+90th Percentile
+</td>
+<td style="text-align:right;">
+7.02
+</td>
+</tr>
+</tbody>
+</table>
+<p>In this model, the result was that Harris won Pennsylvania, Michigan, and Wisconsin. This is the 270 Harris - 268 Trump result that was predicted before. I can evaluate the accuracy of this prediction with the same measures as above, allowing me also to compare the two models. On the surface level, the electoral college outcome is closer to the actual outcome.</p>
+<pre><code>## MSE: 2.598515</code></pre>
+<pre><code>## RMSE: 1.611991</code></pre>
+<pre><code>## MAE: 1.39615</code></pre>
+<pre><code>## Bias: 0.3159973</code></pre>
+<p>The model’s performance metrics indicate that its predictions of Democratic two-party vote shares are relatively accurate. The MSE of 2.65 suggests that the average squared difference between predicted and actual vote shares is small, reflecting minimal deviation from the actual result. Similarly, the RMSE of 1.63 percentage points quantifies this deviation on a comparable scale to the original data, such that there is on average 1.63 percentage point deviation from the actual result. This is not bad overall, but in context the predicted values are so close to 50% that this deviation can change the result of a state or even the whole election. Additionally, the MAE of 1.41 percentage points highlights that the typical prediction error is just about one and a half percentage points. These results suggest that the model provides predictions that are useful for understanding Democratic vote share, but they are still closer to 50% overall, making the predictions off from the actual result.</p>
+<p>The bias metric further reveals a slight systematic over-prediction in the model. With a positive bias, the model tends to estimate Democratic vote shares marginally higher than the actual values. While this overestimation is small, in a close election where even a fraction of a percentage point could influence strategic decisions, it can lead to incorrect predictions. Recognizing and accounting for this bias could improve the predictions, as I will try to account for below.</p>
+</div>
+<div id="learning-from-2020" class="section level3">
+<h3>Learning from 2020</h3>
+<p>After the 2020 election, Alan Abramowitz, the creator of the time for change model, <a href="https://centerforpolitics.org/crystalball/how-did-the-political-science-forecasters-do/">wrote an article for the Center for Politics: Sabato’s Crystal Ball</a> on how to evaluate the forecasts of 2020 post-election. Abramowitz notes how important the assumptions that political scientists decided to implement in their models were, especially due to the 2020 election being during COVID. Though 2024 was not a COVID year, I would argue these changes are still ongoing, brought on not only by COVID but also larger structural changes in American democracy and the opinions of the people, still complicating the forecasting process. While in aggregate forecasting models in 2020 were accurate, individual models were not and varied a lot.</p>
+<p>For 2020, Abramowitz notes that incorpating economic conditions which would usually reflect on the incumbent would have inaccurately used the effect of COVID, which many did not blame on the current President Trump, to his disadvantage. The same blame effect for the economy could be affecting my model here, as the current economic conditions may not be tied directly to Vice President Harris, and more so she may be effected by the negatives in the economy than the positives given her position, though empirically this is unknown.</p>
+<p>Abramowitz also discusses how early polling in the primaries may have been an inaccurate predictor. This is also a useful discussion in 2024 given the candidate switch. Understanding how the polls affect Harris, especially incorporating them pre-candidate switch, and how they may have been inflated due to the recency of the candidate switch and wave of movement and action it caused only among the already most enagaged democrats may be worth exploring. Taking unusual circumstances into account, with a former president against a candidate-switch candidate, may be worth exploring how to integrate into future models, if they are quantifiable.</p>
+</div>
+<div id="understanding-the-inaccuracies" class="section level3">
+<h3>Understanding the Inaccuracies</h3>
+<p>Moving beyond a direct analysis of the inaccuracies of my model, I move to make theoretically testable hypotheses to understand which locations and assumptions within my model contributed to the incorrect result. As noted above, the end result was in the margin of error for many if not all of my prior weeks models, but because the confidence intervals were so large this is unsurprising. Instead, I will focus on why the point estimate of the result may have been inaccurate, shying away from solely pointing to the quality of my model inputs and instead focusing on why certain components may not have have been predictive.</p>
+<p>Arguments for why models like mine were inaccurate should not fall simply to bad data inputs, though critically analyzing these inputs is important. In fact, <a href="https://abcnews.go.com/538/2024-polls-accurate-underestimated-trump/story?id=115652118">538 early analysis</a> found that polling data were actually the lowest in error as they have been in the past 25 years, but instead may have had bias in the direction of Harris. This bias was lower than in 2016 and 2020 polling, but higher than the years prior to that. 538’s takeaway well summed it up: “Pollsters are having a hard time reaching the types of people who support Trump.” However, this is not the only reason I believe my model was incorrect, as I believe there are issues with the model assumptions above and beyond the quality of its components.</p>
+<p>One such potential reason why the components of my model may not have been predictive in the same way as they are in the training set of past elections could be the connection between Harris as the current Vice President and the economy. Though Harris is not technically the incumbent president, she was coded as such in my model, following the idea that the quarter two growth in the year of the election reflects either well or poorly on the current president and will affect their vote share. However, in this case, it is not clear if the same relationship between incumbency and economic indicators holds, making the weight placed on incumbency difficult to determine. I weighted my model such that Harris was treated as the full incumbent, therefore having the full effect of the economic interaction variables with incumbency trained on actual incumbents of the past. It is likely that the relationship between a sitting vice president and how much they are tied to the economic outcomes of their administration are slightly different, though it is unclear if they would have more or less of a magnitude of an effect, and as such this interaction variable may have been less predictive than its performance in past elections. Economic indicators have always had a large place in even the simplest models like the time for change model, so a differing level of predictiveness of them due to the unique circumstances of this election could have thrown off my prediction.</p>
+<p>More potential differences between my model and the outcome also arise out of the candidate switch. The candidate switch from Joe Biden to Kamala Harris for the democrats in July may have motivated active democrats even more than they already were against Trump. The switch also could realign the base of the democrats to a group that is more engaged under a Harris candidacy than Biden, but whom are not the traditional base and therefore are not taken into account in turnout models. It is worth noting that Harris, as the first woman of color to receive a major party’s presidential nomination, might resonate more strongly with demographic groups that Biden didn’t energize as effectively, such as younger voters, women, and people of color. This increased enthusiasm could drive higher turnout among these groups, especially in swing states, which a static model may not capture. However, the model may not also capture changes in predicted turnout through which Harris either pushed democrats away from voting for her or away from voting at all. My turnout model did not account for a shift the Democratic base itself. Furthermore, Harris’s presence on the ticket might intensify opposition among Republicans. As a more progressive figure, she could encourage higher turnout from conservative voters who may have been less motivated by Biden. My prediction and turnout models relied on historical data, but this kind of candidate switch is unprecedented, which limits the model’s ability to make accurate predictions based on past outcomes alone even with interventions in weighting.</p>
+</div>
+<div id="testing-my-hypothesis" class="section level3">
+<h3>Testing My Hypothesis</h3>
+<p>To test my hypotheses and ideas related to the inaccuracies in my model, I will propose quantitative tests to evaluate whether the assumptions made in the model were accurate or whether changes in the political and economic landscape led to deviations from past patterns.</p>
+<p>One test I could do would test the economic fundamentals and their effect on Harris’s vote share. My model assumed that economic indicators, which are traditionally linked to an incumbent president’s electoral success, would also apply to Harris in her role as vice president. However, this relationship may not hold, as her association with economic outcomes may differ from that of a sitting president. To test this, I could conduct a study in a counterfactual world where Biden did not drop out and there was a non-Trump and therefore non-former president other candidate, such that testing the combinations of Harris, Biden, Trump, and not Trump would allow me to see how economic fundamentals, such as GDP growth and RDPI growth, affected democratic vote share in each place. I would also look at swing states relative to non-swing states. This would help determine whether the same economic relationship holds for a vice president as it does for a president.</p>
+<p>Another potential source of inaccuracy is the candidate switch from Biden to Harris in 2024, which may have led to inflated polling numbers or shifts in voter turnout that were not captured in my model. A time-series analysis could be employed to examine polling data before and after the candidate switch, assessing whether there was a significant spike in support for Harris among specific demographics or regions that could be controlled for. Additionally, a difference-in-differences approach could compare voter turnout in states with significant candidate-switch effects seen in polling versus those that didn’t have a change. These tests would help determine whether the model failed to capture changes in voter behavior driven by Harris’s candidacy.</p>
+<p>The bias in polling data could also be a contributing factor to the model’s inaccuracy. According to 538’s post-election analysis, polling data may have overstated Harris’s support, especially among certain demographic groups. To test this hypothesis, I could compare polling data with actual voting outcomes, particularly in key swing states, to determine if specific groups were overrepresented in pre-election polls and adjust my turnout model to handle this.</p>
+<p>Lastly, Harris’s candidacy may have intensified opposition among Republicans, driving higher conservative turnout. A regression could analyze changes in Republican turnout from 2020 to 2024, controlling for party loyalty, candidate preferences, and demographic shifts. This would help determine whether Harris’s presence on the ticket had a distinct impact on conservative voter engagement, particularly in swing states.</p>
+<p>By conducting these quantitative tests, I would be able to better understand the sources of inaccuracy in my model and determine whether unique factors like the candidate switch and shifting voter behaviors contributed to the deviations from historical trends. Testing the effects of economic conditions, polling biases, and changes in Republican base engagement would help refine future models by accounting for these variables, ultimately improving the accuracy of predictions in future elections.</p>
+</div>
+<div id="if-i-could-do-it-all-over" class="section level3">
+<h3>If I Could Do It All Over</h3>
+<p>As discussed in last week’s post, the binomial model with variables in addition to polling I had planned to use met a sudden end. My original plan was to combine the presented linear model, an elastic net model, and the binomial model through super learning to get rid of the potential biases inherent in each formulation while using the same predictors, something I don’t usually see in ensembling. This allows the model to balance the benefits of pooled predictions with the more specific insights from multiple models.</p>
+<p>Additionally, I would rely less on polling and more on economic fundamentals. I would also work more to understand the way to manage incumbency in my model with these economic fundamentals. In addition to these, I would make the changes described in the understanding the inaccuracies section. Overall, I would work more on building out the binomial simulations model and focusing more on economic variables.</p>
+</div>
+<div id="data-sources" class="section level3">
+<h3>Data Sources</h3>
+<ul>
+<li>Popular Vote Data, national and by state, 1948–2020</li>
+<li>Electoral College Distribution, national, 1948–2024</li>
+<li>Demographics Data, by state</li>
+<li>Primary Turnout Data, national and by state, 1789–2020</li>
+<li>Polling Data, National &amp; State, 1968–2024</li>
+<li>FRED Economic Data, national, 1927-2024</li>
+<li>ANES Data, national</li>
+<li>Voter File Data, by state</li>
+<li>2024 Returns by County and State</li>
+</ul>
+<p><strong>Thank you for following along this semester. JS.</strong></p>
 </div>
 
 </main>
