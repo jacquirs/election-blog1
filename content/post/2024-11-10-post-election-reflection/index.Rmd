@@ -1095,14 +1095,23 @@ More potential differences between my model and the outcome also arise out of th
 
 
 ### Testing My Hypothesis
-- proposed quantitative tests that could test these hypotheses
-- what data, if available, could allow you to test whether the reason proposed really did cause the inaccuracy in your model
-- if there is no plausible test of the hypothesis, explain why
+To test my hypotheses and ideas related to the inaccuracies in my model, I will propose quantitative tests to evaluate whether the assumptions made in the model were accurate or whether changes in the political and economic landscape led to deviations from past patterns. 
+
+One test I could do would test the economic fundamentals and their effect on Harris’s vote share. My model assumed that economic indicators, which are traditionally linked to an incumbent president’s electoral success, would also apply to Harris in her role as vice president. However, this relationship may not hold, as her association with economic outcomes may differ from that of a sitting president. To test this, I could conduct a study in a counterfactual world where Biden did not drop out and there was a non-Trump and therefore non-former president other candidate, such that testing the combinations of Harris, Biden, Trump, and not Trump would allow me to see how economic fundamentals, such as GDP growth and RDPI growth, affected democratic vote share in each place. I would also look at swing states relative to non-swing states. This would help determine whether the same economic relationship holds for a vice president as it does for a president.
+
+Another potential source of inaccuracy is the candidate switch from Biden to Harris in 2024, which may have led to inflated polling numbers or shifts in voter turnout that were not captured in my model. A time-series analysis could be employed to examine polling data before and after the candidate switch, assessing whether there was a significant spike in support for Harris among specific demographics or regions that could be controlled for. Additionally, a difference-in-differences approach could compare voter turnout in states with significant candidate-switch effects seen in polling versus those that didn't have a change. These tests would help determine whether the model failed to capture changes in voter behavior driven by Harris's candidacy.
+
+The bias in polling data could also be a contributing factor to the model’s inaccuracy. According to 538’s post-election analysis, polling data may have overstated Harris’s support, especially among certain demographic groups. To test this hypothesis, I could compare polling data with actual voting outcomes, particularly in key swing states, to determine if specific groups were overrepresented in pre-election polls and adjust my turnout model to handle this. 
+
+Lastly, Harris’s candidacy may have intensified opposition among Republicans, driving higher conservative turnout. A regression could analyze changes in Republican turnout from 2020 to 2024, controlling for party loyalty, candidate preferences, and demographic shifts. This would help determine whether Harris’s presence on the ticket had a distinct impact on conservative voter engagement, particularly in swing states.
+
+By conducting these quantitative tests, I would be able to better understand the sources of inaccuracy in my model and determine whether unique factors like the candidate switch and shifting voter behaviors contributed to the deviations from historical trends. Testing the effects of economic conditions, polling biases, and changes in Republican base engagement would help refine future models by accounting for these variables, ultimately improving the accuracy of predictions in future elections.
 
 
 ### If I Could Do It All Over
-A description of how you might change your model if you were to do it again.  
+As discussed in last week's post, the binomial model with variables in addition to polling I had planned to use met a sudden end. My original plan was to combine the presented linear model, an elastic net model, and the binomial model through super learning to get rid of the potential biases inherent in each formulation while using the same predictors, something I don't usually see in ensembling. This allows the model to balance the benefits of pooled predictions with the more specific insights from multiple models. 
 
+Additionally, I would rely less on polling and more on economic fundamentals. I would also work more to understand the way to manage incumbency in my model with these economic fundamentals. In addition to these, I would make the changes described in the understanding the inaccuracies section. Overall, I would work more on building out the binomial simulations model and focusing more on economic variables. 
 
 ### Data Sources
 - Popular Vote Data, national and by state, 1948–2020
