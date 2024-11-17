@@ -755,6 +755,8 @@ pred_for_graphing <- pred.mat %>%
     winning_party = ifelse(margin_pred > 0, "Democrat", "Republican")
   )
 
+write.csv(pred_for_graphing, "final_pred_simulation_results.csv", row.names = FALSE)
+
 # Get the residual standard error from the margin model
 residual_sd <- summary(mod_lm_margin)$sigma
 

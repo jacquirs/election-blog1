@@ -55,6 +55,27 @@ library(kableExtra)
 library(plotly)
 library(lubridate)
 library(caret)
+library(censable)
+library(geofacet)
+library(ggpubr)
+library(ggthemes)
+library(haven)
+library(kableExtra)
+library(maps)
+library(mgcv)
+library(mgcViz)
+library(RColorBrewer)
+library(readstata13)
+library(scales)
+library(sf)
+library(spData)
+library(stargazer)
+library(tidygeocoder)
+library(tidyverse)
+library(tigris)
+library(tmap)
+library(tmaptools)
+library(viridis)
 library(dplyr)
 
 ```
@@ -100,11 +121,12 @@ d_county_2024 <- read_csv("county_votes_pres_2024.csv")[-1, 1:6]
 d_county_2020 <- read_csv("county_votes_pres_2020.csv")[-1, 1:6]
 
 d_final_pred_summary_results <- read_csv("final_pred_summary_results.csv")
+d_final_pred_simulation_results <- read_csv("final_pred_simulation_results.csv")
 
 ```
 
 ```{r, include = FALSE}
-# Process 2024 state and county-level data. 
+# Process 2024 state and county-level data
 d_state_2024 <- d_state_2024 |> 
   mutate(FIPS = as.numeric(FIPS), 
          votes_trump = as.numeric(`Donald J. Trump`), 
@@ -186,27 +208,872 @@ In this section, I review the forecasting models developed throughout weeks 1 to
 
 **Final Prediction:** For my 2024 election prediction, I explored various models to project presidential race outcomes, ultimately deciding on a linear regression model to predict vote margins after initial technical issues with a logistic regression and binomial simulations approach. My final model draws on predictors like polling data, voter turnout, past vote shares, and economic indicators such as GDP and income growth interacted with incumbency. Simulation results showed close races in swing states, with Democratic victories projected in Wisconsin, Michigan, Nevada, Pennsylvania, Georgia, and North Carolina, while Arizona leaned Republican. Predictive intervals indicated significant uncertainty in the swing states, but my model ultimately suggested a likely Democratic win, forecasting 308 Electoral College votes for Harris and 230 for Trump. While data limitations prevented me from incorporating ensembling, this simplified linear model provides a moderate accuracy level, with promising projections for Democratic outcomes across swing states. The actual results of the election were captured within the predictive intervals for each swing state. 
 
-
 While none of these models provided the exact correct result, or even winner, of the election, their predictive intervals are quite large and often include the end result. However, evaluating their accuracy more closely and making observations about where they went wrong, including on important variables, performance of past elections versus today, and turnout, can be instructive for understanding how our democracy currently functions and what brought about the end result. 
 
 Examining specific areas where these models diverged from reality, such as underestimating or overestimating support in particular demographic groups, can highlight biases in the data or assumptions that may need to be recalibrrated in future predictions. For instance, variations in regional turnout or unexpected shifts in key swing states may reveal trends not captured by conventional data inputs, signaling areas for future improvement in turnout models, particularly post-COVID and 2016 with Trump's rise which may not be well suited by using years before in prediction. Evaluating these discrepancies can be particularly enlightening, as it allows us to identify potential blind spots in the models and understand how emerging societal changes impact voter behavior. Additionally, this examination provides a window into the assumptions embedded in these models, which may reflect outdated understandings of the electorate that are less applicable in today’s dynamic political climate.
 
 
 ### Analysis of 2024 County Level Results
-- maps of what happened
+Before quantitatively analyzing the accuracy of my models, I will review the results of the 2024 election. Many of the graphs below are courtesy of Matthew Dardet, the teaching fellow of this course.
 
-### Accuracy of the Final Model
-- description of the accuracy of the models
-- apparent patterns in the accuracy
-- graphics
+First, looking at the states which each candidate won in the end, we see that our seven swing states-- Wisconsin, Michigan, Arizona, Nevada, Georgia, and North Carolina-- were all won by the Republicans. None of my previous predictions had this outcome as the point estimate outcome.
 
 ```{r}
+####-------------------------------------------------------------------------#
+#### Visualizing the results of the 2024 Presidential Election. 
+####-------------------------------------------------------------------------#
+
+# Sequester state and county-level map.
+states_2024 <- states(cb = TRUE, year = 2023) |> 
+  shift_geometry() |> 
+  mutate(GEOID = as.numeric(GEOID)) |> 
+  left_join(d_state_2024, by = c("GEOID" = "FIPS")) |> 
+  drop_na()
+counties_2024 <- counties(cb = TRUE, resolution = "5m", year = 2023) |> 
+  shift_geometry() |> 
+  mutate(GEOID = as.numeric(GEOID)) |> 
+  left_join(d_county_2024, by = c("GEOID" = "FIPS")) |> 
+  left_join(d_county_2020, by = c("GEOID" = "FIPS")) |>
+  mutate(shift = (trump_pv - trump_pv_2020) * 100, 
+         shift_dir = case_when(shift > 0 ~ "REP", 
+                               shift < 0 ~ "DEM", 
+                               TRUE ~ "No Change"),
+         centroid = st_centroid(geometry), 
+         centroid_long = st_coordinates(centroid)[,1],
+         centroid_lat = st_coordinates(centroid)[,2],
+         scale_factor = 1e4, 
+         end_long = centroid_long + scale_factor * shift,
+         end_lat = centroid_lat + scale_factor * shift) |>
+  drop_na()
+
+county_pop_2024 <- read_csv("PopulationEstimates.csv") |> 
+  mutate(FIPStxt = as.numeric(FIPStxt)) |>
+  select(FIPStxt, POP_ESTIMATE_2023)
+
+counties_2024 <- counties_2024 |> 
+  left_join(county_pop_2024, by = c("GEOID" = "FIPStxt"))
+
+# Make map of state winners. 
+ggplot(states_2024, aes(fill = factor(winner))) + 
+  geom_sf() + 
+  scale_fill_manual(values = c("DEM" = "blue", "REP" = "red")) + 
+  theme_bw() + 
+  labs(title = "2024 Presidential Election Results by State", 
+       fill = "Winner") + 
+  theme(legend.position = "right") 
+
+```
+
+I can also look at how individual counties within these states shifted compared to 2020 election results. The average shift of a county, for those who data has been made available, is 1.885619 percentage points in the direction of the Republicans. This shift can be seen across the US, including in traditionally strong blue states which still went to Kamala Harris like California and New York. A map of these shifts across US states with data availabel can be seen below.  
+
+```{r}
+# Make arrow map of county-level shifts across US. 
+counties_2024$shift |> mean()
+counties_2024 |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+              arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+              curvature = 0.2,  # Add a slight curve to each arrow
+              size = 0.2) +
+  scale_color_manual(
+     values = c("DEM" = "blue", "REP" = "red"),
+     name = "Shift Direction") +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County Across the US",
+       subtitle = "Democratic vs. Republican Gains")
+
+```
+
+The patterns on the map above may be difficult to see, so I can also look individually at important swing states to see how they compare to the 2020 results. As a reminder, the results in 2020 were 
+
+- Arizona, 49.4% Biden
+- Nevada, 50.1% Biden
+- Pennsylvania, 50% Biden
+- North Carolina, 49.9% Trump
+- Georgia, 49.5% Biden
+- Wisconsin, 49.4% Biden
+- Michigan, 50.6% Biden
+
+The changes for each swing state by county can be visualized below.
+
+```{r}
+# Check county-level shifts in Pennsylvania between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Pennsylvania") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1e4, label = NAME),
+            size = 2,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Pennsylvania",
+       subtitle = "Democratic vs. Republican Gains")
+```
+
+As seen across the country, counties in Pennsylvania shifted almost unanimously to the right with the popular vote amounts per county. In a state like Pennsylvania which was necessary in many Democratic strategies to 270, and a place that was the subject of a lot of campaigning and money by both campaigns, analyzing why this is the case may help explain the election result. 
+
+```{r}
+# Check county-level shifts in Arizona between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Arizona") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1.5e4, label = NAME),
+            size = 2,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Arizona",
+       subtitle = "Democratic vs. Republican Gains")
+
+# Yuma shift calculation
+#counties_2024 %>%
+ # filter(NAME == "Yuma")
+```
+
+All Arizona counties had swing to the right, some with large amounts like in Yuma county which shifted by 10.6705605 percentage points towards Trump. Apache and Santa Cruz had similarly large shifts to the right compared to 2020. It is worth noting that both Yuma and Santa Cruz county are on the US-Mexico border. 
+
+```{r}
+# Check county-level shifts in Nevada between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Nevada") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-2e4, label = NAME),
+            size = 2,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Nevada",
+       subtitle = "Democratic vs. Republican Gains")
+
+```
+
+Nevada had some small left and right shifts compared to 2020, but the large shifts were all in favor of the Republicans. Shifts to the Democrats were incredibly small in magnitude. 
+
+```{r}
+# Check county-level shifts in Michigan between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Michigan") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1e4, label = NAME),
+            size = 1.7,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Michigan",
+       subtitle = "Democratic vs. Republican Gains")
+
+```
+
+The is a pretty uniform right shift across Michigan counties in the lower peninsula. The upper peninsula had larger shifts towards  Trump. There were also countries along the northwestern counties of Michigan which had small left shifts, but they were once again small in magnitude. Urban areas, not only in Michigan but across all states, had right shifts. Urban centers are traditionally a stronghold for Democrats. Though they may have still won many urban counties, the rightward shift leads to smaller margins which contribute to their loss on a statewide popular vote level. 
+
+```{r}
+# Check county-level shifts in Wisconsin between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Wisconsin") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1.5e4, label = NAME),
+            size = 1.8,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Wisconsin",
+       subtitle = "Democratic vs. Republican Gains")
+
+```
+
+Like with Michigan, many counties had a moderately large rightward shift compared to 2020. Unlike other swing states, some countries had a slightly larger left shift as well, like Adams county in central Wisconsin. Urban areas like Milwaukee shifted left in Wisconsin, which is a contrast to other urban areas shifting right. 
+
+```{r}
+# Check county-level shifts in Georgia between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "Georgia") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1e4, label = NAME),
+            size = 1.5,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in Georgia",
+       subtitle = "Democratic vs. Republican Gains")
+
+```
+
+Again, many large shifts to the republicans occurred in Georgia, particularly rural counties. Around Atlanta, some suburban counties had significant blue shifts, but otherwise were overpowered by the across the board rightward shift. 
+
+```{r}
+# Check county-level shifts in North Carolina between 2024 and 2020. 
+counties_2024 |> 
+  filter(STATE_NAME == "North Carolina") |> 
+  ggplot() +
+  geom_sf(fill = "gray95", color = "darkgrey") +  # Base map
+  geom_text(aes(x = centroid_long, y = centroid_lat-1e4, label = NAME),
+            size = 1.5,  # Adjust size as needed
+            color = "black", hjust = 0.5, vjust = -0.5) + 
+  geom_curve(aes(x = centroid_long, 
+                 y = centroid_lat,
+                 xend = end_long, 
+                 yend = end_lat,
+                 color = shift_dir),
+             arrow = arrow(length = unit(0.1, "cm"), type = "closed"),  # Smaller arrowhead
+             curvature = 0.2,  # Add a slight curve to each arrow
+             size = 0.3) +
+  scale_color_manual(values = c("DEM" = "blue", "REP" = "red")) +
+  theme_void() +
+  labs(title = "Presidential Voting Shifts by County in North Carolina",
+       subtitle = "Democratic vs. Republican Gains")
+```
+
+In North Carolina, the magnitude of rightward shifts is again much larger than leftward shifts, though there are more counties in this state compared to others with a blue shift in 2024. Many counties had large Republican shifts in support. 
+
+Overall, the 2024 results show a nearly uniform shift even at the county level of support for Trump in 2024 compared to 2020. We analyze the reasons for why this was not predicted by my models below. 
+
+
+### Accuracy of the Final Model
+Now I will begin to assess the accuracy of my final model. To do this, I will look at a variety of measures of accuracy including the MSE, RMSE, MAE, and bias. I will also look at confusion matrices for the simulations I ran and make an ROC curve of the results. 
+
+First, I examine the mean squared error for each the my predictions in the seven states of interest I predicted the popular vote outcomes from. This is found by calculating the average of the squares of the errors. I will calculate this on the democratic party two way popular vote values that I predicted and those that were observed. 
+
+```{r}
+# join state outcomes to predictions
+d_combined <- d_final_pred_summary_results %>%
+  filter(state %in% c("Arizona", "Georgia", "Michigan", "Nevada", "North Carolina", "Pennsylvania")) %>%
+  left_join(d_state_2024 %>%
+              filter(`Geographic Name` %in% c("Arizona", "Georgia", "Michigan", "Nevada", "North Carolina", "Pennsylvania")), by = c("state" = "Geographic Name"))
+
+# calculate desired values 
+mse <- mean((d_combined$mean_dem_vote - ((d_combined$harris_2pv)*100))^2)
+rmse <- sqrt(mse)
+mae <- mean(abs(d_combined$mean_dem_vote - (d_combined$harris_2pv * 100)))
+bias <- mean(d_combined$mean_dem_vote - (d_combined$harris_2pv * 100))
+
+cat("MSE:", mse, "\n")
+cat("RMSE:", rmse, "\n")
+cat("MAE:", mae, "\n")
+cat("Bias:", bias, "\n")
+
+```
+
+Looking at these results, we can interpret the error in our results. An MSE of 4.373352 means that, on average, the squared error between the two-party democratic popular vote share my model predicted and the actual outcome in vote share is about 4.37 percentage points squared. This value gives a sense of how large the errors tend to be, but the interpretation is abstract because it's squared. Therefore, I look at the root mean squared error, or RMSE. An RMSE of 2.091256 means that, on average, my model's predictions for the Democratic two-party vote share are off by about 2.09 percentage points. RMSE of 2.09 percentage points is a relatively small error in the context where vote shares typically range from 40% to 60%, so an error of 2 percentage points means my model's predictions are reasonably close to the actual outcomes. However, this only moderate amount of error still led my overall outcome to be wildly different from the actual outcome, given that those two points determined the difference between the winner and loser in every swing state.
+
+Mean absolute error (MAE) measures the average of the absolute differences between predicted and actual vote share values. An MAE of 2.05 percentage points means that, on average, my model's predicted two-party vote share is off by about 2.05 percentage points from the actual vote share in 2024. Like RMSE, MAE reflects the average prediction error, but unlike MSE and RMSE, it does not give more weight to larger errors. The MAE is not significantly different from the RMSE, indicating that there are not very many large errors. The bias and MAE give the same result because the model is consistently making errors of the same sign, under-predicting the results for the Republicans and over-predicting for the Democrats. 
+
+Across all four of these error calculations, my model’s predictions for the Democratic two-party vote share were generally close, with average errors around 2 percentage points, although they led to a different result for all of the states due to how close the values were to 50%. 
+
+For think linear regression model, which was described above, I also ran simulations. I can make confusion matrices for the predictions made by the 10000 simulations run using the model of each state by varying turnout. It may have been more effective to vary polling numbers to carry out simulations, as noted in the final prediction, which will be even more important when discussing polling bias as a source of error in my model in the following section. The confusion matrices for the predictions in each state are shown below. 
+
+```{r}
+# Confusion matrices for simulations from final prediction model
+
+# Mutate your dataframe
+d_final_pred_simulation_results <- d_final_pred_simulation_results %>%
+  mutate(actual_winner = "Republican")
+
+# Confusion matrix for Pennsylvania
+cm_PA <- confusionMatrix(
+  factor(d_final_pred_simulation_results$winning_party[d_final_pred_simulation_results$state == "Pennsylvania"], 
+         levels = c("Republican", "Democrat")),
+  factor(d_final_pred_simulation_results$actual_winner[d_final_pred_simulation_results$state == "Pennsylvania"], 
+         levels = c("Republican", "Democrat")),
+  dnn = c("Prediction", "Actual")
+)
+
+cm_PA_print <- cm_PA$table %>%
+  kable("html", caption = "Confusion Matrix for Pennsylvania Simulations", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm") %>%
+  add_header_above(c(" " = 1, "Actual" = 2)) 
+cm_PA_print
+
+# Confusion matrix for Wisconsin
+cm_WI <- confusionMatrix(
+  factor(d_final_pred_simulation_results$winning_party[d_final_pred_simulation_results$state == "Wisconsin"], 
+         levels = c("Republican", "Democrat")),
+  factor(d_final_pred_simulation_results$actual_winner[d_final_pred_simulation_results$state == "Wisconsin"], 
+         levels = c("Republican", "Democrat")),
+  dnn = c("Prediction", "Actual")
+)
+
+cm_WI_print <- cm_WI$table %>%
+  kable("html", caption = "Confusion Matrix for Wisconsin Simulations", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm") %>%
+  add_header_above(c(" " = 1, "Actual" = 2)) 
+cm_WI_print
+
+# Confusion matrix for Michigan
+cm_MI <- confusionMatrix(
+  factor(d_final_pred_simulation_results$winning_party[d_final_pred_simulation_results$state == "Michigan"], 
+         levels = c("Republican", "Democrat")),
+  factor(d_final_pred_simulation_results$actual_winner[d_final_pred_simulation_results$state == "Michigan"], 
+         levels = c("Republican", "Democrat")),
+  dnn = c("Prediction", "Actual")
+)
+
+cm_MI_print <- cm_MI$table %>%
+  kable("html", caption = "Confusion Matrix for Michigan Simulations", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm") %>%
+  add_header_above(c(" " = 1, "Actual" = 2)) 
+cm_MI_print
+
+# Confusion matrix for Arizona
+cm_AZ <- confusionMatrix(
+  factor(d_final_pred_simulation_results$winning_party[d_final_pred_simulation_results$state == "Arizona"], 
+         levels = c("Republican", "Democrat")),
+  factor(d_final_pred_simulation_results$actual_winner[d_final_pred_simulation_results$state == "Arizona"], 
+         levels = c("Republican", "Democrat")),
+  dnn = c("Prediction", "Actual")
+)
+
+cm_AZ_print <- cm_AZ$table %>%
+  kable("html", caption = "Confusion Matrix for Arizona Simulations", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm") %>%
+  add_header_above(c(" " = 1, "Actual" = 2)) 
+cm_AZ_print
+
+# Confusion matrix for Nevada
+cm_NV <- confusionMatrix(
+  factor(d_final_pred_simulation_results$winning_party[d_final_pred_simulation_results$state == "Nevada"], 
+         levels = c("Republican", "Democrat")),
+  factor(d_final_pred_simulation_results$actual_winner[d_final_pred_simulation_results$state == "Nevada"], 
+         levels = c("Republican", "Democrat")),
+  dnn = c("Prediction", "Actual")
+)
+
+cm_NV_print <- cm_NV$table %>%
+  kable("html", caption = "Confusion Matrix for Nevada Simulations", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm") %>%
+  add_header_above(c(" " = 1, "Actual" = 2)) 
+cm_NV_print
+
+# Confusion matrix for North Carolina
+cm_NC <- confusionMatrix(
+  factor(d_final_pred_simulation_results$winning_party[d_final_pred_simulation_results$state == "North Carolina"], 
+         levels = c("Republican", "Democrat")),
+  factor(d_final_pred_simulation_results$actual_winner[d_final_pred_simulation_results$state == "North Carolina"], 
+         levels = c("Republican", "Democrat")),
+  dnn = c("Prediction", "Actual")
+)
+
+cm_NC_print <- cm_NC$table %>%
+  kable("html", caption = "Confusion Matrix for North Carolina Simulations", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm") %>%
+  add_header_above(c(" " = 1, "Actual" = 2)) 
+cm_NC_print
+
+
+# Confusion matrix for Georgia
+cm_GA <- confusionMatrix(
+  factor(d_final_pred_simulation_results$winning_party[d_final_pred_simulation_results$state == "Georgia"], 
+         levels = c("Republican", "Democrat")),
+  factor(d_final_pred_simulation_results$actual_winner[d_final_pred_simulation_results$state == "Georgia"], 
+         levels = c("Republican", "Democrat")),
+  dnn = c("Prediction", "Actual")
+)
+
+cm_GA_print <- cm_GA$table %>%
+  kable("html", caption = "Confusion Matrix for Georgia Simulations", align = "c") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+                full_width = F, position = "center") %>%
+  row_spec(0, background = "#5bc0de") %>%
+  column_spec(1, background = "#5bc0de", bold = T, width = "3cm") %>%
+  add_header_above(c(" " = 1, "Actual" = 2)) 
+cm_GA_print
+
+```
+
+As expected, in the states where the model predicted the majority of the cases to be democratic wins, as occurred in Michigan, Pennsylvania, and Wisconsin, the confusion matrices will result in very low accuracy. However, in the other states, the accuracy is higher, with the highest accuracy being in Arizona with 78.61%. It is worth noting that in states like Michigan, Pennsylvania, and Wisconsin, my accuracy with this final model was near 0%. This is different when looking at my binomial simulations model, which I will also analyze below. 
+
+
+### Accuracy of the Binomial Simulations Model
+I will also look briefly at the binomial simulations model. This was not my final model due to issues in the final stages, so the version solely using polling-- which was leftwardly biased in this election as discussed below-- is included for analysis. I first rerun the binomial simulations model for each of the seven swing states below. 
+
+I start with the outcomes for Wisconsin, then each of the other swing states
+
+```{r}
+# WISCONSIN
+# Get predicted draw probabilities for D and R. 
+WI_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Wisconsin" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
+WI_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Wisconsin" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
+WI_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Wisconsin" & d_state_polls$party == "DEM"] |> na.omit())
+WI_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Wisconsin" & d_state_polls$party == "REP"] |> na.omit())
+
+# Simulations incorporating prior for SD of polling averages  
+sim_D_votes_WI_2024_2 <- rbinom(n = 10000, size = vep_WI_2024, prob = rnorm(10000, WI_pollav_D / 100, WI_sdpoll_D / 100))
+sim_R_votes_WI_2024_2 <- rbinom(n = 10000, size = vep_WI_2024, prob = rnorm(10000, WI_pollav_R / 100, WI_sdpoll_R / 100))
+sim_elxns_WI_2024_2 <- ((sim_R_votes_WI_2024_2 - sim_D_votes_WI_2024_2) / (sim_D_votes_WI_2024_2 + sim_R_votes_WI_2024_2)) * 100
+
+sim_data <- data.frame(
+  sim_D_votes_WI = sim_D_votes_WI_2024_2,
+  sim_R_votes_WI = sim_R_votes_WI_2024_2,
+  total_votes = sim_D_votes_WI_2024_2 + sim_R_votes_WI_2024_2
+)
+
+sim_data_WI <- sim_data %>%
+  mutate(
+    D_vote_share = sim_D_votes_WI / total_votes * 100,
+    R_vote_share = sim_R_votes_WI / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# Graph outcomes for both parties
+ggplot(sim_data_WI) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 30) +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 30) +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Wisconsin (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+# Calculate the margins and vote distributions predicted
+quantiles_margin_WI <- quantile(sim_data_WI$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem_WI <- quantile(sim_data_WI$D_vote_share, probs = c(0.1, 0.5, 0.9))
+quantiles_rep_WI <- quantile(sim_data_WI$R_vote_share, probs = c(0.1, 0.5, 0.9))
+
+# Put together the margin
+margin_table <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin, 2)
+)
+
+# to get median values
+cat("The median Democrat two-way popular vote predicted is:", round(quantiles_dem_WI[2], 2), "\n")
+cat("The median Republican two-way popular vote predicted is:", round(quantiles_rep_WI[2], 2), "\n")
+
+# Make kable of margin results
+kable(margin_table, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Wisconsin 2024 Simulated Election Margin" = 2))
+
+
+```
+
+Now below are the results for Nevada.
+
+```{r}
+# NEVADA
+NV_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
+NV_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
+NV_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$party == "DEM"] |> na.omit())
+NV_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Nevada" & d_state_polls$party == "REP"] |> na.omit())
+
+sim_D_votes_NV_2024 <- rbinom(n = 10000, size = vep_NV_2024, prob = rnorm(10000, NV_pollav_D / 100, NV_sdpoll_D / 100))
+sim_R_votes_NV_2024 <- rbinom(n = 10000, size = vep_NV_2024, prob = rnorm(10000, NV_pollav_R / 100, NV_sdpoll_R / 100))
+
+sim_data_NV <- data.frame(
+  sim_D_votes_NV = sim_D_votes_NV_2024,
+  sim_R_votes_NV = sim_R_votes_NV_2024,
+  total_votes = sim_D_votes_NV_2024 + sim_R_votes_NV_2024
+)
+
+sim_data_NV <- sim_data_NV %>%
+  mutate(
+    D_vote_share = sim_D_votes_NV / total_votes * 100,
+    R_vote_share = sim_R_votes_NV / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# Graph outcomes for both parties
+ggplot(sim_data_NV) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 30) +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 30) +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Nevada (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+quantiles_margin_NV <- quantile(sim_data_NV$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem_NV <- quantile(sim_data_NV$D_vote_share, probs = c(0.1, 0.5, 0.9))
+quantiles_rep_NV <- quantile(sim_data_NV$R_vote_share, probs = c(0.1, 0.5, 0.9))
+
+margin_table_NV <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin_NV, 2)
+)
+
+# to get median values
+cat("The median Democrat two-way popular vote predicted is:", round(quantiles_dem_NV[2], 2), "\n")
+cat("The median Republican two-way popular vote predicted is:", round(quantiles_rep_NV[2], 2), "\n")
+
+kable(margin_table_NV, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Nevada 2024 Simulated Election Margin" = 2))
+
+```
+
+Arizona results are below.
+
+```{r}
+# ARIZONA
+AZ_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
+AZ_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
+AZ_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$party == "DEM"] |> na.omit())
+AZ_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Arizona" & d_state_polls$party == "REP"] |> na.omit())
+
+sim_D_votes_AZ_2024 <- rbinom(n = 10000, size = vep_AZ_2024, prob = rnorm(10000, AZ_pollav_D / 100, AZ_sdpoll_D / 100))
+sim_R_votes_AZ_2024 <- rbinom(n = 10000, size = vep_AZ_2024, prob = rnorm(10000, AZ_pollav_R / 100, AZ_sdpoll_R / 100))
+
+sim_data_AZ <- data.frame(
+  sim_D_votes_AZ = sim_D_votes_AZ_2024,
+  sim_R_votes_AZ = sim_R_votes_AZ_2024,
+  total_votes = sim_D_votes_AZ_2024 + sim_R_votes_AZ_2024
+)
+
+sim_data_AZ <- sim_data_AZ %>%
+  mutate(
+    D_vote_share = sim_D_votes_AZ / total_votes * 100,
+    R_vote_share = sim_R_votes_AZ / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# Graph outcomes for both parties
+ggplot(sim_data_AZ) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 30) +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 30) +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Arizona (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+quantiles_margin_AZ <- quantile(sim_data_AZ$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem_AZ <- quantile(sim_data_AZ$D_vote_share, probs = c(0.1, 0.5, 0.9))
+quantiles_rep_AZ <- quantile(sim_data_AZ$R_vote_share, probs = c(0.1, 0.5, 0.9))
+
+margin_table_AZ <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin_AZ, 2)
+)
+
+# to get median values
+cat("The median Democrat two-way popular vote predicted is:", round(quantiles_dem_AZ[2], 2), "\n")
+cat("The median Republican two-way popular vote predicted is:", round(quantiles_rep_AZ[2], 2), "\n")
+
+kable(margin_table_AZ, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Arizona 2024 Simulated Election Margin" = 2))
+
+```
+
+Now I calculate this for North Carolina.
+
+```{r}
+# NORTH CAROLINA
+NC_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
+NC_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
+NC_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$party == "DEM"] |> na.omit())
+NC_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "North Carolina" & d_state_polls$party == "REP"] |> na.omit())
+
+sim_D_votes_NC_2024 <- rbinom(n = 10000, size = vep_NC_2024, prob = rnorm(10000, NC_pollav_D / 100, NC_sdpoll_D / 100))
+sim_R_votes_NC_2024 <- rbinom(n = 10000, size = vep_NC_2024, prob = rnorm(10000, NC_pollav_R / 100, NC_sdpoll_R / 100))
+
+sim_data_NC <- data.frame(
+  sim_D_votes_NC = sim_D_votes_NC_2024,
+  sim_R_votes_NC = sim_R_votes_NC_2024,
+  total_votes = sim_D_votes_NC_2024 + sim_R_votes_NC_2024
+)
+
+sim_data_NC <- sim_data_NC %>%
+  mutate(
+    D_vote_share = sim_D_votes_NC / total_votes * 100,
+    R_vote_share = sim_R_votes_NC / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# Graph outcomes for both parties
+ggplot(sim_data_NC) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 30) +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 30) +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for North Carolina (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+quantiles_margin_NC <- quantile(sim_data_NC$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem_NC <- quantile(sim_data_NC$D_vote_share, probs = c(0.1, 0.5, 0.9))
+quantiles_rep_NC <- quantile(sim_data_NC$R_vote_share, probs = c(0.1, 0.5, 0.9))
+
+margin_table_NC <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin_NC, 2)
+)
+
+# to get median values
+cat("The median Democrat two-way popular vote predicted is:", round(quantiles_dem_NC[2], 2), "\n")
+cat("The median Republican two-way popular vote predicted is:", round(quantiles_rep_NC[2], 2), "\n")
+
+kable(margin_table_NC, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "North Carolina 2024 Simulated Election Margin" = 2))
+
+```
+
+And this is calculated for Georgia.
+
+```{r}
+# GEORGIA
+GA_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
+GA_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
+GA_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$party == "DEM"] |> na.omit())
+GA_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Georgia" & d_state_polls$party == "REP"] |> na.omit())
+
+sim_D_votes_GA_2024 <- rbinom(n = 10000, size = vep_GA_2024, prob = rnorm(10000, GA_pollav_D / 100, GA_sdpoll_D / 100))
+sim_R_votes_GA_2024 <- rbinom(n = 10000, size = vep_GA_2024, prob = rnorm(10000, GA_pollav_R / 100, GA_sdpoll_R / 100))
+
+sim_data_GA <- data.frame(
+  sim_D_votes_GA = sim_D_votes_GA_2024,
+  sim_R_votes_GA = sim_R_votes_GA_2024,
+  total_votes = sim_D_votes_GA_2024 + sim_R_votes_GA_2024
+)
+
+sim_data_GA <- sim_data_GA %>%
+  mutate(
+    D_vote_share = sim_D_votes_GA / total_votes * 100,
+    R_vote_share = sim_R_votes_GA / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# Graph outcomes for both parties
+ggplot(sim_data_GA) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 30) +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 30) +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Georgia (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+quantiles_margin_GA <- quantile(sim_data_GA$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem_GA <- quantile(sim_data_GA$D_vote_share, probs = c(0.1, 0.5, 0.9))
+quantiles_rep_GA <- quantile(sim_data_GA$R_vote_share, probs = c(0.1, 0.5, 0.9))
+
+margin_table_GA <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin_GA, 2)
+)
+
+# to get median values
+cat("The median Democrat two-way popular vote predicted is:", round(quantiles_dem_GA[2], 2), "\n")
+cat("The median Republican two-way popular vote predicted is:", round(quantiles_rep_GA[2], 2), "\n")
+
+kable(margin_table_GA, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Georgia 2024 Simulated Election Margin" = 2))
+
+```
+
+Next, for Michigan.
+
+```{r}
+# MICHIGAN
+MI_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
+MI_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
+MI_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$party == "DEM"] |> na.omit())
+MI_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Michigan" & d_state_polls$party == "REP"] |> na.omit())
+
+sim_D_votes_MI_2024 <- rbinom(n = 10000, size = vep_MI_2024, prob = rnorm(10000, MI_pollav_D / 100, MI_sdpoll_D / 100))
+sim_R_votes_MI_2024 <- rbinom(n = 10000, size = vep_MI_2024, prob = rnorm(10000, MI_pollav_R / 100, MI_sdpoll_R / 100))
+
+sim_data_MI <- data.frame(
+  sim_D_votes_MI = sim_D_votes_MI_2024,
+  sim_R_votes_MI = sim_R_votes_MI_2024,
+  total_votes = sim_D_votes_MI_2024 + sim_R_votes_MI_2024
+)
+
+sim_data_MI <- sim_data_MI %>%
+  mutate(
+    D_vote_share = sim_D_votes_MI / total_votes * 100,
+    R_vote_share = sim_R_votes_MI / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# Graph outcomes for both parties
+ggplot(sim_data_MI) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 30) +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 30) +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Michgan (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+quantiles_margin_MI <- quantile(sim_data_MI$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem_MI <- quantile(sim_data_MI$D_vote_share, probs = c(0.1, 0.5, 0.9))
+quantiles_rep_MI <- quantile(sim_data_MI$R_vote_share, probs = c(0.1, 0.5, 0.9))
+
+margin_table_MI <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin_MI, 2)
+)
+
+# to get median values
+cat("The median Democrat two-way popular vote predicted is:", round(quantiles_dem_MI[2], 2), "\n")
+cat("The median Republican two-way popular vote predicted is:", round(quantiles_rep_MI[2], 2), "\n")
+
+kable(margin_table_MI, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Michigan 2024 Simulated Election Margin" = 2))
+
+```
+
+And finally, for Pennsylvania.
+
+```{r}
+# PENNSYLVANIA
+PA_pollav_D <- d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$party == "DEM"] |> mean(na.rm = TRUE)
+PA_pollav_R <- d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$party == "REP"] |> mean(na.rm = TRUE)
+PA_sdpoll_D <- sd(d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$party == "DEM"] |> na.omit())
+PA_sdpoll_R <- sd(d_state_polls$poll_support[d_state_polls$state == "Pennsylvania" & d_state_polls$party == "REP"] |> na.omit())
+
+sim_D_votes_PA_2024 <- rbinom(n = 10000, size = vep_PA_2024, prob = rnorm(10000, PA_pollav_D / 100, PA_sdpoll_D / 100))
+sim_R_votes_PA_2024 <- rbinom(n = 10000, size = vep_PA_2024, prob = rnorm(10000, PA_pollav_R / 100, PA_sdpoll_R / 100))
+
+sim_data_PA <- data.frame(
+  sim_D_votes_PA = sim_D_votes_PA_2024,
+  sim_R_votes_PA = sim_R_votes_PA_2024,
+  total_votes = sim_D_votes_PA_2024 + sim_R_votes_PA_2024
+)
+
+sim_data_PA <- sim_data_PA %>%
+  mutate(
+    D_vote_share = sim_D_votes_PA / total_votes * 100,
+    R_vote_share = sim_R_votes_PA / total_votes * 100,
+    margin = (R_vote_share - D_vote_share)
+  )
+
+# Graph outcomes for both parties
+ggplot(sim_data_PA) +
+  geom_histogram(aes(x = D_vote_share, fill = "Democratic Vote Share"), alpha = 0.5, bins = 30) +
+  geom_histogram(aes(x = R_vote_share, fill = "Republican Vote Share"), alpha = 0.5, bins = 30) +
+  scale_fill_manual(values = c("blue", "red")) +
+  labs(title = "Simulated Vote Share Distributions for Pennsylvania (2024)",
+       x = "Vote Share (%)", y = "Count") +
+  theme(legend.title = element_blank())
+
+quantiles_margin_PA <- quantile(sim_data_PA$margin, probs = c(0.1, 0.5, 0.9))
+quantiles_dem_PA <- quantile(sim_data_PA$D_vote_share, probs = c(0.1, 0.5, 0.9))
+quantiles_rep_PA <- quantile(sim_data_PA$R_vote_share, probs = c(0.1, 0.5, 0.9))
+
+margin_table_PA <- data.frame(
+  `Percentile` = c("10th Percentile", "Median", "90th Percentile"),
+  `Margin (R - D)` = round(quantiles_margin_PA, 2)
+)
+
+# to get median values
+cat("The median Democrat two-way popular vote predicted is:", round(quantiles_dem_PA[2], 2), "\n")
+cat("The median Republican two-way popular vote predicted is:", round(quantiles_rep_PA[2], 2), "\n")
+
+kable(margin_table_PA, col.names = c("Percentile", "Margin (R - D)")) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover")) %>%
+  kableExtra::add_header_above(c(" " = 1, "Pennsylvania 2024 Simulated Election Margin" = 2))
 
 ```
 
 
-### Accuracy of the Unused Binomial Simulations Model
-- 
+In this model, the result was that Harris won Pennsylvania, Michigan, and Wisconsin. This is the 270 Harris - 268 Trump result that was predicted before. I can evaluate the accuracy of this prediction with the same measures as above, allowing me also to compare the two models. On the surface level, the electoral college outcome is closer to the actual outcome. 
+
+```{r}
+# calculate the accuracy of the model
+
+# put together quantiles predictions
+quantiles_predictions <- tibble(
+  state = c("Arizona", "Georgia", "Michigan", "Nevada", "North Carolina", "Pennsylvania"),
+  dem_predicted = c(quantiles_dem_AZ[2], quantiles_dem_GA[2], quantiles_dem_MI[2], 
+                    quantiles_dem_NV[2], quantiles_dem_NC[2], quantiles_dem_PA[2])
+)
+
+# join state outcomes to predictions
+d_combined_bin <- quantiles_predictions %>%
+  left_join(d_state_2024 %>%
+              filter(`Geographic Name` %in% c("Arizona", "Georgia", "Michigan", "Nevada", "North Carolina", "Pennsylvania")),
+            by = c("state" = "Geographic Name"))
+
+# calculate desired values 
+mse <- mean((d_combined_bin$dem_predicted - ((d_combined_bin$harris_2pv)*100))^2)
+rmse <- sqrt(mse)
+mae <- mean(abs(d_combined_bin$dem_predicted - (d_combined_bin$harris_2pv * 100)))
+bias <- mean(d_combined_bin$dem_predicted - (d_combined_bin$harris_2pv * 100))
+
+cat("MSE:", mse, "\n")
+cat("RMSE:", rmse, "\n")
+cat("MAE:", mae, "\n")
+cat("Bias:", bias, "\n")
+```
+
+The model's performance metrics indicate that its predictions of Democratic two-party vote shares are relatively accurate. The MSE of 2.65 suggests that the average squared difference between predicted and actual vote shares is small, reflecting minimal deviation from the actual result. Similarly, the RMSE of 1.63 percentage points quantifies this deviation on a comparable scale to the original data, such that there is on average 1.63 percentage point deviation from the actual result. This is not bad overall, but in context the predicted values are so close to 50% that this deviation can change the result of a state or even the whole election. Additionally, the MAE of 1.41 percentage points highlights that the typical prediction error is just about one and a half percentage points. These results suggest that the model provides predictions that are useful for understanding Democratic vote share, but they are still closer to 50% overall, making the predictions off from the actual result. 
+
+The bias metric further reveals a slight systematic over-prediction in the model. With a positive bias, the model tends to estimate Democratic vote shares marginally higher than the actual values. While this overestimation is small, in a close election where even a fraction of a percentage point could influence strategic decisions, it can lead to incorrect predictions. Recognizing and accounting for this bias could improve the predictions, as I will try to account for below.
 
 
 ### Learning from 2020
@@ -226,10 +1093,6 @@ One such potential reason why the components of my model may not have been predi
 
 More potential differences between my model and the outcome also arise out of the candidate switch. The candidate switch from Joe Biden to Kamala Harris for the democrats in July may have motivated active democrats even more than they already were against Trump. The switch also could realign the base of the democrats to a group that is more engaged under a Harris candidacy than Biden, but whom are not the traditional base and therefore are not taken into account in turnout models. It is worth noting that Harris, as the first woman of color to receive a major party's presidential nomination, might resonate more strongly with demographic groups that Biden didn’t energize as effectively, such as younger voters, women, and people of color. This increased enthusiasm could drive higher turnout among these groups, especially in swing states, which a static model may not capture. However, the model may not also capture changes in predicted turnout through which Harris either pushed democrats away from voting for her or away from voting at all. My turnout model did not account for a shift the Democratic base itself. Furthermore, Harris’s presence on the ticket might intensify opposition among Republicans. As a more progressive figure, she could encourage higher turnout from conservative voters who may have been less motivated by Biden. My prediction and turnout models relied on historical data, but this kind of candidate switch is unprecedented, which limits the model’s ability to make accurate predictions based on past outcomes alone even with interventions in weighting. 
 
-- hypotheses for why the models were inaccurate in the estimates or locations where it was inaccurate
-- reasons should not simply be statements of about the quality of the components of the model, e.g., “the polls were not good” or “economic growth was not a good predictor” 
-- hypotheses on why components of the model may not have been predictive or may not have been predictive in certain cases
-
 
 ### Testing My Hypothesis
 - proposed quantitative tests that could test these hypotheses
@@ -242,3 +1105,15 @@ A description of how you might change your model if you were to do it again.
 
 
 ### Data Sources
+- Popular Vote Data, national and by state, 1948–2020
+- Electoral College Distribution, national, 1948–2024
+- Demographics Data, by state
+- Primary Turnout Data, national and by state, 1789–2020
+- Polling Data, National & State, 1968–2024
+- FRED Economic Data, national, 1927-2024
+- ANES Data, national
+- Voter File Data, by state
+- 2024 Returns by County and State
+
+
+**Thank you for following along this semester. JS.**
