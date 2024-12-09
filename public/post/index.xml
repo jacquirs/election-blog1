@@ -6,8 +6,15 @@
     <description>Recent content in Posts on A minimal Hugo website</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 10 Nov 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 09 Dec 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://example.org/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Post Election Campaign Narrative</title>
+      <link>https://example.org/post/2024/12/09/post-election-campaign-narrative/</link>
+      <pubDate>Mon, 09 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://example.org/post/2024/12/09/post-election-campaign-narrative/</guid>
+      <description>&lt;script src=&#34;https://example.org/post/2024/12/09/post-election-campaign-narrative/index_files/kePrint/kePrint.js&#34;&gt;&lt;/script&gt;&#xD;&#xA;&lt;link href=&#34;https://example.org/post/2024/12/09/post-election-campaign-narrative/index_files/lightable/lightable.css&#34; rel=&#34;stylesheet&#34; /&gt;&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;&lt;p&gt;For my final blog post, I will analyze how and why states– in particular New Hampshire– deviate from forecasts using expert predictions of the states’ outcome and an analysis of news sources and down-ballot races. This blog post will begin with an overview of New Hampshire and its electoral history, then analyze how similar the expertly predicted outcomes for the state deviated from the actual outcome, and finally use scholarly literature and news sources to understand how campaign and candidate effects could have contributed to this deviation. In 2024, Vice President Kamala Harris won New Hampshire with 50.9% of the vote (418,496 votes) to incoming President Donald Trump’s 48.1% (395,578 votes). An additional 8,079 votes went to third party candidates.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Post Election Reflection</title>
       <link>https://example.org/post/2024/11/10/post-election-reflection/</link>
