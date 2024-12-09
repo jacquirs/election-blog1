@@ -13,6 +13,72 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 set.seed(02138)
 ```
 
+```{r}
+####----------------------------------------------------------#
+#### Load Libraries
+####----------------------------------------------------------#
+
+library(ggpubr)
+library(ggthemes)
+library(haven)
+library(kableExtra)
+library(maps)
+library(mgcv)
+library(mgcViz)
+library(RColorBrewer)
+library(scales)
+library(sf)
+library(spData)
+library(stargazer)
+library(tidygeocoder)
+library(tidyverse)
+library(tmap)
+library(tmaptools)
+library(viridis)
+library(ggplot2)
+library(plotly)
+library(ggrepel)
+library(car)
+library(purrr)
+library(broom)
+library(knitr)
+library(dplyr)
+library(tidyr)
+library(car)
+library(caret)
+library(CVXR)
+library(glmnet)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(plotly)
+library(lubridate)
+library(caret)
+library(censable)
+library(geofacet)
+library(ggpubr)
+library(ggthemes)
+library(haven)
+library(kableExtra)
+library(maps)
+library(mgcv)
+library(mgcViz)
+library(RColorBrewer)
+library(readstata13)
+library(scales)
+library(sf)
+library(spData)
+library(stargazer)
+library(tidygeocoder)
+library(tidyverse)
+library(tigris)
+library(tmap)
+library(tmaptools)
+library(viridis)
+library(dplyr)
+
+```
+
 For my final blog post, I will analyze how and why states– in particular New Hampshire– deviate from forecasts using expert predictions of the states’ outcome and an analysis of news sources and down-ballot races. This blog post will begin with an overview of New Hampshire and its electoral history, then analyze how similar the expertly predicted outcomes for the state deviated from the actual outcome, and finally use scholarly literature and news sources to understand how campaign and candidate effects could have contributed to this deviation. In 2024, Vice President Kamala Harris won New Hampshire with 50.9% of the vote (418,496 votes) to incoming President Donald Trump’s 48.1% (395,578 votes). An additional 8,079 votes went to third party candidates. 
 
 ### About New Hampshire
@@ -38,17 +104,97 @@ In 2020, [local news described](https://www.wmur.com/article/new-hampshire-presi
 
 
 ### The 2024 New Hampshire Ballot
-Down ballot candidates in 2024
+In 2024, the November 5 ballot included votes for the president, US House, governor, state executives, State Senate, State House, special state legislative candidates, and ballot measures. 
+
+The US House races both went to the Democrats, with Chris Pappas getting 54% of the vote in district 1 and Maggie Goodlander getting 52.9% of the vote in district 2 according to the [Associated Press](https://apnews.com/ap-elections-explained). 
+
+States races for the New Hampshire House of Representatives [included elections](https://ballotpedia.org/New_Hampshire_House_of_Representatives_elections,_2024) for all 400 seats. The Republicans had the majority both before and after the election, and within state offices, the new State House, State Senate, and governor are now all Republican. There are 23 other states that also had this so called Republican trifecta. Before the election in the State House, [Politico had reported](https://www.politico.com/news/2024/06/19/battleground-state-legislatures-00163822) that it was likely to flip to Democratic control, a prediction that did not pan out. 
+
+The election for the governor of New Hampshire was also quite close [according to Ballotpedia](https://ballotpedia.org/New_Hampshire_gubernatorial_election,_2024). The Republican Kelly Ayote won against the Democrat Joyce Craig, and a third candidate for the Libertarian Party also ran. The primaries for this role took place on September 10, making the campaign between these two candidates head to head very short in what seems to be a theme of this election. Expert predictions did not pick much of a side in how the election would go, with The Cook Political Report and Inside Elections calling it a Toss-Up and Sabato's Crystal Ball saying it would be Lean Republican. Both candidates were not incumbents as they were running to replace Governor Chris Sununu. The governor's race had nationwide attention, with nationwide governors association [pouring in millions](https://www.politico.com/news/2024/09/10/new-hampshire-governor-race-kelly-ayotte-joyce-craig-00178416), 2 million dollars from Republicans and 9 million from Democrats, on the day of the primary. 
+
+The state went to Kamala Harris in the presidential result and democrats for the US House seats but Republicans in all three of the state wide office results, leading to an interesting puzzle to determine whether ticket splitting or some other campaign effect is the cause of this. Additionally, it signals that New Hampshire is not clearly in the pocket of either party going forward and will continue to be a hub of spending and campaigning in future elections. 
+
 
 ### Presidential Election Predictions in New Hampshire
-I did not calculate this
-What did Sabato, 538, real clear, and cook say
+As New Hampshire was not one of the seven swing states I identified at the beginning of the semester based on expert predictions by Sabato's Crystal Ball and The Cook Political Report, I did not calculate a personal prediction with either of my final models. To then assess how close predictions were to the actual results discussed in the first paragraph of this blog post, I will use the predictions from expert sources for comparison. These predictions and their methodology, as much as it is available, are below.
+
+Starting with Real Clear Politics, which takes an unweighted average of polling results and as seen in the post election reflection was closer to the actual national result than FiveThirtyEight's weighted approach, [they predicted](https://www.realclearpolitics.com/) that New Hampshire would go to Harris 50.0% to Trump's 45.8%, which a Harris+4.2 margin prediction. 
+
+For FiveThirtyEight, their [final prediction](https://projects.fivethirtyeight.com/polls/president-general/2024/new-hampshire/) as of November 3 was Harris 50.3% to Trump's 45.5%, a 4.9 percentage point margin for the Democrats. This is a larger margin and higher Harris vote share prediction than given by Real Clear Politics' final prediction. FiveThirtyEight began providing the Harris-Trump split for New Hampshire on August 21, and Harris never dipped below 50% at any time in the weighted average of polls based on their methodology and other factors as has been discussed extensively in past blog posts. Harris remained around the 50% number throughout the fall, which Trump's prediction increased by nearly 3 percentage points to election day. 
+
+Sabato's Crystal Ball [final predictions](https://centerforpolitics.org/crystalball/our-final-2024-ratings/) did not provide popular vote breakdowns for presidential outcomes, but did rate New Hampshire as likely democrat They did mention that the gubernatorial race, saying it learned Republican because of the support from Governor Sununu for the Republican candidate. 
+
+The [Cook Political Report](https://www.cookpolitical.com/ratings/presidential-race-ratings) also did not provide popular vote predictions but also put New Hampshire and its four electoral votes in the likely Democrat rating level. 
+
+Inside Elections [rated New Hampshire](http://www.insideelections.com/ratings/president/2024-presidential-ratings-november-3-2024) Lean Democratic, which is the second category of moving in the democratic direction after Tilt Democratic. They also do not provide a vote share prediction. 
+
 
 ### Analysis of Expert Prediction Closeness
-Use same calculations as analysis
+Based on these expert predictions, all of those who provided qualitative ratings were correct in the direction of their prediction. The two with popular vote percentage predictions were RCP and 538. RCP had Harris 50.0% to Trump's 45.8%, a Harris+4.2 margin. 538 had Harris 50.3% to Trump's 45.5%, a Harris+4.9 margin. In order to compare these to the actual result-- Harris 50.9% to Trump’s 48.1%, a Harris+1.8 margin-- I will look at comparing the margins and the popular vote outcome. As I did with my own predictions, I will look at a variety of measures of accuracy including the MSE, RMSE, MAE, and bias. 
+
+I will calculate all four of these measures and display them in the table below. The mean squared error is found by calculating the average of the squares of the errors. Because there are only two predictions to input, it will just be the average of those two's squared errors. This value gives a sense of how large the errors tend to be, but the interpretation is abstract because it's squared. Therefore, I look at the root mean squared error, or RMSE. Mean absolute error (MAE) measures the average of the absolute differences between predicted and actual vote share values. Like RMSE, MAE reflects the average prediction error, but unlike MSE and RMSE, it does not give more weight to larger errors. I also calculate each of these for the Democratic and Republican vote share because we are not using two-party vote share numbers. The margin is also used. 
+
+```{r}
+# Calculate MSE, RMSE, MAE, and Bias for democratic pop vote, rep pop vote, and margin
+
+# assign values from predictions discussed above
+d_predictions_d <- c(50.3, 50.0)
+d_predictions_r <- c(45.5, 45.8)
+d_predictions_margin <- c(4.9, 4.2)
+
+# actual NH outcomes
+actual_d <- 50.9
+actual_r <- 48.1
+actual_margin <- 1.8
+
+# calculate desired for democratic pop vote 
+mse_d <- mean((d_predictions_d - (actual_d))^2)
+rmse_d <- sqrt(mse_d)
+mae_d <- mean(abs(d_predictions_d - actual_d))
+bias_d <- mean(d_predictions_d - actual_d)
+
+# calculate desired for republican pop vote 
+mse_r <- mean((d_predictions_r - (actual_r))^2)
+rmse_r <- sqrt(mse_r)
+mae_r <- mean(abs(d_predictions_r - actual_r))
+bias_r <- mean(d_predictions_r - actual_r)
+
+# calculate desired for republican pop vote 
+mse_margin <- mean((d_predictions_margin - (actual_margin))^2)
+rmse_margin <- sqrt(mse_margin)
+mae_margin <- mean(abs(d_predictions_margin - actual_margin))
+bias_margin <- mean(d_predictions_margin - actual_margin)
+
+# Define the metrics for the Democratic, Republican, and margin predictions
+metrics <- data.frame(
+  Metric = c("Mean Squared Error (MSE)", "Root Mean Squared Error (RMSE)", 
+             "Mean Absolute Error (MAE)", "Bias"),
+  Democratic = c(mse_d, rmse_d, mae_d, bias_d),
+  Republican = c(mse_r, rmse_r, mae_r, bias_r),
+  Margin = c(mse_margin, rmse_margin, mae_margin, bias_margin)
+)
+
+# Create the kable table
+kable(metrics, 
+      caption = "Error Metrics for Democratic, Republican, and Margin Predictions",
+      col.names = c("Metric", "Democratic Vote", "Republican Vote", "Margin"),
+      digits = 3) %>%
+      kable_styling(bootstrap_options = c("hover", "condensed", "responsive"),
+      full_width = F, position = "center") 
+
+```
+
+
+The MSE on the Democratic vote share value of 0.585 means that, on average, the squared error between the two-party democratic popular vote share the experts predicted and the actual outcome in vote share is about 0.585 percentage points squared. The predictions from experts' error in predicting the Democratic vote share is relatively low, indicating good performance, but because of the difficulty of interpreting this I look at the RMSE. The low RMSE value of 0.765 aligns with the low MSE, confirming that NH Democratic vote predictions were relatively accurate. This can be interpreted as, on average, the predictions for the Democratic two-party vote share are off by about 0.765 percentage points. RMSE of 0.765 percentage points is a small error in the context where vote shares typically range from 40% to 60%. The MAE for democratic vote share is 0.75, meaning, on average, predictions for Democratic vote share are off by 0.75 percentage points. The bias helps us determine the direction of this MAE. With a bias of -0.75, the predictions seem to systematically underestimate Democratic vote share by 0.75 points. This is not necessarily consistent with the general trend across the country from the last election as was seen in the last blog post. This could be due to the low number of predictions being accounted. Overall, expert predictors did relatively well in predicting the Democratic vote share in new Hampshire, though they slightly underestimated it.
+
+The results for the Republican vote share provide context for this negative bias which points to the underestimation of democrats as it shows that republicans were underestimated even more than the democrats in New Hampshire, making this more consistent with national trends of republican gains across the board. Looking at each of the evaluation metrics, the error is much higher for Republican predictions, suggesting the experts less accurately estimate Republican vote shares. This is consistent with the narrative of republicans under performing in polls and expert predictions. The MSE of the republican vote share is 6.025 squared percentage points, which is difficult to interpret, so using RMSE we see that the predictions are off by 2.455 percentage points on average. The MAE says that Republican vote share deviate by 2.45 points, much larger than the Democratic MAE, suggesting room for improvement in predicting Republicans accurately. The bias is the negative of this, meaning the experts underestimates Republican vote share by a margin of 2.45 points. The fact that this is much larger than the margin for Democratic vote share indicates a systematic issue with predicting Republican vote values for these two expert predictions, at least in New Hampshire, but this is a pattern that has been recognized across the board in the last three elections. 
+
+Looking at the margins may provide a way to reconcile this under-prediction of both Democrats and Republicans in models of popular vote in New Hampshire. It seems the models left much more room for third parties than actually occurred though, leaving margins also not very accurate. As seen in the table above, margin predictions suffer due to compounded errors from both party predictions. With an RMSE of 2.772, the margin prediction on average was off by 2.772 percentage points, enough to mispredict the election result significantly especially in such a close state. The MAE and bias are the same, indicating an overall overestimation of Democratic advantages in the margin. The positive bias in margin indicates the experts tended to overestimate the margin in favor of the Democrats, consistent with national trends.
+
 
 ### Review of the 2024 Presidential Campaign in NH
 News sources
+For example, you might consider the candidates and issues of “candidate quality” and the volume and content of their campaign, including the air and ground campaign, and the associated news coverage.
 
 ### Campaign and Candidate Effects As Deviations from Predictions
 Drawing on the literature from the class and, if necessary, other scholarly sources, speculate on how the campaign and candidates may have contributed to the deviations from the forecasted outcome
