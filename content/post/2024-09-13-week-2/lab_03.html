@@ -474,9 +474,9 @@ lambda.min.enet &lt;- cv.enet.pollweeks$lambda.min
 (mse.ridge &lt;- mean((predict(ridge.pollsweeks, s = lambda.min.ridge, newx = x.train) - y.train)^2))</code></pre>
 <pre><code>## [1] 9.575001</code></pre>
 <pre class="r"><code>(mse.lasso &lt;- mean((predict(lasso.pollsweeks, s = lambda.min.lasso, newx = x.train) - y.train)^2))</code></pre>
-<pre><code>## [1] 3.719454</code></pre>
+<pre><code>## [1] 2.005945</code></pre>
 <pre class="r"><code>(mse.enet &lt;- mean((predict(enet.pollsweeks, s = lambda.min.enet, newx = x.train) - y.train)^2))</code></pre>
-<pre><code>## [1] 5.087953</code></pre>
+<pre><code>## [1] 3.568855</code></pre>
 <pre class="r"><code># Generate plot comparing coefficients for each of the weeks. 
 d.coefplot &lt;- data.frame(&quot;OLS&quot; = coef(ols.pollweeks)[-1], 
                          &quot;Ridge&quot; = coef(ridge.pollsweeks, s = lambda.min.ridge)[-1], 
